@@ -135,7 +135,7 @@ export const ART_META_TAGS: BooruTag[] = [
     subcategory: 'Shading, Lineart & Mediums',
     description: 'Smooth, blended gradient transitions across skin, hair, and clothing folds.',
     aliases: ['smooth_shading', 'airbrush_shading'],
-    relatedTags: [' painterly', 'depth_of_field', 'newest'],
+    relatedTags: ['painterly', 'depth_of_field', 'newest'],
     popularity: 'Core',
     postCountEst: '85K'
   },

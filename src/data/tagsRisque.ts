@@ -96,7 +96,7 @@ export const RISQUE_TAGS: BooruTag[] = [
     domain: 'character',
     subcategory: 'Body Proportions & Anatomy',
     description: 'Modest, understated bust proportions.',
-    aliases: ['small_bust', 'A-cup', 'B-cup'],
+    aliases: ['small_bust', 'a-cup', 'b-cup'],
     relatedTags: ['flat_chest', 'medium_breasts', 'slender'],
     popularity: 'Core',
     postCountEst: '1.1M'
@@ -106,7 +106,7 @@ export const RISQUE_TAGS: BooruTag[] = [
     domain: 'character',
     subcategory: 'Body Proportions & Anatomy',
     description: 'Balanced, natural medium bust proportions.',
-    aliases: ['average_breasts', 'C-cup'],
+    aliases: ['average_breasts', 'c-cup'],
     relatedTags: ['breasts', 'large_breasts', 'cleavage'],
     popularity: 'Core',
     postCountEst: '1.6M'
@@ -516,10 +516,10 @@ export const RISQUE_TAGS: BooruTag[] = [
   {
     tag: 'shiny_skin',
     domain: 'character',
-    subcategory: 'Body Proportions & Anatomy',
+    subcategory: 'Skin, Tanlines, Tattoos & Piercings',
     description: 'Glossy specular highlights across skin contours giving an oiled, wet, or dewy pin-up finish.',
     aliases: ['glossy_skin', 'oiled_skin', 'glistening_skin'],
-    relatedTags: ['sweat', 'wet', 'large_breasts', 'thick_thighs'],
+    relatedTags: ['sweat', 'wet_skin', 'large_breasts', 'thick_thighs'],
     popularity: 'Core',
     postCountEst: '520K',
     illustriousNote: 'Enhances skin shading volume and specular highlights in SDXL Illustrious.'

@@ -225,7 +225,7 @@ export const EXTENDED_TAGS: BooruTag[] = [
   {
     tag: 'collarbone',
     domain: 'character',
-    subcategory: 'Ears, Horns & Fantasy Traits',
+    subcategory: 'Body Proportions & Anatomy',
     description: 'Defined clavicle bones visible at the base of the neck.',
     aliases: ['clavicle'],
     relatedTags: ['bare_shoulders', 'off-shoulder', 'upper_body'],
@@ -235,7 +235,7 @@ export const EXTENDED_TAGS: BooruTag[] = [
   {
     tag: 'bare_shoulders',
     domain: 'character',
-    subcategory: 'Ears, Horns & Fantasy Traits',
+    subcategory: 'Body Proportions & Anatomy',
     description: 'Uncovered shoulders exposed by sleeveless, strapless, or off-shoulder attire.',
     aliases: ['exposed_shoulders'],
     relatedTags: ['off-shoulder', 'detached_sleeves', 'collarbone', 'sundress'],
@@ -245,7 +245,7 @@ export const EXTENDED_TAGS: BooruTag[] = [
   {
     tag: 'midriff',
     domain: 'character',
-    subcategory: 'Ears, Horns & Fantasy Traits',
+    subcategory: 'Body Proportions & Anatomy',
     description: 'Exposed stomach and waist area between a cropped top and skirt/pants.',
     aliases: ['exposed_waist', 'bare_stomach'],
     relatedTags: ['crop_top', 'navel', 'short_shorts'],
@@ -339,7 +339,7 @@ export const EXTENDED_TAGS: BooruTag[] = [
     domain: 'clothing',
     subcategory: 'Tops, Jackets & Sleeves',
     description: 'Baggy, loose-fitting jacket, hoodie, or shirt several sizes larger than the wearer.',
-    aliases: ['baggy_clothes', ' oversized_shirt', 'boyfriend_shirt'],
+    aliases: ['baggy_clothes', 'oversized_shirt', 'boyfriend_shirt'],
     relatedTags: ['sleeves_past_wrists', 'hoodie', 'off-shoulder'],
     popularity: 'Core',
     postCountEst: '165K'
@@ -400,7 +400,7 @@ export const EXTENDED_TAGS: BooruTag[] = [
   {
     tag: 'back-to-back',
     domain: 'pose_camera',
-    subcategory: 'Body Poses & Stances',
+    subcategory: 'Multi-Character & Couple Interactions',
     description: 'Two characters standing or sitting with their backs resting against one another.',
     aliases: ['standing_back_to_back'],
     relatedTags: ['2girls', '2boys', 'looking_at_viewer'],
@@ -410,7 +410,7 @@ export const EXTENDED_TAGS: BooruTag[] = [
   {
     tag: 'princess_carry',
     domain: 'pose_camera',
-    subcategory: 'Body Poses & Stances',
+    subcategory: 'Multi-Character & Couple Interactions',
     description: 'One character cradling another horizontally in both arms.',
     aliases: ['bridal_carry', 'ohimesama_dakko'],
     relatedTags: ['2girls', '1boy', '1girl'],

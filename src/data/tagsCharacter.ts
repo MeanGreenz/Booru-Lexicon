@@ -863,7 +863,7 @@ export const CHARACTER_TAGS: BooruTag[] = [
     subcategory: 'Facial Expressions',
     description: 'Shedding tears from sadness, relief, or intense emotion.',
     aliases: ['weeping', 'sobbing'],
-    relatedTags: ['tears', 'tearing_up', 'streaming_tears', ' wiping_tears'],
+    relatedTags: ['tears', 'tearing_up', 'streaming_tears', 'wiping_tears'],
     popularity: 'Core',
     postCountEst: '310K'
   },
@@ -1032,7 +1032,7 @@ export const CHARACTER_TAGS: BooruTag[] = [
   {
     tag: 'dark_skin',
     domain: 'character',
-    subcategory: 'Ears, Horns & Fantasy Traits',
+    subcategory: 'Skin, Tanlines, Tattoos & Piercings',
     description: 'Rich brown, bronze, or dark complexion.',
     aliases: ['brown_skin', 'ebony_skin'],
     relatedTags: ['tan', 'tanlines', 'white_hair'],
@@ -1042,7 +1042,7 @@ export const CHARACTER_TAGS: BooruTag[] = [
   {
     tag: 'tan',
     domain: 'character',
-    subcategory: 'Ears, Horns & Fantasy Traits',
+    subcategory: 'Skin, Tanlines, Tattoos & Piercings',
     description: 'Sun-kissed warm tanned skin tone.',
     aliases: ['tanned_skin', 'suntan'],
     relatedTags: ['dark_skin', 'tanlines', 'gyaru'],
@@ -1052,7 +1052,7 @@ export const CHARACTER_TAGS: BooruTag[] = [
   {
     tag: 'pale_skin',
     domain: 'character',
-    subcategory: 'Ears, Horns & Fantasy Traits',
+    subcategory: 'Skin, Tanlines, Tattoos & Piercings',
     description: 'Porcelain, fair, or alabaster skin tone.',
     aliases: ['fair_skin', 'porcelain_skin'],
     relatedTags: ['white_hair', 'gothic_lolita', 'vampire'],
@@ -1062,7 +1062,7 @@ export const CHARACTER_TAGS: BooruTag[] = [
   {
     tag: 'freckles',
     domain: 'character',
-    subcategory: 'Ears, Horns & Fantasy Traits',
+    subcategory: 'Skin, Tanlines, Tattoos & Piercings',
     description: 'Small natural pigmentation spots dusted across the bridge of the nose and cheeks.',
     aliases: ['facial_freckles'],
     relatedTags: ['mole_under_eye', 'blush'],
@@ -1072,7 +1072,7 @@ export const CHARACTER_TAGS: BooruTag[] = [
   {
     tag: 'mole_under_eye',
     domain: 'character',
-    subcategory: 'Ears, Horns & Fantasy Traits',
+    subcategory: 'Skin, Tanlines, Tattoos & Piercings',
     description: 'A distinct beauty mark positioned just below the lower eyelid.',
     aliases: ['tear_mole', 'beauty_mark_under_eye'],
     relatedTags: ['mole', 'mole_under_mouth', 'looking_at_viewer'],

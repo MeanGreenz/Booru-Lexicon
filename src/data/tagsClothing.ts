@@ -262,7 +262,7 @@ export const CLOTHING_TAGS: BooruTag[] = [
     subcategory: 'Tops, Jackets & Sleeves',
     description: 'Short top cut above the waist to expose the midriff and navel.',
     aliases: ['midriff_top', 'cropped_shirt'],
-    relatedTags: ['midriff', 'navel', 'short_shorts', ' jacket'],
+    relatedTags: ['midriff', 'navel', 'short_shorts', 'jacket'],
     popularity: 'Core',
     postCountEst: '340K'
   },

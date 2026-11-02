@@ -25,6 +25,10 @@ Organized in the exact canonical prompt ordering recommended for SDXL Illustriou
 - **Auto-Sort by Illustrious Order**: Automatically orders your selected tags from Meta/Quality → Character → Clothing → Poses/Camera → Environment.
 - **Tag Conflict & Contradiction Warnings**: Automatically flags mutually exclusive tags in your active prompt (e.g., `1girl` + `2girls`, `short_hair` + `very_long_hair`, `flat_chest` + `huge_breasts`, `completely_nude` + clothing items, `from_above` + `from_below`, `standing` + `sitting` + `lying`, or conflicting hair/eye colors) with one-click resolution buttons (`Keep X only`).
 - **Quick Color Modifier Prefixer**: Apply any of 12 canonical Danbooru color prefixes (`black_`, `white_`, `red_`, `blue_`, `pink_`, `purple_`, `yellow_`, `green_`, `silver_`, `brown_`, `aqua_`, `gold_`) to colorable clothing, swimwear, legwear, accessories, hair, or eyes directly in the Tag Inspector or Active Prompt Composer.
+- **Interactive Negative Prompt Studio & Modular Negative Packs**:
+  - Toggle individual negative tags, send any main lexicon tag directly to your negative prompt (`⊘` / `- Neg`), or save custom negative presets.
+  - Automatic **Positive ↔ Negative Overlap & Guard Conflict Detection** with one-click resolution buttons.
+  - **7 Modular Negative Tag Packs**: *Baseline Quality*, *Anatomy & Hands*, *Anti-Censorship*, *Anti-3D / Realistic*, *Watermarks & UI*, *SFW Guard* (blocks explicit/NSFW elements), and *NSFW Guard* (blocks safe ratings, unwanted clothing/underwear layers, pasties, and censorship).
 - **Favorites & Adjustable History Cap**: Star your go-to tags into a persistent Favorites list and configure a custom cap (`1`–`200`) for recently used tags and copied prompts.
 - **Customizable Display & Output Settings**: Adjust tag text size (`Small`, `Default`, `Large`, `X-Large`), global UI font scale (`85%`–`130%`), row/card density, grid column count, WebUI parenthesis escaping (`\(` and `\)`), and trailing comma formatting.
 

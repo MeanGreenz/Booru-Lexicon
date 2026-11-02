@@ -206,8 +206,8 @@ export const EXPLICIT_ACTION_TAGS: BooruTag[] = [
   },
   {
     tag: 'cum',
-    domain: 'character',
-    subcategory: 'Body Proportions & Anatomy',
+    domain: 'pose_camera',
+    subcategory: 'Intimate & Explicit Acts',
     description: 'Visible seminal fluid in an explicit scene.',
     aliases: ['semen', 'ejaculation', 'bukkake'],
     relatedTags: ['cum_on_body', 'cum_in_pussy', 'facial', 'cum_on_breasts', 'after_sex'],
@@ -216,8 +216,8 @@ export const EXPLICIT_ACTION_TAGS: BooruTag[] = [
   },
   {
     tag: 'cum_in_pussy',
-    domain: 'character',
-    subcategory: 'Body Proportions & Anatomy',
+    domain: 'pose_camera',
+    subcategory: 'Intimate & Explicit Acts',
     description: 'Internal ejaculation or creampie overflowing from the vulva.',
     aliases: ['creampie', 'nakadashi', 'cum_drip'],
     relatedTags: ['cum', 'pussy', 'after_sex', 'x-ray'],
@@ -226,8 +226,8 @@ export const EXPLICIT_ACTION_TAGS: BooruTag[] = [
   },
   {
     tag: 'cum_on_body',
-    domain: 'character',
-    subcategory: 'Body Proportions & Anatomy',
+    domain: 'pose_camera',
+    subcategory: 'Intimate & Explicit Acts',
     description: 'Seminal fluid across the stomach, chest, or thighs.',
     aliases: ['cum_on_stomach', 'cum_on_breasts'],
     relatedTags: ['cum', 'facial', 'shiny_skin'],
@@ -236,8 +236,8 @@ export const EXPLICIT_ACTION_TAGS: BooruTag[] = [
   },
   {
     tag: 'facial',
-    domain: 'character',
-    subcategory: 'Body Proportions & Anatomy',
+    domain: 'pose_camera',
+    subcategory: 'Intimate & Explicit Acts',
     description: 'Seminal fluid on the character’s face, cheeks, or tongue.',
     aliases: ['cum_on_face'],
     relatedTags: ['cum', 'fellatio', 'tongue_out', 'ahegao'],
@@ -246,8 +246,8 @@ export const EXPLICIT_ACTION_TAGS: BooruTag[] = [
   },
   {
     tag: 'pussy_juice',
-    domain: 'character',
-    subcategory: 'Body Proportions & Anatomy',
+    domain: 'pose_camera',
+    subcategory: 'Intimate & Explicit Acts',
     description: 'Glistening arousal fluid on the vulva, inner thighs, or staining panties.',
     aliases: ['arousal_fluid', 'wet_panties', 'girl_cum'],
     relatedTags: ['pussy', 'fingering', 'panties_aside', 'sweat'],
@@ -256,8 +256,8 @@ export const EXPLICIT_ACTION_TAGS: BooruTag[] = [
   },
   {
     tag: 'lactation',
-    domain: 'character',
-    subcategory: 'Body Proportions & Anatomy',
+    domain: 'pose_camera',
+    subcategory: 'Intimate & Explicit Acts',
     description: 'Breast milk droplets or streams expressed from the nipples.',
     aliases: ['breast_milk', 'lactating'],
     relatedTags: ['large_breasts', 'huge_breasts', 'nipples', 'breast_press'],
@@ -267,7 +267,7 @@ export const EXPLICIT_ACTION_TAGS: BooruTag[] = [
   {
     tag: 'bondage',
     domain: 'clothing',
-    subcategory: 'Swimwear, Lingerie & Bodysuits',
+    subcategory: 'Materials, Latex & Fetish Gear',
     description: 'Restraint motifs including ropes, cuffs, chains, or leather straps.',
     aliases: ['bdsm', 'restrained', 'tied_up'],
     relatedTags: ['shibari', 'bound_wrists', 'collar', 'gag', 'chains'],
@@ -277,7 +277,7 @@ export const EXPLICIT_ACTION_TAGS: BooruTag[] = [
   {
     tag: 'shibari',
     domain: 'clothing',
-    subcategory: 'Swimwear, Lingerie & Bodysuits',
+    subcategory: 'Materials, Latex & Fetish Gear',
     description: 'Traditional Japanese decorative rope bondage (kinbaku) framing the bust and hips.',
     aliases: ['kinbaku', 'rope_bondage', 'red_rope'],
     relatedTags: ['bondage', 'skindentation', 'large_breasts', 'nude'],

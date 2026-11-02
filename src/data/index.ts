@@ -9,6 +9,7 @@ import { RISQUE_TAGS } from './tagsRisque';
 import { EXPLICIT_ACTION_TAGS } from './tagsExplicitActions';
 import { ARCHETYPES_FEATURES_TAGS } from './tagsArchetypesFeatures';
 import { INTERACTIONS_MATERIALS_TAGS } from './tagsInteractionsMaterials';
+import { COMPREHENSIVE_POLISH_TAGS } from './tagsComprehensivePolish';
 
 export const DOMAINS: DomainMetadata[] = [
   {
@@ -115,7 +116,8 @@ const rawTags: BooruTag[] = [
   ...ENVIRONMENT_TAGS,
   ...EXTENDED_TAGS,
   ...RISQUE_TAGS,
-  ...EXPLICIT_ACTION_TAGS
+  ...EXPLICIT_ACTION_TAGS,
+  ...COMPREHENSIVE_POLISH_TAGS
 ];
 
 const seen = new Set<string>();
