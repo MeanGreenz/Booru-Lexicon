@@ -1,0 +1,36 @@
+appId: com.illustrious.lexicon
+productName: Illustrious Lexicon
+copyright: Copyright © 2026 Illustrious Lexicon Contributors
+directories:
+  output: release
+files:
+  - dist/**/*
+  - electron/**/*
+  - package.json
+win:
+  target:
+    - target: portable
+      arch:
+        - x64
+    - target: nsis
+      arch:
+        - x64
+  artifactName: "${productName}-${version}-${target}.${ext}"
+portable:
+  artifactName: "Illustrious-Lexicon-Portable-${version}.exe"
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: "Illustrious Lexicon"
+  artifactName: "Illustrious-Lexicon-Setup-${version}.exe"
+mac:
+  target:
+    - dmg
+    - zip
+  category: public.app-category.graphics-design
+linux:
+  target:
+    - AppImage
+  category: Graphics

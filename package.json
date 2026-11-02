@@ -1,13 +1,19 @@
 {
-  "name": "react-example",
+  "name": "illustrious-lexicon",
+  "productName": "Illustrious Lexicon",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "High-density Booru-style tag lexicon and one-click prompt composer for SDXL Illustrious anime diffusion models.",
+  "main": "electron/main.cjs",
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
+    "build:standalone": "vite build && node scripts/build-standalone.mjs",
+    "electron:dev": "electron .",
+    "dist:win": "vite build && npx electron-builder --win portable nsis",
     "preview": "vite preview",
-    "clean": "rm -rf dist server.js",
+    "clean": "rm -rf dist release server.js",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
