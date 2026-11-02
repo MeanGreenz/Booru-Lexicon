@@ -4,6 +4,8 @@
   "private": true,
   "version": "1.0.0",
   "description": "High-density Booru-style tag lexicon and one-click prompt composer for SDXL Illustrious anime diffusion models.",
+  "author": "Illustrious Lexicon Contributors",
+  "license": "Apache-2.0",
   "main": "electron/main.cjs",
   "type": "module",
   "scripts": {

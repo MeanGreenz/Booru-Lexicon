@@ -3,28 +3,29 @@
 **High-Density Booru Tag Index & One-Click Prompt Composer for SDXL Illustrious Anime Diffusion Models**
 
 ![Version](https://img.shields.io/badge/version-1.0.0-4f46e5)
+![Tags](https://img.shields.io/badge/canonical_tags-736-06b6d4)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux%20%7C%20Web-0f172a)
 ![Syntax](https://img.shields.io/badge/booru_syntax-canonical__underscores-10b981)
 
-**Illustrious Lexicon** is a fast, offline-capable desktop and web reference utility built specifically for **SDXL Illustrious** and Danbooru-trained anime diffusion models. Every entry uses canonical underscore formatting (`big_eyes`, `long_hair`, `sailor_collar`, `dutch_angle`, `best_quality`) and assembles clean, comma-separated prompts without unwanted numeric weight clutter.
+**Illustrious Lexicon** is a fast, offline-capable desktop and web reference utility built specifically for **SDXL Illustrious** and Danbooru-trained anime diffusion models. It indexes **736 canonical Booru tags** across 5 domains and 31 subcategories using strict underscore formatting (`big_eyes`, `long_hair`, `sailor_collar`, `dutch_angle`, `best_quality`) and assembles clean, comma-separated positive and negative prompts without unwanted weight clutter.
 
 ---
 
 ## Key Features
 
-### 1. Comprehensive 5-Domain SDXL Illustrious Taxonomy
+### 1. Comprehensive 5-Domain SDXL Illustrious Taxonomy (736 Canonical Tags)
 Organized in the exact canonical prompt ordering recommended for SDXL Illustrious models:
-1. **Meta, Quality & Art Style** — Quality & aesthetic triggers (`masterpiece`, `best_quality`, `absurdres`, `newest`), anime era tokens (`year_2024`, `retro_artstyle`), rendering mediums (`cel_shading`, `impasto`, `watercolor_(medium)`), and visual effects (`chromatic_aberration`, `depth_of_field`, `lens_flare`).
-2. **Character, Hair, Eyes & Expressions** — Subject count (`1girl`, `solo`, `multiple_girls`), hair lengths/cuts/bangs (`very_long_hair`, `twintails`, `hime_cut`, `blunt_bangs`, `ahoge`), eye details (`slit_pupils`, `heterochromia`, `sparkling_eyes`), facial expressions (`smug`, `tsundere`, `ahegao`, `parted_lips`, `heavy_breathing`), body proportions & anatomy (`huge_breasts`, `wide_hips`, `thick_thighs`, `toned_female`), archetypes & occupations (`gyaru`, `succubus`, `nun`, `nurse`, `office_lady`, `kunoichi`, `cow_girl`, `dark_elf`), and surface details (`tanlines`, `wet_skin`, `wet_hair`, `womb_tattoo`, `navel_piercing`, `glasses_off`).
-3. **Clothing, Swimwear, Lingerie & Materials** — School & formal attire (`serafuku`, `blazer`, `maid`), traditional wear (`kimono`, `miko`, `china_dress`), swimwear & lingerie (`micro_bikini`, `slingshot_swimsuit`, `competetive_swimsuit`, `babydoll`, `garter_belt`), legwear (`thighhighs`, `pantyhose`, `torn_thighhighs`, `stirrup_legwear`), materials & fetish gear (`latex`, `shiny_clothes`, `vacuum-packed_clothes`, `reverse_bunnysuit`, `blindfold`, `handcuffs`), and suggestive clothing states (`wet_clothes`, `see-through_shirt`, `open_shirt`, `shirt_tug`, `panties_aside`).
-4. **Poses, Camera Angles, Lighting & Couple Interactions** — Framing (`cowboy_shot`, `portrait`, `full_body`), dynamic perspective (`from_above`, `from_below`, `dutch_angle`, `foreshortening`), full-body stances (`contrapposto`, `sitting`, `all_fours`, `jack-o'_challenge`, `arched_back`), couple & multi-character interactions (`hugging`, `hug_from_behind`, `kissing`, `french_kiss`, `kabedon`, `lap_pillow`, `holding_hands`, `breast_to_breast`, `princess_carry`), explicit acts & positions, and atmospheric lighting (`rim_lighting`, `tyndall_effect`, `backlighting`).
-5. **Backgrounds, Environments & Props** — Studio backdrops (`simple_background`, `white_background`), sky/time/weather (`golden_hour`, `starry_sky`, `cherry_blossoms`, `rain`), indoor & urban locations (`classroom`, `bedroom`, `onsen`, `cyberpunk_city`), and handheld props (`katana`, `parasol`, `teacup`).
+1. **01. Art Styles, Mediums & Meta Quality** — Quality & aesthetic triggers (`masterpiece`, `best_quality`, `very_awa`, `absurdres`, `newest`), source/medium styles (`official_art`, `anime_screencap`, `game_cg`, `cel_shading`, `impasto`, `watercolor_(medium)`), and color/visual effects (`chromatic_aberration`, `monochrome`, `spot_color`).
+2. **02. Character Traits, Archetypes, Anatomy & Expressions** — Subject counts (`1girl`, `solo`, `2girls`, `3girls`, `multiple_girls`), archetypes & species (`gyaru`, `succubus`, `nun`, `nurse`, `office_lady`, `kunoichi`, `bunny_girl`, `cat_girl`, `fox_girl`, `wolf_girl`, `dark_elf`, `oni`, `mermaid`, `android`), body proportions & anatomy (`huge_breasts`, `wide_hips`, `thick_thighs`, `narrow_waist`, `curvy`, `muscular_female`), skin & surface marks (`tanlines`, `wet_skin`, `oily_skin`, `womb_tattoo`, `navel_piercing`, `hickey`, `beauty_mark`), hair cuts/bangs/colors, eye shapes/states (`slit_pupils`, `heart-shaped_pupils`, `sanpaku`, `jitome`, `rolling_eyes`), and facial expressions (`smug`, `seductive_smile`, `ahegao`, `torogao`, `full-face_blush`, `licking_lips`).
+3. **03. Clothing, Lingerie, Materials & Fashion States** — Uniforms & formal wear (`serafuku`, `blazer`, `maid`, `evening_gown`, `wedding_dress`), traditional & fantasy (`kimono`, `miko`, `china_dress`, `bikini_armor`), swimwear & lingerie (`micro_bikini`, `slingshot_swimsuit`, `highleg_leotard`, `plugsuit`, `babydoll`, `garter_belt`, `crotchless_panties`), materials & fetish gear (`latex`, `shiny_clothes`, `vacuum-packed_clothes`, `reverse_bunnysuit`, `bondage`, `shibari`, `blindfold`, `collar`), suggestive states (`wet_clothes`, `see-through`, `clothing_aside`, `shirt_lift`, `shirt_tug`, `one_breast_out`), and legwear/accessories (`thighhighs`, `pantyhose`, `torn_thighhighs`, `stirrup_legwear`, `glasses_off`).
+4. **04. Poses, Camera Angles, Couple Interactions & Acts** — Framing (`cowboy_shot`, `portrait`, `extreme_close-up`, `face_focus`, `back_focus`, `hip_focus`), dynamic perspective (`from_above`, `from_below`, `dutch_angle`, `foreshortening`, `pov`, `pov_hands`, `pov_crotch`), stances (`contrapposto`, `sitting`, `all_fours`, `jack-o'_challenge`, `arched_back`), couple & multi-character interactions (`hugging`, `hug_from_behind`, `kissing`, `french_kiss`, `kabedon`, `lap_pillow`, `princess_carry`, `breast_grab`, `ass_grab`, `leg_lock`), intimate & explicit acts, and lighting (`rim_lighting`, `tyndall_effect`, `backlighting`).
+5. **05. Backgrounds, Environments & Props** — Studio backdrops (`simple_background`, `white_background`, `gradient_background`), sky/time/weather (`golden_hour`, `sunset`, `night_sky`, `cherry_blossoms`, `rain`), indoor & urban locations (`classroom`, `bedroom`, `on_bed`, `onsen`, `bathroom`, `swimming_pool`, `locker_room`, `cyberpunk_city`), and props (`katana`, `scythe`, `handgun`, `parasol`, `mirror`, `popsicle`).
 
 ### 2. Smart Prompt Composer & Workflow Tools
 - **One-Click Comma-Separated Output**: Click any row or card to toggle a tag in your active prompt, then copy the assembled prompt in one click.
 - **Auto-Sort by Illustrious Order**: Automatically orders your selected tags from Meta/Quality → Character → Clothing → Poses/Camera → Environment.
-- **Tag Conflict & Contradiction Warnings**: Automatically flags mutually exclusive tags in your active prompt (e.g., `1girl` + `2girls`, `short_hair` + `very_long_hair`, `flat_chest` + `huge_breasts`, `completely_nude` + clothing items, `from_above` + `from_below`, `standing` + `sitting` + `lying`, or conflicting hair/eye colors) with one-click resolution buttons (`Keep X only`).
-- **Quick Color Modifier Prefixer**: Apply any of 12 canonical Danbooru color prefixes (`black_`, `white_`, `red_`, `blue_`, `pink_`, `purple_`, `yellow_`, `green_`, `silver_`, `brown_`, `aqua_`, `gold_`) to colorable clothing, swimwear, legwear, accessories, hair, or eyes directly in the Tag Inspector or Active Prompt Composer.
+- **Tag Conflict & Contradiction Warnings**: Automatically flags mutually exclusive tags in your active prompt (e.g., `solo` + multi-character tags, `short_hair` + `very_long_hair`, `flat_chest` + `huge_breasts`, `completely_nude` + clothing items, `from_above` + `from_below`, `closed_eyes` + gaze tags, `closed_mouth` + open-mouth tags) with one-click resolution buttons (`Keep X only`).
+- **Quick Color Modifier Prefixer**: Apply any of 12 canonical Danbooru color prefixes (`black_`, `white_`, `red_`, `blue_`, `pink_`, `purple_`, `yellow_`, `green_`, `silver_`, `brown_`, `aqua_`, `gold_`) to colorable clothing, swimwear, legwear, accessories, wings, tails, hair, or eyes directly in the Tag Inspector or Active Prompt Composer.
 - **Interactive Negative Prompt Studio & Modular Negative Packs**:
   - Toggle individual negative tags, send any main lexicon tag directly to your negative prompt (`⊘` / `- Neg`), or save custom negative presets.
   - Automatic **Positive ↔ Negative Overlap & Guard Conflict Detection** with one-click resolution buttons.
@@ -40,16 +41,24 @@ Organized in the exact canonical prompt ordering recommended for SDXL Illustriou
 | :--- | :--- |
 | `/` | Focus the instant search bar from anywhere |
 | `Esc` | Clear and unfocus the search bar |
-| `Click Row / Card` | Add or remove tag from the active prompt |
+| `Click Row / Card` | Add or remove tag from the active positive prompt |
+| `Click ⊘ Button` | Add or remove tag from the active negative prompt |
 
 ---
 
-## Running & Building for PC (Windows Executable & Standalone Release)
+## Deploying on GitHub (Web & PC Desktop Releases)
 
-This repository includes two ways to package and distribute **Illustrious Lexicon** as a Windows PC desktop application for your GitHub Releases:
+This repository includes pre-configured **GitHub Actions workflows** for both live web hosting (**GitHub Pages**) and automated Windows desktop executable releases (**GitHub Releases**).
 
-### Option A: Automated GitHub Release (`.exe` via GitHub Actions)
-A complete GitHub Actions workflow is pre-configured in [`.github/workflows/release.yml`](.github/workflows/release.yml).
+### 1. Live Web Deployment via GitHub Pages
+A complete workflow is configured in [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml):
+1. Push this repository to GitHub (`main` or `master` branch).
+2. In your GitHub repository, open **Settings → Pages**.
+3. Under **Build and deployment → Source**, select **GitHub Actions**.
+4. Every push to `main` will automatically type-check, build, and publish the live web app to `https://<your-username>.github.io/<repo-name>/`.
+
+### 2. Automated Windows `.exe` & Standalone PC Release via GitHub Actions
+A complete Windows packaging workflow is configured in [`.github/workflows/release.yml`](.github/workflows/release.yml).
 
 Whenever you push a version tag (such as `v1.0.0`) to GitHub, GitHub Actions spins up a Windows runner, compiles the application with Electron Builder, and automatically publishes a GitHub Release containing:
 - `Illustrious-Lexicon-Portable-1.0.0.exe` — Single-file portable Windows executable (no installation required)
