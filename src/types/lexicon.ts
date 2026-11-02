@@ -92,3 +92,33 @@ export interface DetectedConflict {
   tagB: string;
   reason: string;
 }
+
+export interface NegativeTagItem {
+  tag: string;
+  description: string;
+}
+
+export interface NegativeModularPack {
+  id: string;
+  name: string;
+  shortLabel: string;
+  description: string;
+  tags: NegativeTagItem[];
+}
+
+export interface NegativePreset {
+  id: string;
+  name: string;
+  description: string;
+  tags: string[];
+  isBuiltIn?: boolean;
+}
+
+export interface PositiveNegativeOverlap {
+  id: string;
+  type: 'exact' | 'contradiction';
+  positiveTag: string;
+  negativeTag: string;
+  reason: string;
+}
+

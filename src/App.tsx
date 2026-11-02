@@ -18,14 +18,15 @@ import {
   RotateCcw,
   Type,
   AlertTriangle,
-  Palette
+  Palette,
+  Ban,
+  ArrowRightLeft
 } from 'lucide-react';
 import {
   ALL_BOORU_TAGS,
   DOMAINS,
   DOMAIN_MAP,
-  BUILT_IN_PROMPT_PRESETS,
-  ILLUSTRIOUS_NEGATIVE_PRESETS
+  BUILT_IN_PROMPT_PRESETS
 } from './data';
 import {
   CANONICAL_BOORU_COLORS,
@@ -35,10 +36,16 @@ import {
   detectPromptConflicts
 } from './data/conflictAndColorRules';
 import {
+  MODULAR_NEGATIVE_PACKS,
+  BUILT_IN_NEGATIVE_PRESETS,
+  detectPositiveNegativeOverlaps
+} from './data/negativeLibrary';
+import {
   BooruTag,
   DomainId,
   PopularityTier,
   PromptPreset,
+  NegativePreset,
   PromptHistoryEntry,
   RecentTagEntry,
   LexiconDisplaySettings,
@@ -47,9 +54,11 @@ import {
 
 const STORAGE_KEYS = {
   PROMPT_TAGS: 'illustrious_lexicon_prompt_tags_v1',
+  NEGATIVE_TAGS: 'illustrious_lexicon_negative_tags_v1',
   FAVORITES: 'illustrious_lexicon_favorites_v1',
   CUSTOM_TAGS: 'illustrious_lexicon_custom_tags_v1',
   SAVED_PRESETS: 'illustrious_lexicon_saved_presets_v1',
+  SAVED_NEGATIVE_PRESETS: 'illustrious_lexicon_saved_neg_presets_v1',
   AUTO_SORT: 'illustrious_lexicon_autosort_v1',
   THEME: 'illustrious_lexicon_theme_v1',
   HISTORY_CAP: 'illustrious_lexicon_history_cap_v1',
@@ -408,6 +417,45 @@ export default function App() {
     localStorage.setItem(STORAGE_KEYS.SAVED_PRESETS, JSON.stringify(userPresets));
   }, [userPresets]);
 
+  // Active Negative Prompt Builder state
+  const [selectedNegativeTags, setSelectedNegativeTags] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.NEGATIVE_TAGS);
+      if (raw) return JSON.parse(raw);
+    } catch {
+      // ignore
+    }
+    return [...BUILT_IN_NEGATIVE_PRESETS[0].tags];
+  });
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.NEGATIVE_TAGS, JSON.stringify(selectedNegativeTags));
+  }, [selectedNegativeTags]);
+
+  // Saved Custom Negative Presets state
+  const [userNegativePresets, setUserNegativePresets] = useState<NegativePreset[]>(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.SAVED_NEGATIVE_PRESETS);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem(
+      STORAGE_KEYS.SAVED_NEGATIVE_PRESETS,
+      JSON.stringify(userNegativePresets)
+    );
+  }, [userNegativePresets]);
+
+  const [quickNegInput, setQuickNegInput] = useState<string>('');
+  const [activeNegativePackId, setActiveNegativePackId] = useState<string>(
+    MODULAR_NEGATIVE_PACKS[0].id
+  );
+  const [newNegPresetName, setNewNegPresetName] = useState<string>('');
+  const [showSaveNegPresetInput, setShowSaveNegPresetInput] = useState<boolean>(false);
+
   // Tag Inspector state
   const [inspectedTagKey, setInspectedTagKey] = useState<string>('big_eyes');
   const inspectedTag = useMemo(() => {
@@ -428,6 +476,7 @@ export default function App() {
 
   // Copy feedback states
   const [copiedPositive, setCopiedPositive] = useState(false);
+  const [copiedActiveNegative, setCopiedActiveNegative] = useState(false);
   const [copiedNegativeId, setCopiedNegativeId] = useState<string | null>(null);
   const [copiedSingleTag, setCopiedSingleTag] = useState<string | null>(null);
   const [copiedHistoryId, setCopiedHistoryId] = useState<string | null>(null);
@@ -631,6 +680,11 @@ export default function App() {
     return set;
   }, [activeConflicts]);
 
+  // Detect overlaps or rating/guard contradictions between Positive and Negative prompts
+  const positiveNegativeOverlaps = useMemo(() => {
+    return detectPositiveNegativeOverlaps(selectedPromptTags, selectedNegativeTags);
+  }, [selectedPromptTags, selectedNegativeTags]);
+
   // Format a single tag according to output parameters (e.g., escaping parentheses if enabled)
   const formatSingleTagForOutput = (rawTag: string) => {
     if (!displaySettings.escapeParentheses) return rawTag;
@@ -644,6 +698,13 @@ export default function App() {
     return displaySettings.trailingComma ? `${joined}, ` : joined;
   }, [orderedPromptTags, displaySettings.escapeParentheses, displaySettings.trailingComma]);
 
+  // Formatted active negative prompt string
+  const formattedNegativeString = useMemo(() => {
+    if (selectedNegativeTags.length === 0) return '';
+    const joined = selectedNegativeTags.map(formatSingleTagForOutput).join(', ');
+    return displaySettings.trailingComma ? `${joined}, ` : joined;
+  }, [selectedNegativeTags, displaySettings.escapeParentheses, displaySettings.trailingComma]);
+
   // Toggle tag in prompt composer + record in recent tag history when adding
   const toggleTagInPrompt = (tagKey: string) => {
     const isAdding = !selectedPromptTags.includes(tagKey);
@@ -654,6 +715,97 @@ export default function App() {
       recordTagHistory(tagKey);
     }
     setInspectedTagKey(tagKey);
+  };
+
+  // Toggle tag in Active Negative Prompt
+  const toggleTagInNegative = (tagKey: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setSelectedNegativeTags((prev) =>
+      prev.includes(tagKey) ? prev.filter((t) => t !== tagKey) : [...prev, tagKey]
+    );
+  };
+
+  // Move a tag between Positive and Negative prompts
+  const handleMoveTagBetweenPrompts = (
+    tagKey: string,
+    direction: 'to_negative' | 'to_positive'
+  ) => {
+    if (direction === 'to_negative') {
+      setSelectedPromptTags((prev) => prev.filter((t) => t !== tagKey));
+      setSelectedNegativeTags((prev) => (prev.includes(tagKey) ? prev : [...prev, tagKey]));
+    } else {
+      setSelectedNegativeTags((prev) => prev.filter((t) => t !== tagKey));
+      setSelectedPromptTags((prev) => (prev.includes(tagKey) ? prev : [...prev, tagKey]));
+      recordTagHistory(tagKey);
+    }
+  };
+
+  // Add one or more comma-separated tags to the Active Negative Prompt via manual input
+  const handleQuickAddNegative = (e: React.FormEvent) => {
+    e.preventDefault();
+    const parts = quickNegInput
+      .split(',')
+      .map((s) =>
+        s
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, '_')
+          .replace(/[^a-z0-9_()!'-]/g, '')
+      )
+      .filter(Boolean);
+    if (parts.length === 0) return;
+
+    setSelectedNegativeTags((prev) => {
+      const merged = new Set([...prev, ...parts]);
+      return Array.from(merged);
+    });
+    setQuickNegInput('');
+  };
+
+  // Toggle all tags in a modular negative pack
+  const handleToggleNegativePack = (packTags: string[], allCurrentlyIncluded: boolean) => {
+    if (allCurrentlyIncluded) {
+      const packSet = new Set(packTags);
+      setSelectedNegativeTags((prev) => prev.filter((t) => !packSet.has(t)));
+    } else {
+      setSelectedNegativeTags((prev) => {
+        const merged = new Set([...prev, ...packTags]);
+        return Array.from(merged);
+      });
+    }
+  };
+
+  // Copy active negative prompt
+  const handleCopyActiveNegative = async () => {
+    if (!formattedNegativeString) return;
+    try {
+      await navigator.clipboard.writeText(formattedNegativeString);
+      setCopiedActiveNegative(true);
+      setTimeout(() => setCopiedActiveNegative(false), 1800);
+    } catch {
+      // ignore
+    }
+  };
+
+  // Save current active negative prompt as a custom negative preset
+  const handleSaveNegativePreset = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = newNegPresetName.trim();
+    if (!trimmed || selectedNegativeTags.length === 0) return;
+    const newPreset: NegativePreset = {
+      id: `user_neg_preset_${Date.now()}`,
+      name: trimmed,
+      description: `${selectedNegativeTags.length} negative tags saved from Negative Builder.`,
+      tags: [...selectedNegativeTags],
+      isBuiltIn: false
+    };
+    setUserNegativePresets((prev) => [newPreset, ...prev]);
+    setNewNegPresetName('');
+    setShowSaveNegPresetInput(false);
+  };
+
+  const handleDeleteNegativePreset = (id: string) => {
+    setUserNegativePresets((prev) => prev.filter((p) => p.id !== id));
   };
 
   // Apply a color prefix to a target tag (either replacing the uncolored/previous-colored tag in prompt or adding the new colored tag)
@@ -762,7 +914,8 @@ export default function App() {
   // Copy negative preset
   const handleCopyNegative = async (id: string, tags: string[]) => {
     try {
-      await navigator.clipboard.writeText(tags.join(', '));
+      const out = tags.map(formatSingleTagForOutput).join(', ');
+      await navigator.clipboard.writeText(displaySettings.trailingComma ? `${out}, ` : out);
       setCopiedNegativeId(id);
       setTimeout(() => setCopiedNegativeId(null), 1800);
     } catch {
@@ -1753,6 +1906,7 @@ export default function App() {
                     <tbody className="divide-y divide-slate-200/70 dark:divide-slate-800/80">
                       {filteredTags.map((item) => {
                         const isSelected = selectedPromptTags.includes(item.tag);
+                        const isNegated = selectedNegativeTags.includes(item.tag);
                         const isFav = favoriteTags.includes(item.tag);
                         const isInspected = inspectedTag?.tag === item.tag;
                         const canColor = isTagColorable(item.tag);
@@ -1765,6 +1919,8 @@ export default function App() {
                             className={`group transition-colors cursor-pointer ${
                               isSelected
                                 ? 'bg-indigo-50/70 dark:bg-indigo-950/30 hover:bg-indigo-100/70 dark:hover:bg-indigo-950/50'
+                                : isNegated
+                                ? 'bg-rose-50/50 dark:bg-rose-950/20 hover:bg-rose-100/50 dark:hover:bg-rose-950/30'
                                 : isInspected
                                 ? 'bg-slate-100/70 dark:bg-slate-800/40'
                                 : 'hover:bg-slate-50 dark:hover:bg-slate-800/30'
@@ -1799,6 +1955,8 @@ export default function App() {
                                 className={`font-mono ${tagFontClasses} font-semibold ${
                                   isSelected
                                     ? 'text-indigo-600 dark:text-indigo-400'
+                                    : isNegated
+                                    ? 'text-rose-600 dark:text-rose-400 line-through'
                                     : 'text-slate-900 dark:text-slate-100'
                                 }`}
                               >
@@ -1848,12 +2006,28 @@ export default function App() {
                               </td>
                             )}
 
-                            {/* Row Actions: Color Prefixer Trigger, Favorite Star, Copy single tag, Inspect */}
+                            {/* Row Actions: Send to Negative, Color Prefixer Trigger, Favorite Star, Copy single tag, Inspect */}
                             <td
                               className={`${tableCellPadding} pl-2 pr-4 align-middle text-right whitespace-nowrap`}
                               onClick={(e) => e.stopPropagation()}
                             >
                               <div className="inline-flex items-center justify-end gap-1">
+                                <button
+                                  type="button"
+                                  onClick={(e) => toggleTagInNegative(item.tag, e)}
+                                  title={
+                                    isNegated
+                                      ? `Remove "${item.tag}" from Negative Prompt`
+                                      : `Send "${item.tag}" to Negative Prompt`
+                                  }
+                                  className={`p-1.5 rounded transition-colors cursor-pointer ${
+                                    isNegated
+                                      ? 'text-rose-500 bg-rose-500/10 hover:bg-rose-500/20'
+                                      : 'text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                  }`}
+                                >
+                                  <Ban className="w-3.5 h-3.5" />
+                                </button>
                                 {canColor && (
                                   <button
                                     type="button"
@@ -1919,6 +2093,7 @@ export default function App() {
               <div className={`grid ${gridColsClass} gap-4`}>
                 {filteredTags.map((item) => {
                   const isSelected = selectedPromptTags.includes(item.tag);
+                  const isNegated = selectedNegativeTags.includes(item.tag);
                   const isFav = favoriteTags.includes(item.tag);
                   const canColor = isTagColorable(item.tag);
                   const domainMeta = DOMAIN_MAP[item.domain];
@@ -1930,6 +2105,8 @@ export default function App() {
                       className={`${gridCardPadding} rounded-xl border transition-colors cursor-pointer flex flex-col justify-between ${
                         isSelected
                           ? 'bg-indigo-50/50 dark:bg-indigo-950/25 border-indigo-500/60 dark:border-indigo-500/60'
+                          : isNegated
+                          ? 'bg-rose-50/40 dark:bg-rose-950/20 border-rose-500/50 dark:border-rose-500/50'
                           : 'bg-white dark:bg-[#0F1522] border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                       }`}
                     >
@@ -1961,6 +2138,22 @@ export default function App() {
                             className="flex items-center gap-1 shrink-0"
                             onClick={(e) => e.stopPropagation()}
                           >
+                            <button
+                              type="button"
+                              onClick={(e) => toggleTagInNegative(item.tag, e)}
+                              title={
+                                isNegated
+                                  ? `Remove "${item.tag}" from Negative Prompt`
+                                  : `Send "${item.tag}" to Negative Prompt`
+                              }
+                              className={`p-1 cursor-pointer ${
+                                isNegated
+                                  ? 'text-rose-500'
+                                  : 'text-slate-400 hover:text-rose-500'
+                              }`}
+                            >
+                              <Ban className="w-3.5 h-3.5" />
+                            </button>
                             {canColor && (
                               <button
                                 type="button"
@@ -2014,6 +2207,8 @@ export default function App() {
                             className={`font-mono ${tagFontClasses} font-semibold ${
                               isSelected
                                 ? 'text-indigo-600 dark:text-indigo-400'
+                                : isNegated
+                                ? 'text-rose-600 dark:text-rose-400 line-through'
                                 : 'text-slate-900 dark:text-slate-100'
                             }`}
                           >
@@ -2023,10 +2218,12 @@ export default function App() {
                             className={`text-xs font-medium ${
                               isSelected
                                 ? 'text-indigo-600 dark:text-indigo-400'
+                                : isNegated
+                                ? 'text-rose-500'
                                 : 'text-slate-400 dark:text-slate-500'
                             }`}
                           >
-                            {isSelected ? 'In Prompt ✓' : '+ Add'}
+                            {isSelected ? 'In Prompt ✓' : isNegated ? 'Negated ⊘' : '+ Add'}
                           </span>
                         </div>
 
@@ -2063,7 +2260,7 @@ export default function App() {
                 SDXL Illustrious Composer
               </h2>
               <span className="text-xs font-mono tabular-nums text-slate-500 dark:text-slate-400">
-                {selectedPromptTags.length} active · {favoriteTags.length} ★
+                {selectedPromptTags.length} pos · {selectedNegativeTags.length} neg · {favoriteTags.length} ★
               </span>
             </div>
 
@@ -2077,7 +2274,7 @@ export default function App() {
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
-                Prompt
+                Prompt ({selectedPromptTags.length})
               </button>
               <button
                 onClick={() => setComposerSection('favorites')}
@@ -2113,13 +2310,73 @@ export default function App() {
                 onClick={() => setComposerSection('negative')}
                 className={`flex-1 py-1.5 px-2 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                   composerSection === 'negative'
-                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
+                    ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-xs'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
-                Negative
+                Negative ({selectedNegativeTags.length})
               </button>
             </div>
+
+            {/* Positive ↔ Negative Overlap & Contradiction Alert (Visible in both Positive and Negative tabs) */}
+            {(composerSection === 'positive' || composerSection === 'negative') &&
+              positiveNegativeOverlaps.length > 0 && (
+                <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/40 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-semibold text-rose-600 dark:text-rose-400">
+                    <span className="inline-flex items-center gap-1.5">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                      <span>
+                        {positiveNegativeOverlaps.length} Positive ↔ Negative{' '}
+                        {positiveNegativeOverlaps.length === 1 ? 'Overlap' : 'Overlaps'}
+                      </span>
+                    </span>
+                  </div>
+                  <div className="space-y-2 max-h-32 overflow-y-auto pr-1">
+                    {positiveNegativeOverlaps.map((ov) => (
+                      <div
+                        key={ov.id}
+                        className="p-2 rounded bg-white/80 dark:bg-[#0B0F17]/80 border border-rose-500/20 text-[11px] space-y-1.5"
+                      >
+                        <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
+                          <span className="font-semibold text-rose-600 dark:text-rose-400">
+                            {ov.type === 'exact' ? 'Duplicate Tag' : 'Guard Conflict'}
+                          </span>
+                          <span className="font-mono text-slate-500">
+                            +{ov.positiveTag} / -{ov.negativeTag}
+                          </span>
+                        </div>
+                        <p className="text-slate-500 dark:text-slate-400 leading-snug">
+                          {ov.reason}
+                        </p>
+                        <div className="flex items-center gap-1.5 pt-0.5">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSelectedNegativeTags((prev) =>
+                                prev.filter((t) => t !== ov.negativeTag)
+                              )
+                            }
+                            className="px-2 py-0.5 font-mono text-[11px] bg-slate-100 dark:bg-slate-800 hover:bg-indigo-600 hover:text-white text-slate-700 dark:text-slate-200 rounded transition-colors cursor-pointer"
+                          >
+                            Remove -{ov.negativeTag}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSelectedPromptTags((prev) =>
+                                prev.filter((t) => t !== ov.positiveTag)
+                              )
+                            }
+                            className="px-2 py-0.5 font-mono text-[11px] bg-slate-100 dark:bg-slate-800 hover:bg-rose-600 hover:text-white text-slate-700 dark:text-slate-200 rounded transition-colors cursor-pointer"
+                          >
+                            Remove +{ov.positiveTag}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
             {/* TAB 1: Active Positive Prompt */}
             {composerSection === 'positive' && (
@@ -2725,47 +2982,346 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB 5: Negative Prompts */}
+            {/* TAB 5: Interactive Negative Prompt Builder & Modular Negative Library */}
             {composerSection === 'negative' && (
-              <div className="space-y-3">
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Ready-to-use negative prompt templates tuned for SDXL Illustrious checkpoints.
-                </p>
-                {ILLUSTRIOUS_NEGATIVE_PRESETS.map((neg) => (
-                  <div
-                    key={neg.id}
-                    className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-[#0B0F17]/60 space-y-2"
-                  >
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-xs font-semibold text-slate-900 dark:text-slate-100">
-                        {neg.name}
-                      </h3>
+              <div className="space-y-4">
+                {/* 1. Active Negative Prompt Output & Quick Add Input */}
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold text-slate-700 dark:text-slate-200">
+                      Active Negative Prompt ({selectedNegativeTags.length} tags)
+                    </span>
+                    {selectedNegativeTags.length > 0 && (
                       <button
                         type="button"
-                        onClick={() => handleCopyNegative(neg.id, neg.tags)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded transition-colors cursor-pointer"
+                        onClick={() => setSelectedNegativeTags([])}
+                        className="text-[11px] text-rose-500 hover:underline cursor-pointer inline-flex items-center gap-1"
                       >
-                        {copiedNegativeId === neg.id ? (
-                          <>
-                            <Check className="w-3 h-3" />
-                            <span>Copied</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-3 h-3" />
-                            <span>Copy Negative</span>
-                          </>
-                        )}
+                        <Trash2 className="w-3 h-3" />
+                        <span>Clear All</span>
                       </button>
-                    </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      {neg.description}
-                    </p>
-                    <p className="font-mono text-[11px] text-slate-700 dark:text-slate-300 select-all leading-relaxed">
-                      {neg.tags.join(', ')}
-                    </p>
+                    )}
                   </div>
-                ))}
+
+                  <form onSubmit={handleQuickAddNegative} className="flex items-center gap-1.5">
+                    <input
+                      type="text"
+                      value={quickNegInput}
+                      onChange={(e) => setQuickNegInput(e.target.value)}
+                      placeholder="Add negative tag(s) (e.g. 3d, glasses, censored)..."
+                      className="flex-1 px-2.5 py-1.5 text-xs font-mono bg-slate-50 dark:bg-[#0B0F17] border border-slate-200 dark:border-slate-800 rounded-md text-slate-900 dark:text-slate-100 focus:outline-none focus:border-rose-500"
+                    />
+                    <button
+                      type="submit"
+                      className="px-2.5 py-1.5 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 rounded-md transition-colors cursor-pointer whitespace-nowrap"
+                    >
+                      + Exclude
+                    </button>
+                  </form>
+
+                  {/* Live Formatted Negative String Output Box */}
+                  <div className="p-3 rounded-lg bg-slate-50 dark:bg-[#0B0F17] border border-slate-200 dark:border-slate-800">
+                    {selectedNegativeTags.length === 0 ? (
+                      <p className="text-xs text-slate-400 dark:text-slate-500 py-3 text-center">
+                        Toggle tags from the modular negative packs below, load a preset, or click the ⊘ icon on any lexicon tag to build your negative prompt.
+                      </p>
+                    ) : (
+                      <p
+                        className={`font-mono ${descFontClasses} text-slate-800 dark:text-slate-200 leading-relaxed break-words select-all`}
+                      >
+                        {formattedNegativeString}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Interactive Active Negative Tokens */}
+                  {selectedNegativeTags.length > 0 && (
+                    <div>
+                      <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 mb-1">
+                        <span>⇄ move to positive · × remove from negative</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1 max-h-32 overflow-y-auto pr-1">
+                        {selectedNegativeTags.map((negTag) => {
+                          const isExactOverlap = selectedPromptTags.includes(negTag);
+                          return (
+                            <div
+                              key={negTag}
+                              className={`inline-flex items-center rounded overflow-hidden border ${
+                                isExactOverlap
+                                  ? 'bg-rose-500/15 border-rose-500/60'
+                                  : 'bg-slate-100 dark:bg-slate-800/90 border-transparent'
+                              }`}
+                            >
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleMoveTagBetweenPrompts(negTag, 'to_positive')
+                                }
+                                title={`Move "${negTag}" to Positive Prompt`}
+                                className="pl-1.5 pr-1 py-0.5 text-slate-400 hover:text-indigo-500 transition-colors cursor-pointer"
+                              >
+                                <ArrowRightLeft className="w-2.5 h-2.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => toggleTagInNegative(negTag)}
+                                title={`Remove "${negTag}" from Negative Prompt`}
+                                className="inline-flex items-center gap-1 pl-0.5 pr-1.5 py-0.5 text-[11px] font-mono text-slate-700 dark:text-slate-200 hover:text-rose-500 transition-colors cursor-pointer whitespace-nowrap"
+                              >
+                                <span>{negTag}</span>
+                                <X className="w-2.5 h-2.5 opacity-60" />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Copy Active Negative & Save Custom Negative Preset Buttons */}
+                  <div className="flex items-center gap-2 pt-0.5">
+                    <button
+                      type="button"
+                      onClick={handleCopyActiveNegative}
+                      disabled={selectedNegativeTags.length === 0}
+                      className="flex-1 inline-flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-40 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
+                    >
+                      {copiedActiveNegative ? (
+                        <>
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Copied Negative ({selectedNegativeTags.length})</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Copy Negative ({selectedNegativeTags.length})</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowSaveNegPresetInput((prev) => !prev)}
+                      disabled={selectedNegativeTags.length === 0}
+                      title="Save current negative prompt as custom preset"
+                      className="py-2 px-3 text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
+                    >
+                      Save Preset
+                    </button>
+                  </div>
+
+                  {showSaveNegPresetInput && (
+                    <form onSubmit={handleSaveNegativePreset} className="flex items-center gap-2 pt-1">
+                      <input
+                        type="text"
+                        value={newNegPresetName}
+                        onChange={(e) => setNewNegPresetName(e.target.value)}
+                        placeholder="Custom negative preset name..."
+                        className="flex-1 px-2.5 py-1.5 text-xs bg-slate-50 dark:bg-[#0B0F17] border border-slate-200 dark:border-slate-700 rounded-md text-slate-900 dark:text-slate-100 focus:outline-none focus:border-rose-500"
+                      />
+                      <button
+                        type="submit"
+                        className="px-3 py-1.5 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 rounded-md cursor-pointer"
+                      >
+                        Save
+                      </button>
+                    </form>
+                  )}
+                </div>
+
+                {/* 2. Modular Negative Tag Categories (7 Packs including SFW Guard & NSFW Guard) */}
+                <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                      Modular Negative Packs
+                    </span>
+                    <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                      Click pack or individual tags
+                    </span>
+                  </div>
+
+                  {/* Pack Selector Strip */}
+                  <div className="flex flex-wrap gap-1">
+                    {MODULAR_NEGATIVE_PACKS.map((pack) => {
+                      const isCurrentPack = activeNegativePackId === pack.id;
+                      const activeCount = pack.tags.filter((t) =>
+                        selectedNegativeTags.includes(t.tag)
+                      ).length;
+                      return (
+                        <button
+                          key={pack.id}
+                          type="button"
+                          onClick={() => setActiveNegativePackId(pack.id)}
+                          className={`px-2 py-1 text-[11px] font-medium rounded transition-colors cursor-pointer whitespace-nowrap ${
+                            isCurrentPack
+                              ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-semibold'
+                              : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                          }`}
+                        >
+                          <span>{pack.shortLabel}</span>
+                          {activeCount > 0 && (
+                            <span className="ml-1 font-mono opacity-80">
+                              ({activeCount}/{pack.tags.length})
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Active Modular Pack Detail & Toggleable Tag Chips */}
+                  {(() => {
+                    const currentPack =
+                      MODULAR_NEGATIVE_PACKS.find((p) => p.id === activeNegativePackId) ||
+                      MODULAR_NEGATIVE_PACKS[0];
+                    const packTagKeys = currentPack.tags.map((t) => t.tag);
+                    const activeInPackCount = packTagKeys.filter((k) =>
+                      selectedNegativeTags.includes(k)
+                    ).length;
+                    const allInPackActive =
+                      packTagKeys.length > 0 && activeInPackCount === packTagKeys.length;
+
+                    return (
+                      <div className="p-3 rounded-lg bg-slate-50/80 dark:bg-[#0B0F17]/80 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <h3 className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+                              {currentPack.name}
+                            </h3>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug mt-0.5">
+                              {currentPack.description}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleToggleNegativePack(packTagKeys, allInPackActive)
+                            }
+                            className={`px-2.5 py-1 text-[11px] font-semibold rounded transition-colors shrink-0 cursor-pointer whitespace-nowrap ${
+                              allInPackActive
+                                ? 'bg-rose-500/15 text-rose-500 hover:bg-rose-500/25'
+                                : 'bg-indigo-600 text-white hover:bg-indigo-500'
+                            }`}
+                          >
+                            {allInPackActive
+                              ? 'Remove Pack'
+                              : `+ Add Pack (${packTagKeys.length})`}
+                          </button>
+                        </div>
+
+                        <div className="flex flex-wrap gap-1 max-h-40 overflow-y-auto pr-1">
+                          {currentPack.tags.map((negItem) => {
+                            const isNegActive = selectedNegativeTags.includes(negItem.tag);
+                            return (
+                              <button
+                                key={negItem.tag}
+                                type="button"
+                                onClick={() => toggleTagInNegative(negItem.tag)}
+                                title={negItem.description}
+                                className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-mono rounded border transition-colors cursor-pointer whitespace-nowrap ${
+                                  isNegActive
+                                    ? 'bg-rose-600 border-rose-600 text-white font-semibold'
+                                    : 'bg-white dark:bg-[#0F1522] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-rose-500/60'
+                                }`}
+                              >
+                                <span>{negItem.tag}</span>
+                                {isNegActive ? (
+                                  <Check className="w-2.5 h-2.5" />
+                                ) : (
+                                  <Plus className="w-2.5 h-2.5 opacity-60" />
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* 3. Built-In & Custom Negative Presets (Including SFW Guard & NSFW Guard) */}
+                <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                      Negative Presets ({userNegativePresets.length + BUILT_IN_NEGATIVE_PRESETS.length})
+                    </span>
+                    <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                      Load, merge, or copy
+                    </span>
+                  </div>
+
+                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                    {[...userNegativePresets, ...BUILT_IN_NEGATIVE_PRESETS].map((neg) => (
+                      <div
+                        key={neg.id}
+                        className="p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-[#0B0F17]/60 space-y-1.5"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <h3 className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+                              {neg.name}
+                            </h3>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
+                              {neg.description}
+                            </p>
+                          </div>
+                          {!neg.isBuiltIn && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteNegativePreset(neg.id)}
+                              title="Delete custom negative preset"
+                              className="text-slate-400 hover:text-rose-500 p-1 cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+
+                        <p className="font-mono text-[11px] text-slate-600 dark:text-slate-400 line-clamp-2 select-all">
+                          {neg.tags.join(', ')}
+                        </p>
+
+                        <div className="flex items-center gap-1.5 pt-0.5">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedNegativeTags([...neg.tags])}
+                            className="px-2 py-1 text-[11px] font-semibold text-white bg-rose-600 hover:bg-rose-500 rounded transition-colors cursor-pointer"
+                          >
+                            Load Preset
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSelectedNegativeTags((prev) =>
+                                Array.from(new Set([...prev, ...neg.tags]))
+                              )
+                            }
+                            className="px-2 py-1 text-[11px] font-medium text-slate-700 dark:text-slate-300 bg-slate-200/70 dark:bg-slate-800 hover:bg-slate-300/70 dark:hover:bg-slate-700 rounded transition-colors cursor-pointer"
+                          >
+                            + Merge
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyNegative(neg.id, neg.tags)}
+                            className="ml-auto inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-slate-700 dark:text-slate-300 bg-slate-200/70 dark:bg-slate-800 hover:bg-slate-300/70 dark:hover:bg-slate-700 rounded transition-colors cursor-pointer"
+                          >
+                            {copiedNegativeId === neg.id ? (
+                              <>
+                                <Check className="w-3 h-3 text-emerald-500" />
+                                <span>Copied</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3 h-3" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -2785,7 +3341,7 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Canonical Tag Title, Favorite Toggle & Primary Add/Remove Toggle */}
+                {/* Canonical Tag Title, Favorite Toggle, Negative Toggle & Primary Add/Remove Toggle */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-2">
                     <h3 className="text-lg font-bold font-mono text-slate-900 dark:text-slate-100 break-all">
@@ -2795,7 +3351,12 @@ export default function App() {
                       <button
                         type="button"
                         onClick={(e) => toggleFavorite(inspectedTag.tag, e)}
-                        className={`inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-colors cursor-pointer ${
+                        title={
+                          favoriteTags.includes(inspectedTag.tag)
+                            ? 'Remove from Favorites'
+                            : 'Add to Favorites'
+                        }
+                        className={`inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium rounded-lg border transition-colors cursor-pointer ${
                           favoriteTags.includes(inspectedTag.tag)
                             ? 'bg-amber-500/10 border-amber-500/40 text-amber-500'
                             : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-amber-500/50 hover:text-amber-500'
@@ -2805,8 +3366,25 @@ export default function App() {
                           className="w-3.5 h-3.5"
                           fill={favoriteTags.includes(inspectedTag.tag) ? 'currentColor' : 'none'}
                         />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={(e) => toggleTagInNegative(inspectedTag.tag, e)}
+                        title={
+                          selectedNegativeTags.includes(inspectedTag.tag)
+                            ? 'Remove from Negative Prompt'
+                            : 'Add to Negative Prompt'
+                        }
+                        className={`inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                          selectedNegativeTags.includes(inspectedTag.tag)
+                            ? 'bg-rose-600 border-rose-600 text-white'
+                            : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-rose-500/60 hover:text-rose-500'
+                        }`}
+                      >
+                        <Ban className="w-3.5 h-3.5" />
                         <span>
-                          {favoriteTags.includes(inspectedTag.tag) ? 'Favorited' : 'Favorite'}
+                          {selectedNegativeTags.includes(inspectedTag.tag) ? 'Negated' : '- Neg'}
                         </span>
                       </button>
 

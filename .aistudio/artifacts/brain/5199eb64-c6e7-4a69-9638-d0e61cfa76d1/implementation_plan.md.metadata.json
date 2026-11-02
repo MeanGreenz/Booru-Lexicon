@@ -1,6 +1,6 @@
 {
-  "summary":  "Updated implementation plan for Illustrious Lexicon adding Tag Conflict & Contradiction Warnings, Quick Color Modifier Prefixer, and 3 new Booru tag categories (Archetypes & Occupations, Multi-Character & Couple Interactions, and Fetish, Material & Surface Detail tags).",
-  "updatedAt":  "2026-11-02T06:57:34.458127209Z",
-  "requestFeedback":  true,
-  "userFacing":  true
+  "summary": "Implementation plan for the Interactive Negative Prompt Builder & Modular Negative Tag Library in Illustrious Lexicon, including toggleable negative tags, main lexicon 'Send to Negative' action, custom negative presets, positive/negative overlap conflict detection, and 6 modular SDXL Illustrious negative tag packs.",
+  "updatedAt": "2026-11-02T17:10:54.400490950Z",
+  "requestFeedback": true,
+  "userFacing": true
 }
