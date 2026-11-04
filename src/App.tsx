@@ -23,7 +23,11 @@ import {
   ArrowRightLeft,
   Smile,
   Sparkles,
-  Download
+  Download,
+  ChevronDown,
+  ChevronRight,
+  PanelLeft,
+  Filter
 } from 'lucide-react';
 import {
   ALL_BOORU_TAGS,
@@ -494,10 +498,20 @@ export default function App() {
 
   // Right sidebar active tab
   const [composerSection, setComposerSection] = useState<
-    'positive' | 'favorites' | 'history' | 'presets' | 'negative'
+    'positive' | 'negative' | 'presets'
   >('positive');
   const [newPresetName, setNewPresetName] = useState('');
   const [showSavePresetInput, setShowSavePresetInput] = useState(false);
+
+  // Collapsible layout & decluttering states
+  const [isLeftSidebarCollapsed, setIsLeftSidebarCollapsed] = useState<boolean>(false);
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState<boolean>(false);
+  const [promptViewMode, setPromptViewMode] = useState<'chips' | 'raw'>('chips');
+  const [isConflictsExpanded, setIsConflictsExpanded] = useState<boolean>(false);
+  const [isOverlapsExpanded, setIsOverlapsExpanded] = useState<boolean>(false);
+  const [isNegPacksExpanded, setIsNegPacksExpanded] = useState<boolean>(true);
+  const [isNegPresetsExpanded, setIsNegPresetsExpanded] = useState<boolean>(false);
+  const [isInspectorExpanded, setIsInspectorExpanded] = useState<boolean>(true);
 
   // Custom Tag Modal state
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
@@ -507,9 +521,9 @@ export default function App() {
   const [customDescInput, setCustomDescInput] = useState('');
   const [customAliasesInput, setCustomAliasesInput] = useState('');
 
-  // Face & Expression Studio state
+  // Face & Expression Studio state (default collapsed to keep tag table above the fold)
   const [expressionStudioTab, setExpressionStudioTab] = useState<'presets' | 'mixer'>('presets');
-  const [isExpressionStudioExpanded, setIsExpressionStudioExpanded] = useState<boolean>(true);
+  const [isExpressionStudioExpanded, setIsExpressionStudioExpanded] = useState<boolean>(false);
   const [userExpressionPresets, setUserExpressionPresets] = useState<ExpressionPreset[]>(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEYS.SAVED_EXPRESSION_PRESETS);
@@ -528,9 +542,9 @@ export default function App() {
     );
   }, [userExpressionPresets]);
 
-  // Species, Race & Trait Studio state
+  // Species, Race & Trait Studio state (default collapsed to keep tag table above the fold)
   const [speciesStudioTab, setSpeciesStudioTab] = useState<'presets' | 'mixer'>('presets');
-  const [isSpeciesStudioExpanded, setIsSpeciesStudioExpanded] = useState<boolean>(true);
+  const [isSpeciesStudioExpanded, setIsSpeciesStudioExpanded] = useState<boolean>(false);
   const [userSpeciesPresets, setUserSpeciesPresets] = useState<SpeciesPreset[]>(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEYS.SAVED_SPECIES_PRESETS);
@@ -1285,42 +1299,73 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#0B0F17] text-slate-900 dark:text-slate-100">
       {/* Top Bar Contract: Strictly 3 zones separated by gap-8 */}
-      <header className="sticky top-0 z-30 flex items-center justify-between gap-8 px-6 py-3.5 bg-white/95 dark:bg-[#0B0F17]/95 backdrop-blur border-b border-slate-200 dark:border-slate-800">
-        {/* Zone 1: Single text element wordmark */}
-        <a
-          href="#top"
-          onClick={(e) => {
-            e.preventDefault();
-            handleSelectDomain('all');
-          }}
-          className="text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100 whitespace-nowrap shrink-0 font-display"
-        >
-          Illustrious Lexicon
-        </a>
+      <header className="sticky top-0 z-30 flex items-center justify-between gap-8 px-6 py-3 bg-white/95 dark:bg-[#0B0F17]/95 backdrop-blur border-b border-slate-200 dark:border-slate-800">
+        {/* Zone 1: Sidebar toggle + Single text element wordmark */}
+        <div className="flex items-center gap-3 shrink-0">
+          <button
+            type="button"
+            onClick={() => setIsLeftSidebarCollapsed((prev) => !prev)}
+            title={isLeftSidebarCollapsed ? 'Expand Taxonomy Sidebar' : 'Collapse Taxonomy Sidebar'}
+            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          >
+            <PanelLeft className="w-4 h-4" />
+          </button>
+          <a
+            href="#top"
+            onClick={(e) => {
+              e.preventDefault();
+              handleSelectDomain('all');
+            }}
+            className="text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100 whitespace-nowrap shrink-0 font-display"
+          >
+            Illustrious Lexicon
+          </a>
+        </div>
 
-        {/* Zone 2: 5 concise single-line text navigation links */}
-        <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600 dark:text-slate-400">
-          {DOMAINS.map((domain) => {
-            const isActive = selectedDomain === domain.id;
-            return (
-              <a
-                key={domain.id}
-                href={`#${domain.id}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleSelectDomain(domain.id);
-                }}
-                className={`whitespace-nowrap shrink-0 transition-colors underline-offset-8 hover:text-slate-900 dark:hover:text-slate-100 hover:underline ${
-                  isActive
-                    ? 'text-indigo-600 dark:text-indigo-400 underline font-semibold'
-                    : ''
-                }`}
-              >
-                {domain.shortLabel}
-              </a>
-            );
-          })}
-        </nav>
+        {/* Zone 2: Clean Contextual Breadcrumb & Active Filter Status (Replaces duplicate domain links) */}
+        <div className="hidden md:flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 truncate">
+          <span className="font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
+            {selectedDomain === 'all'
+              ? 'All Canonical Tags'
+              : selectedDomain === 'favorites'
+              ? 'Favorite Booru Tags'
+              : selectedDomain === 'history'
+              ? 'Recent Tag History'
+              : selectedDomain === 'custom'
+              ? 'Custom User Tags'
+              : `${DOMAIN_MAP[selectedDomain].indexNumber}. ${DOMAIN_MAP[selectedDomain].shortLabel}`}
+          </span>
+          {selectedSubcategory !== 'all' && (
+            <>
+              <span aria-hidden="true">/</span>
+              <span className="text-indigo-600 dark:text-indigo-400 font-semibold whitespace-nowrap">
+                {selectedSubcategory}
+              </span>
+            </>
+          )}
+          <span aria-hidden="true">·</span>
+          <span className="font-mono tabular-nums whitespace-nowrap">
+            {filteredTags.length} of {allTags.length} tags
+          </span>
+          {(selectedSubcategory !== 'all' ||
+            popularityFilter !== 'all' ||
+            letterFilter !== 'all' ||
+            searchQuery.trim() !== '') && (
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedSubcategory('all');
+                setPopularityFilter('all');
+                setLetterFilter('all');
+                setSearchQuery('');
+              }}
+              className="ml-1 inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 rounded transition-colors cursor-pointer whitespace-nowrap"
+            >
+              <X className="w-3 h-3" />
+              <span>Reset Filters</span>
+            </button>
+          )}
+        </div>
 
         {/* Zone 3: 1 primary action */}
         <div className="flex items-center shrink-0">
@@ -1346,8 +1391,9 @@ export default function App() {
 
       {/* Main 3-Column Workspace Layout (1440px+ full-width desktop layout) */}
       <div className="flex-1 flex flex-col lg:flex-row max-w-[1920px] w-full mx-auto">
-        {/* Left Taxonomy Sidebar (260px on desktop) */}
-        <aside className="w-full lg:w-[260px] shrink-0 border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0F1522] p-4 flex flex-col justify-between gap-6">
+        {/* Left Taxonomy Sidebar (Collapsible on desktop) */}
+        {!isLeftSidebarCollapsed && (
+          <aside className="w-full lg:w-[250px] shrink-0 border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0F1522] p-4 flex flex-col justify-between gap-6">
           <div className="space-y-6">
             {/* Overview, Favorites & History Views */}
             <div>
@@ -1570,82 +1616,32 @@ export default function App() {
             </button>
           </div>
         </aside>
+        )}
 
         {/* Center Main Lexicon Viewport */}
         <main className="flex-1 min-w-0 flex flex-col bg-slate-50 dark:bg-[#0B0F17]">
-          {/* Context Header & Search Toolbar */}
-          <div className="p-6 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0E131F] space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
-                  <span>SDXL Illustrious Tag Reference</span>
-                  <span aria-hidden="true">·</span>
-                  <span>Canonical Underscore Syntax</span>
-                  <span aria-hidden="true">·</span>
-                  <span className="font-mono tabular-nums">{filteredTags.length} matching entries</span>
-                </div>
-                <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 font-display">
+          {/* Compact Context Header & Search Toolbar */}
+          <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0E131F] space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-baseline gap-3 flex-wrap">
+                <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100 font-display">
                   {selectedDomain === 'all'
                     ? 'Complete Booru Tag Lexicon'
                     : selectedDomain === 'favorites'
                     ? 'Favorite Booru Tags'
                     : selectedDomain === 'history'
-                    ? `Recently Used Tag History (Cap: ${historyCap})`
+                    ? `Recently Used Tag History`
                     : selectedDomain === 'custom'
                     ? 'Custom User Tags'
                     : `${DOMAIN_MAP[selectedDomain].indexNumber}. ${DOMAIN_MAP[selectedDomain].label}`}
                 </h1>
+                <span className="text-xs font-mono tabular-nums text-slate-400 dark:text-slate-500">
+                  {filteredTags.length} entries
+                </span>
               </div>
 
-              {/* Quick Text Size Controls, Display Settings Button, Sort & View Mode */}
+              {/* Streamlined Sort & View Mode Controls (Duplicate CSV & A-/A+ buttons removed) */}
               <div className="flex flex-wrap items-center gap-2 shrink-0">
-                <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800/90 rounded-lg">
-                  <button
-                    type="button"
-                    onClick={() => stepTextSize(-1)}
-                    disabled={displaySettings.textSize === 'sm'}
-                    title="Decrease tag text size"
-                    className="px-2 py-1 text-xs font-mono font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white disabled:opacity-35 cursor-pointer"
-                  >
-                    A-
-                  </button>
-                  <span className="px-1.5 text-[11px] font-mono text-slate-400 dark:text-slate-500 uppercase select-none">
-                    {displaySettings.textSize}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => stepTextSize(1)}
-                    disabled={displaySettings.textSize === 'xl'}
-                    title="Increase tag text size"
-                    className="px-2 py-1 text-xs font-mono font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white disabled:opacity-35 cursor-pointer"
-                  >
-                    A+
-                  </button>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => handleExportDatabaseCsv(false)}
-                  title="Download CSV of all tags in the database"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200/70 dark:border-indigo-800/60"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Export CSV ({allTags.length})</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setIsSettingsOpen((prev) => !prev)}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                    isSettingsOpen
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-slate-100 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  <SlidersHorizontal className="w-3.5 h-3.5" />
-                  <span>Display Settings</span>
-                </button>
-
                 <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800/90 rounded-lg">
                   <button
                     onClick={() => setSortMode('canonical')}
@@ -1655,7 +1651,7 @@ export default function App() {
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                     }`}
                   >
-                    {selectedDomain === 'history' ? 'Recent Order' : 'Taxonomy Order'}
+                    {selectedDomain === 'history' ? 'Recent' : 'Taxonomy'}
                   </button>
                   <button
                     onClick={() => setSortMode('alphabetical')}
@@ -1665,7 +1661,7 @@ export default function App() {
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                     }`}
                   >
-                    A–Z Order
+                    A–Z
                   </button>
                 </div>
 
@@ -2524,104 +2520,133 @@ export default function App() {
               </div>
             )}
 
-            {/* Search Input & Popularity Tier Filter Bar */}
-            <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
-              <div className="relative flex-1">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search canonical tags (e.g. big_eyes, gyaru, latex, kabedon) or aliases (press / to focus)..."
-                  className="w-full pl-10 pr-20 py-2.5 text-sm bg-slate-50 dark:bg-[#0B0F17] border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 font-mono"
-                />
-                {searchQuery ? (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
-                  >
-                    Clear
-                  </button>
-                ) : (
-                  <span className="hidden sm:inline-block absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-mono text-slate-400 dark:text-slate-500">
-                    Press /
-                  </span>
-                )}
-              </div>
+            {/* Search Input & Collapsible Filter / A-Z Drawer Toggle */}
+            <div className="space-y-2.5">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                <div className="relative flex-1">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search canonical tags (e.g. big_eyes, gyaru, latex, kabedon) or aliases (press / to focus)..."
+                    className="w-full pl-10 pr-20 py-2 text-sm bg-slate-50 dark:bg-[#0B0F17] border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 font-mono"
+                  />
+                  {searchQuery ? (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  ) : (
+                    <span className="hidden sm:inline-block absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-mono text-slate-400 dark:text-slate-500">
+                      Press /
+                    </span>
+                  )}
+                </div>
 
-              {/* Popularity Tier Segmented Filter */}
-              <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800/90 rounded-lg shrink-0">
-                {(['all', 'Core', 'Common', 'Specialized'] as const).map((tier) => (
-                  <button
-                    key={tier}
-                    onClick={() => setPopularityFilter(tier)}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                      popularityFilter === tier
-                        ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                    }`}
-                  >
-                    {tier === 'all' ? 'All Tiers' : tier}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Subcategory Filter Buttons when inside a specific Domain */}
-            {availableSubcategories.length > 0 && (
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                {/* Collapsible Filters & A-Z Jumper Button */}
                 <button
-                  onClick={() => setSelectedSubcategory('all')}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                    selectedSubcategory === 'all'
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'
+                  type="button"
+                  onClick={() => setIsFilterDrawerOpen((prev) => !prev)}
+                  className={`inline-flex items-center justify-center gap-2 px-3.5 py-2 text-xs font-medium rounded-lg border transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+                    isFilterDrawerOpen ||
+                    popularityFilter !== 'all' ||
+                    letterFilter !== 'all' ||
+                    selectedSubcategory !== 'all'
+                      ? 'bg-indigo-50 dark:bg-indigo-950/50 border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300'
+                      : 'bg-slate-100 dark:bg-slate-800/90 border-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                   }`}
                 >
-                  All Subcategories
+                  <Filter className="w-3.5 h-3.5" />
+                  <span>Filters & A–Z</span>
+                  {(popularityFilter !== 'all' ||
+                    letterFilter !== 'all' ||
+                    selectedSubcategory !== 'all') && (
+                    <span className="font-mono text-[11px] font-semibold">
+                      · Active
+                    </span>
+                  )}
+                  {isFilterDrawerOpen ? (
+                    <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5 opacity-70" />
+                  )}
                 </button>
-                {availableSubcategories.map((sub) => (
-                  <button
-                    key={sub}
-                    onClick={() => setSelectedSubcategory(sub)}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                      selectedSubcategory === sub
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    {sub}
-                  </button>
-                ))}
               </div>
-            )}
 
-            {/* Alphabetical Quick Jump Bar */}
-            <div className="flex items-center gap-1 overflow-x-auto pt-1">
-              <button
-                onClick={() => setLetterFilter('all')}
-                className={`px-2 py-1 text-[11px] font-mono rounded transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                  letterFilter === 'all'
-                    ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-semibold'
-                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                ALL
-              </button>
-              {alphabet.map((letter) => (
-                <button
-                  key={letter}
-                  onClick={() => setLetterFilter(letter === letterFilter ? 'all' : letter)}
-                  className={`w-6 h-6 flex items-center justify-center text-[11px] font-mono rounded transition-colors shrink-0 cursor-pointer ${
-                    letterFilter === letter
-                      ? 'bg-indigo-600 text-white font-semibold'
-                      : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  {letter}
-                </button>
-              ))}
+              {/* Collapsible Filter Drawer: Popularity Tier + Subcategories (mobile/quick) + A-Z Quick Jump */}
+              {isFilterDrawerOpen && (
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#0B0F17] border border-slate-200 dark:border-slate-800 space-y-2.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                        Popularity Tier:
+                      </span>
+                      <div className="flex items-center gap-1 p-0.5 bg-white dark:bg-[#0F1522] border border-slate-200 dark:border-slate-800 rounded-lg">
+                        {(['all', 'Core', 'Common', 'Specialized'] as const).map((tier) => (
+                          <button
+                            key={tier}
+                            onClick={() => setPopularityFilter(tier)}
+                            className={`px-2.5 py-1 text-xs font-medium rounded transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                              popularityFilter === tier
+                                ? 'bg-indigo-600 text-white'
+                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                            }`}
+                          >
+                            {tier === 'all' ? 'All Tiers' : tier}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {(popularityFilter !== 'all' ||
+                      letterFilter !== 'all' ||
+                      selectedSubcategory !== 'all') && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPopularityFilter('all');
+                          setLetterFilter('all');
+                          setSelectedSubcategory('all');
+                        }}
+                        className="text-xs font-medium text-rose-500 hover:underline cursor-pointer"
+                      >
+                        Reset All Filters
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Alphabetical Quick Jump Bar */}
+                  <div className="flex items-center gap-1 overflow-x-auto pt-1 border-t border-slate-200/70 dark:border-slate-800/70">
+                    <button
+                      onClick={() => setLetterFilter('all')}
+                      className={`px-2 py-1 text-[11px] font-mono rounded transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                        letterFilter === 'all'
+                          ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-semibold'
+                          : 'text-slate-500 dark:text-slate-400 hover:bg-slate-200/70 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      ALL
+                    </button>
+                    {alphabet.map((letter) => (
+                      <button
+                        key={letter}
+                        onClick={() => setLetterFilter(letter === letterFilter ? 'all' : letter)}
+                        className={`w-6 h-6 flex items-center justify-center text-[11px] font-mono rounded transition-colors shrink-0 cursor-pointer ${
+                          letterFilter === letter
+                            ? 'bg-indigo-600 text-white font-semibold'
+                            : 'text-slate-500 dark:text-slate-400 hover:bg-slate-200/70 dark:hover:bg-slate-800'
+                        }`}
+                      >
+                        {letter}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -2824,7 +2849,10 @@ export default function App() {
                                 {canColor && (
                                   <button
                                     type="button"
-                                    onClick={() => setInspectedTagKey(item.tag)}
+                                    onClick={() => {
+                                      setInspectedTagKey(item.tag);
+                                      setIsInspectorExpanded(true);
+                                    }}
                                     title={`Open Color Prefixer for ${item.tag} in Inspector`}
                                     className="p-1.5 rounded text-slate-400 hover:text-indigo-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                                   >
@@ -2862,7 +2890,10 @@ export default function App() {
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => setInspectedTagKey(item.tag)}
+                                  onClick={() => {
+                                    setInspectedTagKey(item.tag);
+                                    setIsInspectorExpanded(true);
+                                  }}
                                   title="Inspect tag details & related tags"
                                   className={`p-1.5 rounded transition-colors cursor-pointer ${
                                     isInspected
@@ -2950,7 +2981,10 @@ export default function App() {
                             {canColor && (
                               <button
                                 type="button"
-                                onClick={() => setInspectedTagKey(item.tag)}
+                                onClick={() => {
+                                  setInspectedTagKey(item.tag);
+                                  setIsInspectorExpanded(true);
+                                }}
                                 title={`Open Color Prefixer for ${item.tag}`}
                                 className="p-1 text-slate-400 hover:text-indigo-500 cursor-pointer"
                               >
@@ -2986,7 +3020,10 @@ export default function App() {
                             </button>
                             <button
                               type="button"
-                              onClick={() => setInspectedTagKey(item.tag)}
+                              onClick={() => {
+                                setInspectedTagKey(item.tag);
+                                setIsInspectorExpanded(true);
+                              }}
                               className="p-1 text-slate-400 hover:text-indigo-500 cursor-pointer"
                             >
                               <Info className="w-3.5 h-3.5" />
@@ -3044,21 +3081,21 @@ export default function App() {
           </div>
         </main>
 
-        {/* Right Panel: Prompt Composer, Conflict Detector, Color Prefixer, Favorites, History & Inspector */}
-        <aside className="w-full lg:w-[400px] shrink-0 border-t lg:border-t-0 lg:border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0F1522] flex flex-col">
+        {/* Right Panel: Prompt Composer, Conflict Detector, Color Prefixer & Collapsible Inspector */}
+        <aside className="w-full lg:w-[390px] shrink-0 border-t lg:border-t-0 lg:border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0F1522] flex flex-col">
           {/* Upper Section: Prompt Composer Workspace */}
-          <div className="p-5 border-b border-slate-200 dark:border-slate-800 space-y-4">
+          <div className="p-4 border-b border-slate-200 dark:border-slate-800 space-y-3.5">
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 font-display">
                 SDXL Illustrious Composer
               </h2>
               <span className="text-xs font-mono tabular-nums text-slate-500 dark:text-slate-400">
-                {selectedPromptTags.length} pos · {selectedNegativeTags.length} neg · {favoriteTags.length} ★
+                {selectedPromptTags.length} pos · {selectedNegativeTags.length} neg
               </span>
             </div>
 
-            {/* Mode Switcher Tabs: Prompt / Favorites / History / Presets / Negative */}
-            <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800/90 rounded-lg overflow-x-auto">
+            {/* Streamlined 3-Tab Switcher: Positive / Negative / Presets & History */}
+            <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800/90 rounded-lg">
               <button
                 onClick={() => setComposerSection('positive')}
                 className={`flex-1 py-1.5 px-2 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
@@ -3067,37 +3104,7 @@ export default function App() {
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
-                Prompt ({selectedPromptTags.length})
-              </button>
-              <button
-                onClick={() => setComposerSection('favorites')}
-                className={`flex-1 py-1.5 px-2 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                  composerSection === 'favorites'
-                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                }`}
-              >
-                Favorites ({favoriteTags.length})
-              </button>
-              <button
-                onClick={() => setComposerSection('history')}
-                className={`flex-1 py-1.5 px-2 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                  composerSection === 'history'
-                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                }`}
-              >
-                History ({promptHistory.length})
-              </button>
-              <button
-                onClick={() => setComposerSection('presets')}
-                className={`flex-1 py-1.5 px-2 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                  composerSection === 'presets'
-                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                }`}
-              >
-                Presets
+                Positive ({selectedPromptTags.length})
               </button>
               <button
                 onClick={() => setComposerSection('negative')}
@@ -3109,13 +3116,27 @@ export default function App() {
               >
                 Negative ({selectedNegativeTags.length})
               </button>
+              <button
+                onClick={() => setComposerSection('presets')}
+                className={`flex-1 py-1.5 px-2 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                  composerSection === 'presets'
+                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                }`}
+              >
+                Presets & History
+              </button>
             </div>
 
-            {/* Positive ↔ Negative Overlap & Contradiction Alert (Visible in both Positive and Negative tabs) */}
+            {/* Collapsible Positive ↔ Negative Overlap Alert */}
             {(composerSection === 'positive' || composerSection === 'negative') &&
               positiveNegativeOverlaps.length > 0 && (
-                <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/40 space-y-2">
-                  <div className="flex items-center justify-between text-xs font-semibold text-rose-600 dark:text-rose-400">
+                <div className="rounded-lg bg-rose-500/10 border border-rose-500/40 overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setIsOverlapsExpanded((prev) => !prev)}
+                    className="w-full px-3 py-2 flex items-center justify-between text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-500/5 transition-colors cursor-pointer"
+                  >
                     <span className="inline-flex items-center gap-1.5">
                       <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                       <span>
@@ -3123,55 +3144,65 @@ export default function App() {
                         {positiveNegativeOverlaps.length === 1 ? 'Overlap' : 'Overlaps'}
                       </span>
                     </span>
-                  </div>
-                  <div className="space-y-2 max-h-32 overflow-y-auto pr-1">
-                    {positiveNegativeOverlaps.map((ov) => (
-                      <div
-                        key={ov.id}
-                        className="p-2 rounded bg-white/80 dark:bg-[#0B0F17]/80 border border-rose-500/20 text-[11px] space-y-1.5"
-                      >
-                        <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
-                          <span className="font-semibold text-rose-600 dark:text-rose-400">
-                            {ov.type === 'exact' ? 'Duplicate Tag' : 'Guard Conflict'}
-                          </span>
-                          <span className="font-mono text-slate-500">
-                            +{ov.positiveTag} / -{ov.negativeTag}
-                          </span>
+                    <span className="inline-flex items-center gap-1 text-[11px] font-normal opacity-80">
+                      <span>{isOverlapsExpanded ? 'Hide' : 'Resolve'}</span>
+                      {isOverlapsExpanded ? (
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      ) : (
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      )}
+                    </span>
+                  </button>
+                  {isOverlapsExpanded && (
+                    <div className="px-3 pb-3 space-y-2 max-h-36 overflow-y-auto">
+                      {positiveNegativeOverlaps.map((ov) => (
+                        <div
+                          key={ov.id}
+                          className="p-2 rounded bg-white/80 dark:bg-[#0B0F17]/80 border border-rose-500/20 text-[11px] space-y-1.5"
+                        >
+                          <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
+                            <span className="font-semibold text-rose-600 dark:text-rose-400">
+                              {ov.type === 'exact' ? 'Duplicate Tag' : 'Guard Conflict'}
+                            </span>
+                            <span className="font-mono text-slate-500">
+                              +{ov.positiveTag} / -{ov.negativeTag}
+                            </span>
+                          </div>
+                          <p className="text-slate-500 dark:text-slate-400 leading-snug">
+                            {ov.reason}
+                          </p>
+                          <div className="flex items-center gap-1.5 pt-0.5">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setSelectedNegativeTags((prev) =>
+                                  prev.filter((t) => t !== ov.negativeTag)
+                                )
+                              }
+                              className="px-2 py-0.5 font-mono text-[11px] bg-slate-100 dark:bg-slate-800 hover:bg-indigo-600 hover:text-white text-slate-700 dark:text-slate-200 rounded transition-colors cursor-pointer"
+                            >
+                              Remove -{ov.negativeTag}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setSelectedPromptTags((prev) =>
+                                  prev.filter((t) => t !== ov.positiveTag)
+                                )
+                              }
+                              className="px-2 py-0.5 font-mono text-[11px] bg-slate-100 dark:bg-slate-800 hover:bg-rose-600 hover:text-white text-slate-700 dark:text-slate-200 rounded transition-colors cursor-pointer"
+                            >
+                              Remove +{ov.positiveTag}
+                            </button>
+                          </div>
                         </div>
-                        <p className="text-slate-500 dark:text-slate-400 leading-snug">
-                          {ov.reason}
-                        </p>
-                        <div className="flex items-center gap-1.5 pt-0.5">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setSelectedNegativeTags((prev) =>
-                                prev.filter((t) => t !== ov.negativeTag)
-                              )
-                            }
-                            className="px-2 py-0.5 font-mono text-[11px] bg-slate-100 dark:bg-slate-800 hover:bg-indigo-600 hover:text-white text-slate-700 dark:text-slate-200 rounded transition-colors cursor-pointer"
-                          >
-                            Remove -{ov.negativeTag}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setSelectedPromptTags((prev) =>
-                                prev.filter((t) => t !== ov.positiveTag)
-                              )
-                            }
-                            className="px-2 py-0.5 font-mono text-[11px] bg-slate-100 dark:bg-slate-800 hover:bg-rose-600 hover:text-white text-slate-700 dark:text-slate-200 rounded transition-colors cursor-pointer"
-                          >
-                            Remove +{ov.positiveTag}
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
-            {/* TAB 1: Active Positive Prompt */}
+            {/* TAB 1: Active Positive Prompt (Unified Interactive Chips / Raw String Box) */}
             {composerSection === 'positive' && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between gap-2 text-xs">
@@ -3198,75 +3229,191 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* Tag Conflict & Contradiction Warning Box */}
+                {/* Collapsible Tag Conflict & Contradiction Accordion */}
                 {activeConflicts.length > 0 && (
-                  <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/40 space-y-2">
-                    <div className="flex items-center justify-between text-xs font-semibold text-amber-600 dark:text-amber-400">
+                  <div className="rounded-lg bg-amber-500/10 border border-amber-500/40 overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setIsConflictsExpanded((prev) => !prev)}
+                      className="w-full px-3 py-2 flex items-center justify-between text-xs font-semibold text-amber-600 dark:text-amber-400 hover:bg-amber-500/5 transition-colors cursor-pointer"
+                    >
                       <span className="inline-flex items-center gap-1.5">
                         <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                         <span>
                           {activeConflicts.length} Tag{' '}
-                          {activeConflicts.length === 1 ? 'Contradiction' : 'Contradictions'}{' '}
-                          Detected
+                          {activeConflicts.length === 1 ? 'Contradiction' : 'Contradictions'}
                         </span>
                       </span>
-                    </div>
-                    <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
-                      {activeConflicts.map((conflict) => (
-                        <div
-                          key={conflict.id}
-                          className="p-2 rounded bg-white/80 dark:bg-[#0B0F17]/80 border border-amber-500/20 text-[11px] space-y-1.5"
-                        >
-                          <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
-                            <span className="font-semibold text-amber-600 dark:text-amber-400">
-                              {conflict.categoryLabel}
-                            </span>
-                            <span className="font-mono text-slate-500">
-                              {conflict.tagA} ↔ {conflict.tagB}
-                            </span>
+                      <span className="inline-flex items-center gap-1 text-[11px] font-normal opacity-80">
+                        <span>{isConflictsExpanded ? 'Hide' : 'Resolve'}</span>
+                        {isConflictsExpanded ? (
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        ) : (
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        )}
+                      </span>
+                    </button>
+                    {isConflictsExpanded && (
+                      <div className="px-3 pb-3 space-y-2 max-h-36 overflow-y-auto">
+                        {activeConflicts.map((conflict) => (
+                          <div
+                            key={conflict.id}
+                            className="p-2 rounded bg-white/80 dark:bg-[#0B0F17]/80 border border-amber-500/20 text-[11px] space-y-1.5"
+                          >
+                            <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
+                              <span className="font-semibold text-amber-600 dark:text-amber-400">
+                                {conflict.categoryLabel}
+                              </span>
+                              <span className="font-mono text-slate-500">
+                                {conflict.tagA} ↔ {conflict.tagB}
+                              </span>
+                            </div>
+                            <p className="text-slate-500 dark:text-slate-400 leading-snug">
+                              {conflict.reason}
+                            </p>
+                            <div className="flex items-center gap-1.5 pt-0.5">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleResolveConflict(conflict.tagA, conflict.tagB)
+                                }
+                                className="px-2 py-0.5 font-mono text-[11px] bg-slate-100 dark:bg-slate-800 hover:bg-indigo-600 hover:text-white text-slate-700 dark:text-slate-200 rounded transition-colors cursor-pointer"
+                              >
+                                Keep {conflict.tagA}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleResolveConflict(conflict.tagB, conflict.tagA)
+                                }
+                                className="px-2 py-0.5 font-mono text-[11px] bg-slate-100 dark:bg-slate-800 hover:bg-indigo-600 hover:text-white text-slate-700 dark:text-slate-200 rounded transition-colors cursor-pointer"
+                              >
+                                Keep {conflict.tagB}
+                              </button>
+                            </div>
                           </div>
-                          <p className="text-slate-500 dark:text-slate-400 leading-snug">
-                            {conflict.reason}
-                          </p>
-                          <div className="flex items-center gap-1.5 pt-0.5">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleResolveConflict(conflict.tagA, conflict.tagB)
-                              }
-                              className="px-2 py-0.5 font-mono text-[11px] bg-slate-100 dark:bg-slate-800 hover:bg-indigo-600 hover:text-white text-slate-700 dark:text-slate-200 rounded transition-colors cursor-pointer"
-                            >
-                              Keep {conflict.tagA}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleResolveConflict(conflict.tagB, conflict.tagA)
-                              }
-                              className="px-2 py-0.5 font-mono text-[11px] bg-slate-100 dark:bg-slate-800 hover:bg-indigo-600 hover:text-white text-slate-700 dark:text-slate-200 rounded transition-colors cursor-pointer"
-                            >
-                              Keep {conflict.tagB}
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
 
-                {/* Live Booru String Output Box */}
-                <div className="p-3 rounded-lg bg-slate-50 dark:bg-[#0B0F17] border border-slate-200 dark:border-slate-800">
-                  {orderedPromptTags.length === 0 ? (
-                    <p className="text-xs text-slate-400 dark:text-slate-500 py-4 text-center">
-                      Click any booru tag in the lexicon to assemble your SDXL Illustrious prompt.
-                    </p>
-                  ) : (
-                    <p
-                      className={`font-mono ${descFontClasses} text-slate-800 dark:text-slate-200 leading-relaxed break-words select-all`}
-                    >
-                      {formattedPromptString}
-                    </p>
-                  )}
+                {/* Unified Positive Prompt Box with Interactive Chips / Raw Text Switcher */}
+                <div className="rounded-lg bg-slate-50 dark:bg-[#0B0F17] border border-slate-200 dark:border-slate-800 overflow-hidden">
+                  <div className="px-3 py-2 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2 bg-white/50 dark:bg-[#0F1522]/50">
+                    <div className="flex items-center gap-1 p-0.5 bg-slate-200/70 dark:bg-slate-800 rounded-md">
+                      <button
+                        type="button"
+                        onClick={() => setPromptViewMode('chips')}
+                        className={`px-2 py-0.5 text-[11px] font-medium rounded transition-colors cursor-pointer ${
+                          promptViewMode === 'chips'
+                            ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-2xs'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                        }`}
+                      >
+                        Interactive Chips
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPromptViewMode('raw')}
+                        className={`px-2 py-0.5 text-[11px] font-medium rounded transition-colors cursor-pointer ${
+                          promptViewMode === 'raw'
+                            ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-2xs'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                        }`}
+                      >
+                        Raw Text
+                      </button>
+                    </div>
+
+                    {orderedPromptTags.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          recordPromptHistory(orderedPromptTags, 'Cleared Prompt');
+                          setSelectedPromptTags([]);
+                        }}
+                        className="text-[11px] text-rose-500 hover:underline cursor-pointer inline-flex items-center gap-1"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        <span>Clear ({orderedPromptTags.length})</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="p-3">
+                    {orderedPromptTags.length === 0 ? (
+                      <p className="text-xs text-slate-400 dark:text-slate-500 py-4 text-center">
+                        Click any booru tag in the lexicon to assemble your SDXL Illustrious prompt.
+                      </p>
+                    ) : promptViewMode === 'raw' ? (
+                      <p
+                        className={`font-mono ${descFontClasses} text-slate-800 dark:text-slate-200 leading-relaxed break-words select-all max-h-48 overflow-y-auto`}
+                      >
+                        {formattedPromptString}
+                      </p>
+                    ) : (
+                      <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto pr-1">
+                        {orderedPromptTags.map((tagKey) => {
+                          const isFav = favoriteTags.includes(tagKey);
+                          const canColor = isTagColorable(tagKey);
+                          const hasConflict = conflictingTagSet.has(tagKey);
+                          return (
+                            <div
+                              key={tagKey}
+                              className={`inline-flex items-center rounded overflow-hidden border ${
+                                hasConflict
+                                  ? 'bg-amber-500/10 border-amber-500/50'
+                                  : 'bg-white dark:bg-slate-800/90 border-slate-200 dark:border-slate-700/80'
+                              }`}
+                            >
+                              <button
+                                type="button"
+                                onClick={(e) => toggleFavorite(tagKey, e)}
+                                title={isFav ? 'Remove from Favorites' : 'Add to Favorites'}
+                                className={`pl-1.5 pr-1 py-0.5 transition-colors cursor-pointer ${
+                                  isFav
+                                    ? 'text-amber-500'
+                                    : 'text-slate-400 hover:text-amber-500'
+                                }`}
+                              >
+                                <Star
+                                  className="w-3 h-3"
+                                  fill={isFav ? 'currentColor' : 'none'}
+                                />
+                              </button>
+                              {canColor && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setColorPickerTargetTag((prev) =>
+                                      prev === tagKey ? null : tagKey
+                                    )
+                                  }
+                                  title={`Apply color prefix to ${tagKey}`}
+                                  className={`px-1 py-0.5 transition-colors cursor-pointer ${
+                                    colorPickerTargetTag === tagKey
+                                      ? 'text-indigo-500'
+                                      : 'text-slate-400 hover:text-indigo-500'
+                                  }`}
+                                >
+                                  <Palette className="w-3 h-3" />
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => toggleTagInPrompt(tagKey)}
+                                className="inline-flex items-center gap-1 pl-1 pr-1.5 py-0.5 text-xs font-mono text-slate-700 dark:text-slate-200 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer whitespace-nowrap"
+                              >
+                                <span>{tagKey}</span>
+                                <X className="w-3 h-3 opacity-60" />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Inline Color Prefixer Popover when a colorable active prompt tag's palette icon is clicked */}
@@ -3314,92 +3461,13 @@ export default function App() {
                   </div>
                 )}
 
-                {/* Interactive Selected Tag Buttons (Click to remove, Star to favorite, Palette to color) */}
-                {orderedPromptTags.length > 0 && (
-                  <div>
-                    <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 mb-1.5">
-                      <span>★ favorite · 🎨 color prefix · × remove</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          recordPromptHistory(orderedPromptTags, 'Cleared Prompt');
-                          setSelectedPromptTags([]);
-                        }}
-                        className="text-rose-500 hover:underline cursor-pointer inline-flex items-center gap-1"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                        <span>Clear All</span>
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5 max-h-44 overflow-y-auto pr-1">
-                      {orderedPromptTags.map((tagKey) => {
-                        const isFav = favoriteTags.includes(tagKey);
-                        const canColor = isTagColorable(tagKey);
-                        const hasConflict = conflictingTagSet.has(tagKey);
-                        return (
-                          <div
-                            key={tagKey}
-                            className={`inline-flex items-center rounded overflow-hidden border ${
-                              hasConflict
-                                ? 'bg-amber-500/10 border-amber-500/50'
-                                : 'bg-slate-100 dark:bg-slate-800/90 border-transparent'
-                            }`}
-                          >
-                            <button
-                              type="button"
-                              onClick={(e) => toggleFavorite(tagKey, e)}
-                              title={isFav ? 'Remove from Favorites' : 'Add to Favorites'}
-                              className={`pl-2 pr-1 py-1 transition-colors cursor-pointer ${
-                                isFav
-                                  ? 'text-amber-500'
-                                  : 'text-slate-400 hover:text-amber-500'
-                              }`}
-                            >
-                              <Star
-                                className="w-3 h-3"
-                                fill={isFav ? 'currentColor' : 'none'}
-                              />
-                            </button>
-                            {canColor && (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setColorPickerTargetTag((prev) =>
-                                    prev === tagKey ? null : tagKey
-                                  )
-                                }
-                                title={`Apply color prefix to ${tagKey}`}
-                                className={`px-1 py-1 transition-colors cursor-pointer ${
-                                  colorPickerTargetTag === tagKey
-                                    ? 'text-indigo-500'
-                                    : 'text-slate-400 hover:text-indigo-500'
-                                }`}
-                              >
-                                <Palette className="w-3 h-3" />
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => toggleTagInPrompt(tagKey)}
-                              className="inline-flex items-center gap-1 pl-1 pr-2 py-1 text-xs font-mono text-slate-700 dark:text-slate-200 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer whitespace-nowrap"
-                            >
-                              <span>{tagKey}</span>
-                              <X className="w-3 h-3 opacity-60" />
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Primary One-Click Copy, Log to History, & Save Preset Actions */}
-                <div className="flex items-center gap-2 pt-1">
+                {/* Primary One-Click Copy & Save Preset Actions */}
+                <div className="flex items-center gap-2 pt-0.5">
                   <button
                     type="button"
                     onClick={handleCopyPrompt}
                     disabled={orderedPromptTags.length === 0}
-                    className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-3 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
+                    className="flex-1 inline-flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
                   >
                     {copiedPositive ? (
                       <>
@@ -3416,25 +3484,12 @@ export default function App() {
 
                   <button
                     type="button"
-                    onClick={() => {
-                      recordPromptHistory(orderedPromptTags, 'Manual Snapshot');
-                      setComposerSection('history');
-                    }}
-                    disabled={orderedPromptTags.length === 0}
-                    title="Snapshot current prompt to History"
-                    className="py-2.5 px-2.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
-                  >
-                    Log History
-                  </button>
-
-                  <button
-                    type="button"
                     onClick={() => setShowSavePresetInput((prev) => !prev)}
                     disabled={orderedPromptTags.length === 0}
                     title="Save current prompt as preset"
-                    className="py-2.5 px-2.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
+                    className="py-2 px-3 text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
                   >
-                    Save
+                    Save Preset
                   </button>
                 </div>
 
@@ -3459,191 +3514,131 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB 2: Interactive Favorites System (Add & Remove Tags Easily) */}
-            {composerSection === 'favorites' && (
-              <div className="space-y-3">
-                <form onSubmit={handleQuickAddFavorite} className="flex items-center gap-1.5">
-                  <input
-                    type="text"
-                    value={quickFavInput}
-                    onChange={(e) => setQuickFavInput(e.target.value)}
-                    placeholder="Add booru tag to Favorites (e.g. big_eyes)..."
-                    className="flex-1 px-2.5 py-1.5 text-xs font-mono bg-slate-50 dark:bg-[#0B0F17] border border-slate-200 dark:border-slate-800 rounded-md text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
-                  />
-                  <button
-                    type="submit"
-                    className="px-2.5 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-md transition-colors cursor-pointer whitespace-nowrap"
-                  >
-                    + Add
-                  </button>
-                </form>
-
-                {favoriteTags.length === 0 ? (
-                  <p className="text-xs text-slate-400 dark:text-slate-500 py-6 text-center">
-                    No favorite tags saved yet. Click the ★ icon next to any tag or type one above to add it.
-                  </p>
-                ) : (
-                  <>
-                    <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500">
-                      <span>Click tag to toggle in prompt · Click × to remove</span>
-                      <button
-                        type="button"
-                        onClick={() => setFavoriteTags([])}
-                        className="text-rose-500 hover:underline cursor-pointer"
-                      >
-                        Remove All
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5 max-h-56 overflow-y-auto pr-1">
-                      {favoriteTags.map((favTag) => {
-                        const inPrompt = selectedPromptTags.includes(favTag);
-                        return (
-                          <div
-                            key={favTag}
-                            className={`inline-flex items-center rounded border transition-colors ${
-                              inPrompt
-                                ? 'bg-indigo-600/10 border-indigo-500/50 text-indigo-600 dark:text-indigo-400'
-                                : 'bg-slate-50 dark:bg-[#0B0F17] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
-                            }`}
-                          >
-                            <button
-                              type="button"
-                              onClick={() => toggleTagInPrompt(favTag)}
-                              title={inPrompt ? 'Remove from active prompt' : 'Add to active prompt'}
-                              className="px-2 py-1 text-xs font-mono hover:underline cursor-pointer whitespace-nowrap"
-                            >
-                              {favTag}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => toggleFavorite(favTag, e)}
-                              title={`Remove ${favTag} from Favorites`}
-                              className="pr-1.5 pl-0.5 py-1 text-slate-400 hover:text-rose-500 cursor-pointer"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-
-            {/* TAB 3: History with Adjustable Length Cap */}
-            {composerSection === 'history' && (
-              <div className="space-y-3">
-                <div className="p-3 rounded-lg bg-slate-50 dark:bg-[#0B0F17] border border-slate-200 dark:border-slate-800 space-y-2.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <label
-                      htmlFor="composer-history-cap"
-                      className="text-xs font-semibold text-slate-700 dark:text-slate-200"
-                    >
-                      History Max Length Cap
-                    </label>
-                    <div className="flex items-center gap-1.5">
-                      <input
-                        id="composer-history-cap"
-                        type="number"
-                        min={1}
-                        max={200}
-                        value={historyCap}
-                        onChange={(e) => handleHistoryCapChange(Number(e.target.value))}
-                        className="w-14 px-2 py-0.5 text-xs font-mono tabular-nums text-right bg-white dark:bg-[#0F1522] border border-slate-200 dark:border-slate-700 rounded text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
-                      />
-                      <span className="text-[11px] font-mono text-slate-400">items</span>
-                    </div>
+            {/* TAB 2: Presets & Prompt History (Consolidated) */}
+            {composerSection === 'presets' && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                      Prompt Presets ({userPresets.length + BUILT_IN_PROMPT_PRESETS.length})
+                    </span>
+                    <span className="text-[11px] text-slate-400">Load or append</span>
                   </div>
-
-                  <input
-                    type="range"
-                    min={1}
-                    max={100}
-                    value={Math.min(100, historyCap)}
-                    onChange={(e) => handleHistoryCapChange(Number(e.target.value))}
-                    className="w-full accent-indigo-600 cursor-pointer"
-                  />
-
-                  <div className="flex items-center justify-between gap-1 pt-0.5">
-                    <div className="flex items-center gap-1">
-                      {[5, 15, 25, 50, 100].map((capPreset) => (
-                        <button
-                          key={capPreset}
-                          type="button"
-                          onClick={() => handleHistoryCapChange(capPreset)}
-                          className={`px-2 py-0.5 text-[11px] font-mono rounded transition-colors cursor-pointer ${
-                            historyCap === capPreset
-                              ? 'bg-indigo-600 text-white font-semibold'
-                              : 'bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                          }`}
-                        >
-                          {capPreset}
-                        </button>
-                      ))}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => recordPromptHistory(orderedPromptTags, 'Snapshot')}
-                      disabled={orderedPromptTags.length === 0}
-                      className="text-[11px] font-medium text-indigo-600 dark:text-indigo-400 hover:underline disabled:opacity-40 cursor-pointer"
-                    >
-                      + Log Current
-                    </button>
+                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                    {[...userPresets, ...BUILT_IN_PROMPT_PRESETS].map((preset) => (
+                      <div
+                        key={preset.id}
+                        className="p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-[#0B0F17]/60 space-y-1.5"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <h3 className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+                              {preset.name}
+                            </h3>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                              {preset.description}
+                            </p>
+                          </div>
+                          {!preset.isBuiltIn && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeletePreset(preset.id)}
+                              className="text-slate-400 hover:text-rose-500 p-1 cursor-pointer"
+                              title="Delete saved preset"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                        <p className="font-mono text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1">
+                          {preset.tags.join(', ')}
+                        </p>
+                        <div className="flex items-center gap-2 pt-0.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedPromptTags(preset.tags);
+                              recordPromptHistory(preset.tags, `Loaded ${preset.name}`);
+                              setComposerSection('positive');
+                            }}
+                            className="px-2.5 py-1 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-500 rounded transition-colors cursor-pointer"
+                          >
+                            Load Preset
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedPromptTags((prev) => {
+                                const merged = new Set([...prev, ...preset.tags]);
+                                return Array.from(merged);
+                              });
+                              setComposerSection('positive');
+                            }}
+                            className="px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-200/70 dark:bg-slate-800 hover:bg-slate-300/70 dark:hover:bg-slate-700 rounded transition-colors cursor-pointer"
+                          >
+                            + Append
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
-                    <span className="font-mono tabular-nums">
-                      Prompt History ({promptHistory.length}/{historyCap})
+                {/* Compact Prompt History Section inside Presets & History Tab */}
+                <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold text-slate-700 dark:text-slate-200">
+                      Recent Copied Prompts ({promptHistory.length}/{historyCap})
                     </span>
-                    {promptHistory.length > 0 && (
+                    <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => setPromptHistory([])}
-                        className="text-rose-500 hover:underline cursor-pointer"
+                        onClick={() => recordPromptHistory(orderedPromptTags, 'Snapshot')}
+                        disabled={orderedPromptTags.length === 0}
+                        className="text-[11px] font-medium text-indigo-600 dark:text-indigo-400 hover:underline disabled:opacity-40 cursor-pointer"
                       >
-                        Clear All
+                        + Snapshot Current
                       </button>
-                    )}
+                      {promptHistory.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setPromptHistory([])}
+                          className="text-[11px] text-rose-500 hover:underline cursor-pointer"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {promptHistory.length === 0 ? (
-                    <p className="text-xs text-slate-400 dark:text-slate-500 py-4 text-center">
-                      Copied or snapshotted prompts will be stored here up to {historyCap} entries.
+                    <p className="text-xs text-slate-400 dark:text-slate-500 py-3 text-center">
+                      Copied prompts are logged here automatically.
                     </p>
                   ) : (
-                    <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                    <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
                       {promptHistory.map((entry) => (
                         <div
                           key={entry.id}
-                          className="p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-[#0B0F17]/60 space-y-1.5"
+                          className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-[#0B0F17]/60 space-y-1"
                         >
                           <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
-                            <div className="flex items-center gap-1.5 font-mono tabular-nums">
-                              <span>{entry.actionLabel}</span>
-                              <span aria-hidden="true">·</span>
-                              <span>{entry.timestamp}</span>
-                              <span aria-hidden="true">·</span>
-                              <span>{entry.tags.length} tags</span>
-                            </div>
+                            <span className="font-mono tabular-nums">
+                              {entry.actionLabel} · {entry.timestamp} ({entry.tags.length})
+                            </span>
                             <button
                               type="button"
                               onClick={() =>
                                 setPromptHistory((prev) => prev.filter((h) => h.id !== entry.id))
                               }
-                              title="Remove history entry"
                               className="text-slate-400 hover:text-rose-500 cursor-pointer"
                             >
-                              <X className="w-3.5 h-3.5" />
+                              <X className="w-3 h-3" />
                             </button>
                           </div>
-
-                          <p className="font-mono text-[11px] text-slate-700 dark:text-slate-300 line-clamp-2">
+                          <p className="font-mono text-[11px] text-slate-700 dark:text-slate-300 line-clamp-1">
                             {entry.tags.join(', ')}
                           </p>
-
                           <div className="flex items-center gap-1.5 pt-0.5">
                             <button
                               type="button"
@@ -3651,14 +3646,14 @@ export default function App() {
                                 setSelectedPromptTags(entry.tags);
                                 setComposerSection('positive');
                               }}
-                              className="px-2 py-1 text-[11px] font-medium text-white bg-indigo-600 hover:bg-indigo-500 rounded transition-colors cursor-pointer"
+                              className="px-2 py-0.5 text-[11px] font-medium text-white bg-indigo-600 hover:bg-indigo-500 rounded transition-colors cursor-pointer"
                             >
                               Restore
                             </button>
                             <button
                               type="button"
                               onClick={() => handleCopyHistoryEntry(entry)}
-                              className="px-2 py-1 text-[11px] font-medium text-slate-700 dark:text-slate-300 bg-slate-200/70 dark:bg-slate-800 hover:bg-slate-300/70 dark:hover:bg-slate-700 rounded transition-colors cursor-pointer"
+                              className="px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:text-slate-300 bg-slate-200/70 dark:bg-slate-800 hover:bg-slate-300/70 dark:hover:bg-slate-700 rounded transition-colors cursor-pointer"
                             >
                               {copiedHistoryId === entry.id ? 'Copied!' : 'Copy'}
                             </button>
@@ -3668,134 +3663,14 @@ export default function App() {
                     </div>
                   )}
                 </div>
-
-                <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-1.5">
-                  <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
-                    <span className="font-mono tabular-nums">
-                      Recent Tags ({recentTagsHistory.length}/{historyCap})
-                    </span>
-                    {recentTagsHistory.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => setRecentTagsHistory([])}
-                        className="text-rose-500 hover:underline cursor-pointer"
-                      >
-                        Clear
-                      </button>
-                    )}
-                  </div>
-                  {recentTagsHistory.length === 0 ? (
-                    <p className="text-[11px] text-slate-400 dark:text-slate-500">
-                      Recently clicked tags appear here.
-                    </p>
-                  ) : (
-                    <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto pr-1">
-                      {recentTagsHistory.map((item) => {
-                        const isSelected = selectedPromptTags.includes(item.tag);
-                        return (
-                          <button
-                            key={item.tag}
-                            type="button"
-                            onClick={() => toggleTagInPrompt(item.tag)}
-                            className={`px-2 py-0.5 text-[11px] font-mono rounded transition-colors cursor-pointer ${
-                              isSelected
-                                ? 'bg-indigo-600 text-white'
-                                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                            }`}
-                          >
-                            {item.tag}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
               </div>
             )}
 
-            {/* TAB 4: Presets */}
-            {composerSection === 'presets' && (
-              <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
-                {[...userPresets, ...BUILT_IN_PROMPT_PRESETS].map((preset) => (
-                  <div
-                    key={preset.id}
-                    className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-[#0B0F17]/60 space-y-2"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <h3 className="text-xs font-semibold text-slate-900 dark:text-slate-100">
-                          {preset.name}
-                        </h3>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                          {preset.description}
-                        </p>
-                      </div>
-                      {!preset.isBuiltIn && (
-                        <button
-                          type="button"
-                          onClick={() => handleDeletePreset(preset.id)}
-                          className="text-slate-400 hover:text-rose-500 p-1 cursor-pointer"
-                          title="Delete saved preset"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-                    <p className="font-mono text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2">
-                      {preset.tags.join(', ')}
-                    </p>
-                    <div className="flex items-center gap-2 pt-1">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedPromptTags(preset.tags);
-                          recordPromptHistory(preset.tags, `Loaded ${preset.name}`);
-                          setComposerSection('positive');
-                        }}
-                        className="px-2.5 py-1 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-500 rounded transition-colors cursor-pointer"
-                      >
-                        Load Preset
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedPromptTags((prev) => {
-                            const merged = new Set([...prev, ...preset.tags]);
-                            return Array.from(merged);
-                          });
-                          setComposerSection('positive');
-                        }}
-                        className="px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-200/70 dark:bg-slate-800 hover:bg-slate-300/70 dark:hover:bg-slate-700 rounded transition-colors cursor-pointer"
-                      >
-                        Append Tags
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* TAB 5: Interactive Negative Prompt Builder & Modular Negative Library */}
+            {/* TAB 3: Interactive Negative Prompt Builder & Collapsible Negative Library */}
             {composerSection === 'negative' && (
-              <div className="space-y-4">
-                {/* 1. Active Negative Prompt Output & Quick Add Input */}
+              <div className="space-y-3.5">
+                {/* 1. Quick Add Input & Unified Negative Output Box */}
                 <div className="space-y-2.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-700 dark:text-slate-200">
-                      Active Negative Prompt ({selectedNegativeTags.length} tags)
-                    </span>
-                    {selectedNegativeTags.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => setSelectedNegativeTags([])}
-                        className="text-[11px] text-rose-500 hover:underline cursor-pointer inline-flex items-center gap-1"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                        <span>Clear All</span>
-                      </button>
-                    )}
-                  </div>
-
                   <form onSubmit={handleQuickAddNegative} className="flex items-center gap-1.5">
                     <input
                       type="text"
@@ -3812,64 +3687,96 @@ export default function App() {
                     </button>
                   </form>
 
-                  {/* Live Formatted Negative String Output Box */}
-                  <div className="p-3 rounded-lg bg-slate-50 dark:bg-[#0B0F17] border border-slate-200 dark:border-slate-800">
-                    {selectedNegativeTags.length === 0 ? (
-                      <p className="text-xs text-slate-400 dark:text-slate-500 py-3 text-center">
-                        Toggle tags from the modular negative packs below, load a preset, or click the ⊘ icon on any lexicon tag to build your negative prompt.
-                      </p>
-                    ) : (
-                      <p
-                        className={`font-mono ${descFontClasses} text-slate-800 dark:text-slate-200 leading-relaxed break-words select-all`}
-                      >
-                        {formattedNegativeString}
-                      </p>
-                    )}
-                  </div>
+                  {/* Unified Negative Prompt Box with Interactive Chips / Raw String Switcher */}
+                  <div className="rounded-lg bg-slate-50 dark:bg-[#0B0F17] border border-slate-200 dark:border-slate-800 overflow-hidden">
+                    <div className="px-3 py-2 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2 bg-white/50 dark:bg-[#0F1522]/50">
+                      <div className="flex items-center gap-1 p-0.5 bg-slate-200/70 dark:bg-slate-800 rounded-md">
+                        <button
+                          type="button"
+                          onClick={() => setPromptViewMode('chips')}
+                          className={`px-2 py-0.5 text-[11px] font-medium rounded transition-colors cursor-pointer ${
+                            promptViewMode === 'chips'
+                              ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-2xs'
+                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                          }`}
+                        >
+                          Interactive Chips
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPromptViewMode('raw')}
+                          className={`px-2 py-0.5 text-[11px] font-medium rounded transition-colors cursor-pointer ${
+                            promptViewMode === 'raw'
+                              ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-2xs'
+                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                          }`}
+                        >
+                          Raw Text
+                        </button>
+                      </div>
 
-                  {/* Interactive Active Negative Tokens */}
-                  {selectedNegativeTags.length > 0 && (
-                    <div>
-                      <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 mb-1">
-                        <span>⇄ move to positive · × remove from negative</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1 max-h-32 overflow-y-auto pr-1">
-                        {selectedNegativeTags.map((negTag) => {
-                          const isExactOverlap = selectedPromptTags.includes(negTag);
-                          return (
-                            <div
-                              key={negTag}
-                              className={`inline-flex items-center rounded overflow-hidden border ${
-                                isExactOverlap
-                                  ? 'bg-rose-500/15 border-rose-500/60'
-                                  : 'bg-slate-100 dark:bg-slate-800/90 border-transparent'
-                              }`}
-                            >
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleMoveTagBetweenPrompts(negTag, 'to_positive')
-                                }
-                                title={`Move "${negTag}" to Positive Prompt`}
-                                className="pl-1.5 pr-1 py-0.5 text-slate-400 hover:text-indigo-500 transition-colors cursor-pointer"
-                              >
-                                <ArrowRightLeft className="w-2.5 h-2.5" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => toggleTagInNegative(negTag)}
-                                title={`Remove "${negTag}" from Negative Prompt`}
-                                className="inline-flex items-center gap-1 pl-0.5 pr-1.5 py-0.5 text-[11px] font-mono text-slate-700 dark:text-slate-200 hover:text-rose-500 transition-colors cursor-pointer whitespace-nowrap"
-                              >
-                                <span>{negTag}</span>
-                                <X className="w-2.5 h-2.5 opacity-60" />
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
+                      {selectedNegativeTags.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedNegativeTags([])}
+                          className="text-[11px] text-rose-500 hover:underline cursor-pointer inline-flex items-center gap-1"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>Clear ({selectedNegativeTags.length})</span>
+                        </button>
+                      )}
                     </div>
-                  )}
+
+                    <div className="p-3">
+                      {selectedNegativeTags.length === 0 ? (
+                        <p className="text-xs text-slate-400 dark:text-slate-500 py-3 text-center">
+                          Toggle tags from the modular negative packs below, load a preset, or click ⊘ on any lexicon tag.
+                        </p>
+                      ) : promptViewMode === 'raw' ? (
+                        <p
+                          className={`font-mono ${descFontClasses} text-slate-800 dark:text-slate-200 leading-relaxed break-words select-all max-h-40 overflow-y-auto`}
+                        >
+                          {formattedNegativeString}
+                        </p>
+                      ) : (
+                        <div className="flex flex-wrap gap-1 max-h-40 overflow-y-auto pr-1">
+                          {selectedNegativeTags.map((negTag) => {
+                            const isExactOverlap = selectedPromptTags.includes(negTag);
+                            return (
+                              <div
+                                key={negTag}
+                                className={`inline-flex items-center rounded overflow-hidden border ${
+                                  isExactOverlap
+                                    ? 'bg-rose-500/15 border-rose-500/60'
+                                    : 'bg-white dark:bg-slate-800/90 border-slate-200 dark:border-slate-700/80'
+                                }`}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleMoveTagBetweenPrompts(negTag, 'to_positive')
+                                  }
+                                  title={`Move "${negTag}" to Positive Prompt`}
+                                  className="pl-1.5 pr-1 py-0.5 text-slate-400 hover:text-indigo-500 transition-colors cursor-pointer"
+                                >
+                                  <ArrowRightLeft className="w-2.5 h-2.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => toggleTagInNegative(negTag)}
+                                  title={`Remove "${negTag}" from Negative Prompt`}
+                                  className="inline-flex items-center gap-1 pl-0.5 pr-1.5 py-0.5 text-[11px] font-mono text-slate-700 dark:text-slate-200 hover:text-rose-500 transition-colors cursor-pointer whitespace-nowrap"
+                                >
+                                  <span>{negTag}</span>
+                                  <X className="w-2.5 h-2.5 opacity-60" />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
                   {/* Copy Active Negative & Save Custom Negative Preset Buttons */}
                   <div className="flex items-center gap-2 pt-0.5">
@@ -3922,428 +3829,468 @@ export default function App() {
                   )}
                 </div>
 
-                {/* 2. Modular Negative Tag Categories (7 Packs including SFW Guard & NSFW Guard) */}
-                <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-                      Modular Negative Packs
+                {/* 2. Collapsible Modular Negative Packs */}
+                <div className="pt-2.5 border-t border-slate-200 dark:border-slate-800 space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsNegPacksExpanded((prev) => !prev)}
+                    className="w-full flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer"
+                  >
+                    <span>Modular Negative Packs (7)</span>
+                    <span className="inline-flex items-center gap-1 text-[11px] font-normal text-slate-400">
+                      <span>{isNegPacksExpanded ? 'Collapse' : 'Expand'}</span>
+                      {isNegPacksExpanded ? (
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      ) : (
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      )}
                     </span>
-                    <span className="text-[11px] text-slate-400 dark:text-slate-500">
-                      Click pack or individual tags
-                    </span>
-                  </div>
+                  </button>
 
-                  {/* Pack Selector Strip */}
-                  <div className="flex flex-wrap gap-1">
-                    {MODULAR_NEGATIVE_PACKS.map((pack) => {
-                      const isCurrentPack = activeNegativePackId === pack.id;
-                      const activeCount = pack.tags.filter((t) =>
-                        selectedNegativeTags.includes(t.tag)
-                      ).length;
-                      return (
-                        <button
-                          key={pack.id}
-                          type="button"
-                          onClick={() => setActiveNegativePackId(pack.id)}
-                          className={`px-2 py-1 text-[11px] font-medium rounded transition-colors cursor-pointer whitespace-nowrap ${
-                            isCurrentPack
-                              ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-semibold'
-                              : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                          }`}
-                        >
-                          <span>{pack.shortLabel}</span>
-                          {activeCount > 0 && (
-                            <span className="ml-1 font-mono opacity-80">
-                              ({activeCount}/{pack.tags.length})
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {isNegPacksExpanded && (
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap gap-1">
+                        {MODULAR_NEGATIVE_PACKS.map((pack) => {
+                          const isCurrentPack = activeNegativePackId === pack.id;
+                          const activeCount = pack.tags.filter((t) =>
+                            selectedNegativeTags.includes(t.tag)
+                          ).length;
+                          return (
+                            <button
+                              key={pack.id}
+                              type="button"
+                              onClick={() => setActiveNegativePackId(pack.id)}
+                              className={`px-2 py-1 text-[11px] font-medium rounded transition-colors cursor-pointer whitespace-nowrap ${
+                                isCurrentPack
+                                  ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-semibold'
+                                  : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                              }`}
+                            >
+                              <span>{pack.shortLabel}</span>
+                              {activeCount > 0 && (
+                                <span className="ml-1 font-mono opacity-80">
+                                  ({activeCount}/{pack.tags.length})
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
 
-                  {/* Active Modular Pack Detail & Toggleable Tag Chips */}
-                  {(() => {
-                    const currentPack =
-                      MODULAR_NEGATIVE_PACKS.find((p) => p.id === activeNegativePackId) ||
-                      MODULAR_NEGATIVE_PACKS[0];
-                    const packTagKeys = currentPack.tags.map((t) => t.tag);
-                    const activeInPackCount = packTagKeys.filter((k) =>
-                      selectedNegativeTags.includes(k)
-                    ).length;
-                    const allInPackActive =
-                      packTagKeys.length > 0 && activeInPackCount === packTagKeys.length;
+                      {(() => {
+                        const currentPack =
+                          MODULAR_NEGATIVE_PACKS.find((p) => p.id === activeNegativePackId) ||
+                          MODULAR_NEGATIVE_PACKS[0];
+                        const packTagKeys = currentPack.tags.map((t) => t.tag);
+                        const activeInPackCount = packTagKeys.filter((k) =>
+                          selectedNegativeTags.includes(k)
+                        ).length;
+                        const allInPackActive =
+                          packTagKeys.length > 0 && activeInPackCount === packTagKeys.length;
 
-                    return (
-                      <div className="p-3 rounded-lg bg-slate-50/80 dark:bg-[#0B0F17]/80 border border-slate-200 dark:border-slate-800 space-y-2.5">
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <h3 className="text-xs font-semibold text-slate-900 dark:text-slate-100">
-                              {currentPack.name}
-                            </h3>
-                            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug mt-0.5">
-                              {currentPack.description}
-                            </p>
+                        return (
+                          <div className="p-2.5 rounded-lg bg-slate-50/80 dark:bg-[#0B0F17]/80 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <h3 className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+                                  {currentPack.name}
+                                </h3>
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
+                                  {currentPack.description}
+                                </p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleToggleNegativePack(packTagKeys, allInPackActive)
+                                }
+                                className={`px-2 py-1 text-[11px] font-semibold rounded transition-colors shrink-0 cursor-pointer whitespace-nowrap ${
+                                  allInPackActive
+                                    ? 'bg-rose-500/15 text-rose-500 hover:bg-rose-500/25'
+                                    : 'bg-indigo-600 text-white hover:bg-indigo-500'
+                                }`}
+                              >
+                                {allInPackActive
+                                  ? 'Remove Pack'
+                                  : `+ Add Pack (${packTagKeys.length})`}
+                              </button>
+                            </div>
+
+                            <div className="flex flex-wrap gap-1 max-h-36 overflow-y-auto pr-1">
+                              {currentPack.tags.map((negItem) => {
+                                const isNegActive = selectedNegativeTags.includes(negItem.tag);
+                                return (
+                                  <button
+                                    key={negItem.tag}
+                                    type="button"
+                                    onClick={() => toggleTagInNegative(negItem.tag)}
+                                    title={negItem.description}
+                                    className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-mono rounded border transition-colors cursor-pointer whitespace-nowrap ${
+                                      isNegActive
+                                        ? 'bg-rose-600 border-rose-600 text-white font-semibold'
+                                        : 'bg-white dark:bg-[#0F1522] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-rose-500/60'
+                                    }`}
+                                  >
+                                    <span>{negItem.tag}</span>
+                                    {isNegActive ? (
+                                      <Check className="w-2.5 h-2.5" />
+                                    ) : (
+                                      <Plus className="w-2.5 h-2.5 opacity-60" />
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
                           </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+                </div>
+
+                {/* 3. Collapsible Built-In & Custom Negative Presets */}
+                <div className="pt-2.5 border-t border-slate-200 dark:border-slate-800 space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsNegPresetsExpanded((prev) => !prev)}
+                    className="w-full flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer"
+                  >
+                    <span>
+                      Negative Presets ({userNegativePresets.length + BUILT_IN_NEGATIVE_PRESETS.length})
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[11px] font-normal text-slate-400">
+                      <span>{isNegPresetsExpanded ? 'Collapse' : 'Expand'}</span>
+                      {isNegPresetsExpanded ? (
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      ) : (
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      )}
+                    </span>
+                  </button>
+
+                  {isNegPresetsExpanded && (
+                    <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                      {[...userNegativePresets, ...BUILT_IN_NEGATIVE_PRESETS].map((neg) => (
+                        <div
+                          key={neg.id}
+                          className="p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-[#0B0F17]/60 space-y-1.5"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <h3 className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+                                {neg.name}
+                              </h3>
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
+                                {neg.description}
+                              </p>
+                            </div>
+                            {!neg.isBuiltIn && (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteNegativePreset(neg.id)}
+                                title="Delete custom negative preset"
+                                className="text-slate-400 hover:text-rose-500 p-1 cursor-pointer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+
+                          <p className="font-mono text-[11px] text-slate-600 dark:text-slate-400 line-clamp-1 select-all">
+                            {neg.tags.join(', ')}
+                          </p>
+
+                          <div className="flex items-center gap-1.5 pt-0.5">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedNegativeTags([...neg.tags])}
+                              className="px-2 py-1 text-[11px] font-semibold text-white bg-rose-600 hover:bg-rose-500 rounded transition-colors cursor-pointer"
+                            >
+                              Load
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setSelectedNegativeTags((prev) =>
+                                  Array.from(new Set([...prev, ...neg.tags]))
+                                )
+                              }
+                              className="px-2 py-1 text-[11px] font-medium text-slate-700 dark:text-slate-300 bg-slate-200/70 dark:bg-slate-800 hover:bg-slate-300/70 dark:hover:bg-slate-700 rounded transition-colors cursor-pointer"
+                            >
+                              + Merge
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleCopyNegative(neg.id, neg.tags)}
+                              className="ml-auto inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-slate-700 dark:text-slate-300 bg-slate-200/70 dark:bg-slate-800 hover:bg-slate-300/70 dark:hover:bg-slate-700 rounded transition-colors cursor-pointer"
+                            >
+                              {copiedNegativeId === neg.id ? (
+                                <>
+                                  <Check className="w-3 h-3 text-emerald-500" />
+                                  <span>Copied</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-3 h-3" />
+                                  <span>Copy</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Lower Section: Collapsible Tag Inspector, Color Prefixer & Sibling Relationships */}
+          {inspectedTag && (
+            <div className="flex-1 flex flex-col">
+              <button
+                type="button"
+                onClick={() => setIsInspectorExpanded((prev) => !prev)}
+                className="w-full px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-[#0B0F17]/60 flex items-center justify-between text-xs hover:bg-slate-100/80 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-2 truncate">
+                  <Info className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                  <span className="font-semibold text-slate-700 dark:text-slate-200">
+                    Tag Inspector
+                  </span>
+                  <span aria-hidden="true" className="text-slate-400">·</span>
+                  <span className="font-mono font-semibold text-indigo-600 dark:text-indigo-400 truncate">
+                    {inspectedTag.tag}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 shrink-0">
+                  <span className="font-mono text-[11px]">{inspectedTag.postCountEst}</span>
+                  {isInspectorExpanded ? (
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  )}
+                </div>
+              </button>
+
+              {isInspectorExpanded && (
+                <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
+                  <div className="space-y-3.5">
+                    {/* Canonical Tag Title, Favorite Toggle, Negative Toggle & Primary Add/Remove Toggle */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="text-base font-bold font-mono text-slate-900 dark:text-slate-100 break-all">
+                          {inspectedTag.tag}
+                        </h3>
+                        <div className="flex items-center gap-1.5 shrink-0">
                           <button
                             type="button"
-                            onClick={() =>
-                              handleToggleNegativePack(packTagKeys, allInPackActive)
+                            onClick={(e) => toggleFavorite(inspectedTag.tag, e)}
+                            title={
+                              favoriteTags.includes(inspectedTag.tag)
+                                ? 'Remove from Favorites'
+                                : 'Add to Favorites'
                             }
-                            className={`px-2.5 py-1 text-[11px] font-semibold rounded transition-colors shrink-0 cursor-pointer whitespace-nowrap ${
-                              allInPackActive
-                                ? 'bg-rose-500/15 text-rose-500 hover:bg-rose-500/25'
+                            className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-lg border transition-colors cursor-pointer ${
+                              favoriteTags.includes(inspectedTag.tag)
+                                ? 'bg-amber-500/10 border-amber-500/40 text-amber-500'
+                                : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-amber-500/50 hover:text-amber-500'
+                            }`}
+                          >
+                            <Star
+                              className="w-3.5 h-3.5"
+                              fill={favoriteTags.includes(inspectedTag.tag) ? 'currentColor' : 'none'}
+                            />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={(e) => toggleTagInNegative(inspectedTag.tag, e)}
+                            title={
+                              selectedNegativeTags.includes(inspectedTag.tag)
+                                ? 'Remove from Negative Prompt'
+                                : 'Add to Negative Prompt'
+                            }
+                            className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-lg border transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                              selectedNegativeTags.includes(inspectedTag.tag)
+                                ? 'bg-rose-600 border-rose-600 text-white'
+                                : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-rose-500/60 hover:text-rose-500'
+                            }`}
+                          >
+                            <Ban className="w-3.5 h-3.5" />
+                            <span>
+                              {selectedNegativeTags.includes(inspectedTag.tag) ? 'Negated' : '- Neg'}
+                            </span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => toggleTagInPrompt(inspectedTag.tag)}
+                            className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                              selectedPromptTags.includes(inspectedTag.tag)
+                                ? 'bg-rose-500/10 text-rose-500 hover:bg-rose-500/20'
                                 : 'bg-indigo-600 text-white hover:bg-indigo-500'
                             }`}
                           >
-                            {allInPackActive
-                              ? 'Remove Pack'
-                              : `+ Add Pack (${packTagKeys.length})`}
+                            {selectedPromptTags.includes(inspectedTag.tag)
+                              ? 'Remove'
+                              : '+ Prompt'}
                           </button>
                         </div>
+                      </div>
 
-                        <div className="flex flex-wrap gap-1 max-h-40 overflow-y-auto pr-1">
-                          {currentPack.tags.map((negItem) => {
-                            const isNegActive = selectedNegativeTags.includes(negItem.tag);
+                      {/* Unboxed Taxonomy Path */}
+                      <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                        <span>{DOMAIN_MAP[inspectedTag.domain]?.shortLabel}</span>
+                        <span aria-hidden="true">·</span>
+                        <span>{inspectedTag.subcategory}</span>
+                        <span aria-hidden="true">·</span>
+                        <span className="font-mono">{inspectedTag.popularity}</span>
+                      </div>
+                    </div>
+
+                    {/* Quick Color Modifier Prefixer inside Inspector when tag is colorable */}
+                    {isTagColorable(inspectedTag.tag) && (
+                      <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-[#0B0F17] border border-slate-200 dark:border-slate-800 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                            <Palette className="w-3.5 h-3.5 text-indigo-500" />
+                            <span>Quick Color Modifier Prefixer</span>
+                          </span>
+                          {getBaseUncoloredTag(inspectedTag.tag).colorPrefix && (
+                            <button
+                              type="button"
+                              onClick={() => handleResetTagColor(inspectedTag.tag)}
+                              className="text-[11px] font-mono text-rose-500 hover:underline cursor-pointer"
+                            >
+                              Reset to {getBaseUncoloredTag(inspectedTag.tag).baseTag}
+                            </button>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-3 gap-1.5">
+                          {CANONICAL_BOORU_COLORS.map((c) => {
+                            const targetColored = applyColorPrefixToTag(
+                              inspectedTag.tag,
+                              c.prefix
+                            );
+                            const isCurrentlyActive = selectedPromptTags.includes(targetColored);
                             return (
                               <button
-                                key={negItem.tag}
+                                key={c.prefix}
                                 type="button"
-                                onClick={() => toggleTagInNegative(negItem.tag)}
-                                title={negItem.description}
-                                className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-mono rounded border transition-colors cursor-pointer whitespace-nowrap ${
-                                  isNegActive
-                                    ? 'bg-rose-600 border-rose-600 text-white font-semibold'
-                                    : 'bg-white dark:bg-[#0F1522] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-rose-500/60'
+                                onClick={() =>
+                                  handleApplyColorPrefix(inspectedTag.tag, c.prefix)
+                                }
+                                title={`Add or swap to ${targetColored}`}
+                                className={`flex items-center gap-1.5 px-2 py-1 text-[11px] font-mono rounded border transition-colors cursor-pointer truncate ${
+                                  isCurrentlyActive
+                                    ? 'bg-indigo-600 border-indigo-600 text-white font-semibold'
+                                    : 'bg-white dark:bg-[#0F1522] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-500'
                                 }`}
                               >
-                                <span>{negItem.tag}</span>
-                                {isNegActive ? (
-                                  <Check className="w-2.5 h-2.5" />
+                                <span
+                                  className="w-2.5 h-2.5 rounded-full shrink-0 border border-slate-400/40"
+                                  style={{ backgroundColor: c.hex }}
+                                />
+                                <span className="truncate">{targetColored}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Full Wiki Definition */}
+                    <div className="space-y-1">
+                      <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">
+                        Visual Definition
+                      </span>
+                      <p
+                        className={`${descFontClasses} text-slate-700 dark:text-slate-300 leading-relaxed`}
+                      >
+                        {inspectedTag.description}
+                      </p>
+                    </div>
+
+                    {/* SDXL Illustrious Specific Usage Tip */}
+                    {inspectedTag.illustriousNote && (
+                      <div className="p-2.5 rounded-lg bg-slate-100/80 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1">
+                        <span className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
+                          SDXL Illustrious Usage Note
+                        </span>
+                        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                          {inspectedTag.illustriousNote}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Unboxed Search Aliases */}
+                    {inspectedTag.aliases.length > 0 && (
+                      <div className="space-y-1">
+                        <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">
+                          Recognized Search Aliases
+                        </span>
+                        <p className="text-xs font-mono text-slate-600 dark:text-slate-400">
+                          {inspectedTag.aliases.join(' · ')}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Interactive Related / Co-Occurring Sibling Tags */}
+                    {inspectedTag.relatedTags.length > 0 && (
+                      <div className="space-y-1.5">
+                        <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 block">
+                          Related & Co-Occurring Tags
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {inspectedTag.relatedTags.map((rel) => {
+                            const relSelected = selectedPromptTags.includes(rel);
+                            const existsInLexicon = tagMap.has(rel);
+                            return (
+                              <button
+                                key={rel}
+                                type="button"
+                                onClick={() => {
+                                  toggleTagInPrompt(rel);
+                                  if (existsInLexicon) {
+                                    setInspectedTagKey(rel);
+                                  }
+                                }}
+                                className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-mono rounded transition-colors cursor-pointer whitespace-nowrap ${
+                                  relSelected
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                }`}
+                              >
+                                <span>{rel}</span>
+                                {relSelected ? (
+                                  <Check className="w-3 h-3" />
                                 ) : (
-                                  <Plus className="w-2.5 h-2.5 opacity-60" />
+                                  <Plus className="w-3 h-3 opacity-60" />
                                 )}
                               </button>
                             );
                           })}
                         </div>
                       </div>
-                    );
-                  })()}
-                </div>
-
-                {/* 3. Built-In & Custom Negative Presets (Including SFW Guard & NSFW Guard) */}
-                <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-                      Negative Presets ({userNegativePresets.length + BUILT_IN_NEGATIVE_PRESETS.length})
-                    </span>
-                    <span className="text-[11px] text-slate-400 dark:text-slate-500">
-                      Load, merge, or copy
-                    </span>
+                    )}
                   </div>
 
-                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                    {[...userNegativePresets, ...BUILT_IN_NEGATIVE_PRESETS].map((neg) => (
-                      <div
-                        key={neg.id}
-                        className="p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-[#0B0F17]/60 space-y-1.5"
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <h3 className="text-xs font-semibold text-slate-900 dark:text-slate-100">
-                              {neg.name}
-                            </h3>
-                            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
-                              {neg.description}
-                            </p>
-                          </div>
-                          {!neg.isBuiltIn && (
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteNegativePreset(neg.id)}
-                              title="Delete custom negative preset"
-                              className="text-slate-400 hover:text-rose-500 p-1 cursor-pointer"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                        </div>
-
-                        <p className="font-mono text-[11px] text-slate-600 dark:text-slate-400 line-clamp-2 select-all">
-                          {neg.tags.join(', ')}
-                        </p>
-
-                        <div className="flex items-center gap-1.5 pt-0.5">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedNegativeTags([...neg.tags])}
-                            className="px-2 py-1 text-[11px] font-semibold text-white bg-rose-600 hover:bg-rose-500 rounded transition-colors cursor-pointer"
-                          >
-                            Load Preset
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setSelectedNegativeTags((prev) =>
-                                Array.from(new Set([...prev, ...neg.tags]))
-                              )
-                            }
-                            className="px-2 py-1 text-[11px] font-medium text-slate-700 dark:text-slate-300 bg-slate-200/70 dark:bg-slate-800 hover:bg-slate-300/70 dark:hover:bg-slate-700 rounded transition-colors cursor-pointer"
-                          >
-                            + Merge
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleCopyNegative(neg.id, neg.tags)}
-                            className="ml-auto inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-slate-700 dark:text-slate-300 bg-slate-200/70 dark:bg-slate-800 hover:bg-slate-300/70 dark:hover:bg-slate-700 rounded transition-colors cursor-pointer"
-                          >
-                            {copiedNegativeId === neg.id ? (
-                              <>
-                                <Check className="w-3 h-3 text-emerald-500" />
-                                <span>Copied</span>
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="w-3 h-3" />
-                                <span>Copy</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500">
+                    <span>Format: Canonical Danbooru (_)</span>
+                    <button
+                      type="button"
+                      onClick={(e) => handleCopySingleTag(inspectedTag.tag, e)}
+                      className="font-mono text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+                    >
+                      {copiedSingleTag === inspectedTag.tag
+                        ? 'Copied tag!'
+                        : `Copy "${formatSingleTagForOutput(inspectedTag.tag)}"`}
+                    </button>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-
-          {/* Lower Section: Tag Inspector, Color Prefixer & Sibling Relationships */}
-          {inspectedTag && (
-            <div className="p-5 flex-1 flex flex-col justify-between space-y-5">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                    Tag Inspector
-                  </span>
-                  <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-mono tabular-nums">
-                    <span>{inspectedTag.popularity}</span>
-                    <span aria-hidden="true">·</span>
-                    <span>{inspectedTag.postCountEst} posts</span>
-                  </div>
-                </div>
-
-                {/* Canonical Tag Title, Favorite Toggle, Negative Toggle & Primary Add/Remove Toggle */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-lg font-bold font-mono text-slate-900 dark:text-slate-100 break-all">
-                      {inspectedTag.tag}
-                    </h3>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <button
-                        type="button"
-                        onClick={(e) => toggleFavorite(inspectedTag.tag, e)}
-                        title={
-                          favoriteTags.includes(inspectedTag.tag)
-                            ? 'Remove from Favorites'
-                            : 'Add to Favorites'
-                        }
-                        className={`inline-flex items-center gap-1 px-2 py-1.5 text-xs font-medium rounded-lg border transition-colors cursor-pointer ${
-                          favoriteTags.includes(inspectedTag.tag)
-                            ? 'bg-amber-500/10 border-amber-500/40 text-amber-500'
-                            : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-amber-500/50 hover:text-amber-500'
-                        }`}
-                      >
-                        <Star
-                          className="w-3.5 h-3.5"
-                          fill={favoriteTags.includes(inspectedTag.tag) ? 'currentColor' : 'none'}
-                        />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={(e) => toggleTagInNegative(inspectedTag.tag, e)}
-                        title={
-                          selectedNegativeTags.includes(inspectedTag.tag)
-                            ? 'Remove from Negative Prompt'
-                            : 'Add to Negative Prompt'
-                        }
-                        className={`inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                          selectedNegativeTags.includes(inspectedTag.tag)
-                            ? 'bg-rose-600 border-rose-600 text-white'
-                            : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-rose-500/60 hover:text-rose-500'
-                        }`}
-                      >
-                        <Ban className="w-3.5 h-3.5" />
-                        <span>
-                          {selectedNegativeTags.includes(inspectedTag.tag) ? 'Negated' : '- Neg'}
-                        </span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => toggleTagInPrompt(inspectedTag.tag)}
-                        className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                          selectedPromptTags.includes(inspectedTag.tag)
-                            ? 'bg-rose-500/10 text-rose-500 hover:bg-rose-500/20'
-                            : 'bg-indigo-600 text-white hover:bg-indigo-500'
-                        }`}
-                      >
-                        {selectedPromptTags.includes(inspectedTag.tag)
-                          ? 'Remove'
-                          : '+ Prompt'}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Unboxed Taxonomy Path */}
-                  <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-                    <span>{DOMAIN_MAP[inspectedTag.domain]?.shortLabel}</span>
-                    <span aria-hidden="true">·</span>
-                    <span>{inspectedTag.subcategory}</span>
-                  </div>
-                </div>
-
-                {/* Quick Color Modifier Prefixer inside Inspector when tag is colorable */}
-                {isTagColorable(inspectedTag.tag) && (
-                  <div className="p-3 rounded-lg bg-slate-50 dark:bg-[#0B0F17] border border-slate-200 dark:border-slate-800 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-700 dark:text-slate-300">
-                        <Palette className="w-3.5 h-3.5 text-indigo-500" />
-                        <span>Quick Color Modifier Prefixer</span>
-                      </span>
-                      {getBaseUncoloredTag(inspectedTag.tag).colorPrefix && (
-                        <button
-                          type="button"
-                          onClick={() => handleResetTagColor(inspectedTag.tag)}
-                          className="text-[11px] font-mono text-rose-500 hover:underline cursor-pointer"
-                        >
-                          Reset to {getBaseUncoloredTag(inspectedTag.tag).baseTag}
-                        </button>
-                      )}
-                    </div>
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {CANONICAL_BOORU_COLORS.map((c) => {
-                        const targetColored = applyColorPrefixToTag(
-                          inspectedTag.tag,
-                          c.prefix
-                        );
-                        const isCurrentlyActive = selectedPromptTags.includes(targetColored);
-                        return (
-                          <button
-                            key={c.prefix}
-                            type="button"
-                            onClick={() =>
-                              handleApplyColorPrefix(inspectedTag.tag, c.prefix)
-                            }
-                            title={`Add or swap to ${targetColored}`}
-                            className={`flex items-center gap-1.5 px-2 py-1 text-[11px] font-mono rounded border transition-colors cursor-pointer truncate ${
-                              isCurrentlyActive
-                                ? 'bg-indigo-600 border-indigo-600 text-white font-semibold'
-                                : 'bg-white dark:bg-[#0F1522] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-500'
-                            }`}
-                          >
-                            <span
-                              className="w-2.5 h-2.5 rounded-full shrink-0 border border-slate-400/40"
-                              style={{ backgroundColor: c.hex }}
-                            />
-                            <span className="truncate">{targetColored}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Full Wiki Definition */}
-                <div className="space-y-1">
-                  <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">
-                    Visual Definition
-                  </span>
-                  <p
-                    className={`${descFontClasses} text-slate-700 dark:text-slate-300 leading-relaxed`}
-                  >
-                    {inspectedTag.description}
-                  </p>
-                </div>
-
-                {/* SDXL Illustrious Specific Usage Tip */}
-                {inspectedTag.illustriousNote && (
-                  <div className="p-3 rounded-lg bg-slate-100/80 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1">
-                    <span className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
-                      SDXL Illustrious Usage Note
-                    </span>
-                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                      {inspectedTag.illustriousNote}
-                    </p>
-                  </div>
-                )}
-
-                {/* Unboxed Search Aliases */}
-                {inspectedTag.aliases.length > 0 && (
-                  <div className="space-y-1">
-                    <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">
-                      Recognized Search Aliases & Synonyms
-                    </span>
-                    <p className="text-xs font-mono text-slate-600 dark:text-slate-400">
-                      {inspectedTag.aliases.join(' · ')}
-                    </p>
-                  </div>
-                )}
-
-                {/* Interactive Related / Co-Occurring Sibling Tags */}
-                {inspectedTag.relatedTags.length > 0 && (
-                  <div className="space-y-2">
-                    <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 block">
-                      Related & Co-Occurring Booru Tags (Click to toggle)
-                    </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {inspectedTag.relatedTags.map((rel) => {
-                        const relSelected = selectedPromptTags.includes(rel);
-                        const existsInLexicon = tagMap.has(rel);
-                        return (
-                          <button
-                            key={rel}
-                            type="button"
-                            onClick={() => {
-                              toggleTagInPrompt(rel);
-                              if (existsInLexicon) {
-                                setInspectedTagKey(rel);
-                              }
-                            }}
-                            className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-mono rounded transition-colors cursor-pointer whitespace-nowrap ${
-                              relSelected
-                                ? 'bg-indigo-600 text-white'
-                                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                            }`}
-                          >
-                            <span>{rel}</span>
-                            {relSelected ? (
-                              <Check className="w-3 h-3" />
-                            ) : (
-                              <Plus className="w-3 h-3 opacity-60" />
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500">
-                <span>Format: Canonical Danbooru (_)</span>
-                <button
-                  type="button"
-                  onClick={(e) => handleCopySingleTag(inspectedTag.tag, e)}
-                  className="font-mono text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
-                >
-                  {copiedSingleTag === inspectedTag.tag
-                    ? 'Copied tag!'
-                    : `Copy "${formatSingleTagForOutput(inspectedTag.tag)}"`}
-                </button>
-              </div>
+              )}
             </div>
           )}
         </aside>
