@@ -11,7 +11,8 @@
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
-    "build:standalone": "vite build && node scripts/build-standalone.mjs",
+    "export:csv": "npx tsx scripts/export-csv.ts",
+    "build:standalone": "npx tsx scripts/export-csv.ts && vite build && node scripts/build-standalone.mjs",
     "electron:dev": "electron .",
     "dist:win": "vite build && npx electron-builder --win portable nsis",
     "preview": "vite preview",

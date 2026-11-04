@@ -22,7 +22,8 @@ import {
   Ban,
   ArrowRightLeft,
   Smile,
-  Sparkles
+  Sparkles,
+  Download
 } from 'lucide-react';
 import {
   ALL_BOORU_TAGS,
@@ -1218,6 +1219,67 @@ export default function App() {
     setHistoryCap(clamped);
   };
 
+  // Export all tags currently in the database (including any custom user tags) to an RFC-4180 CSV file
+  const handleExportDatabaseCsv = (onlyFiltered = false) => {
+    const sourceTags = onlyFiltered ? filteredTags : allTags;
+    const escapeCsvField = (val: string | undefined | null): string => {
+      const str = String(val ?? '');
+      if (/[",\r\n]/.test(str)) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const headers = [
+      'tag',
+      'domain_id',
+      'domain_index',
+      'domain_label',
+      'subcategory',
+      'popularity',
+      'post_count_est',
+      'description',
+      'aliases',
+      'related_tags',
+      'illustrious_note',
+      'is_custom'
+    ];
+
+    const rows = [headers.join(',')];
+    for (const item of sourceTags) {
+      const domainMeta = DOMAIN_MAP[item.domain];
+      rows.push(
+        [
+          escapeCsvField(item.tag),
+          escapeCsvField(item.domain),
+          escapeCsvField(domainMeta?.indexNumber ?? ''),
+          escapeCsvField(domainMeta?.label ?? item.domain),
+          escapeCsvField(item.subcategory),
+          escapeCsvField(item.popularity),
+          escapeCsvField(item.postCountEst),
+          escapeCsvField(item.description),
+          escapeCsvField((item.aliases ?? []).join('; ')),
+          escapeCsvField((item.relatedTags ?? []).join('; ')),
+          escapeCsvField(item.illustriousNote ?? ''),
+          escapeCsvField(item.isCustom ? 'true' : 'false')
+        ].join(',')
+      );
+    }
+
+    const csvContent = '\uFEFF' + rows.join('\r\n') + '\r\n';
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = onlyFiltered
+      ? `illustrious-lexicon-filtered-${sourceTags.length}-tags.csv`
+      : `illustrious-lexicon-tags.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const alphabet = ['#', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')];
 
   return (
@@ -1475,6 +1537,19 @@ export default function App() {
             </button>
 
             <button
+              type="button"
+              onClick={() => handleExportDatabaseCsv(false)}
+              title="Download a complete CSV file of all tags in the Illustrious Lexicon database"
+              className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200/70 dark:border-indigo-800/60 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
+            >
+              <span className="inline-flex items-center gap-2">
+                <Download className="w-3.5 h-3.5" />
+                <span>Export Database CSV</span>
+              </span>
+              <span className="font-mono text-[11px] opacity-80">{allTags.length}</span>
+            </button>
+
+            <button
               onClick={() => setIsDark((prev) => !prev)}
               className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/50 rounded-lg transition-colors cursor-pointer"
             >
@@ -1547,6 +1622,16 @@ export default function App() {
                     A+
                   </button>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleExportDatabaseCsv(false)}
+                  title="Download CSV of all tags in the database"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200/70 dark:border-indigo-800/60"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Export CSV ({allTags.length})</span>
+                </button>
 
                 <button
                   type="button"
