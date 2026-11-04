@@ -31,19 +31,19 @@ export const COMPREHENSIVE_POLISH_TAGS: BooruTag[] = [
     subcategory: 'Illustrious Quality & Era',
     description: 'Visual novel or gacha game event CG illustration with rich lighting and full background.',
     aliases: ['event_cg', 'visual_novel_cg'],
-    relatedTags: ['official_art', 'soft_shading', 'cinematic_lighting', 'pov'],
+    relatedTags: ['official_art', 'painting_(medium)', 'dramatic_shadows', 'pov'],
     popularity: 'Core',
     postCountEst: '390K'
   },
   {
-    tag: 'bold_lineart',
+    tag: 'thick_outline',
     domain: 'art_meta',
     subcategory: 'Shading, Lineart & Mediums',
     description: 'Thick, expressive outer contour lines with graphic comic or pop-anime impact.',
-    aliases: ['thick_outlines', 'heavy_lineart', 'thick_lineart'],
+    aliases: ['bold_lineart', 'thick_outlines', 'heavy_lineart', 'thick_lineart'],
     relatedTags: ['lineart', 'cel_shading', 'flat_color', 'high_contrast'],
     popularity: 'Core',
-    postCountEst: '145K'
+    postCountEst: '125K'
   },
   {
     tag: 'hatching_(texture)',
@@ -61,7 +61,7 @@ export const COMPREHENSIVE_POLISH_TAGS: BooruTag[] = [
     subcategory: 'Shading, Lineart & Mediums',
     description: 'Alcohol marker (Copic) illustration look with vibrant layered ink blending.',
     aliases: ['copic_marker', 'alcohol_marker'],
-    relatedTags: ['watercolor_(medium)', 'sketch', 'vibrant_colors'],
+    relatedTags: ['watercolor_(medium)', 'sketch', 'colorful'],
     popularity: 'Common',
     postCountEst: '75K'
   },
@@ -91,7 +91,7 @@ export const COMPREHENSIVE_POLISH_TAGS: BooruTag[] = [
     subcategory: 'Color, Tone & Visual Effects',
     description: 'Soft darkening around the outer edges of the frame to draw focus to the center subject.',
     aliases: ['dark_edges', 'edge_darkening'],
-    relatedTags: ['cinematic_lighting', 'depth_of_field'],
+    relatedTags: ['dramatic_shadows', 'depth_of_field'],
     popularity: 'Core',
     postCountEst: '95K'
   },
@@ -170,21 +170,21 @@ export const COMPREHENSIVE_POLISH_TAGS: BooruTag[] = [
     postCountEst: '115K'
   },
   {
-    tag: 'kuudere',
-    domain: 'character',
-    subcategory: 'Archetypes, Occupations & Species',
-    description: 'Cool, aloof, stoic character archetype who rarely shows overt emotion.',
-    aliases: ['stoic_girl', 'cool_beauty'],
-    relatedTags: ['expressionless', 'half-closed_eyes', 'jitome', 'closed_mouth'],
+    tag: 'serious',
+    domain: 'face_expressions',
+    subcategory: 'Blush, Tears, Sweat & Emotion Symbols',
+    description: 'Cool, composed, focused, or stoic expression without levity.',
+    aliases: ['kuudere', 'stoic', 'composed_expression'],
+    relatedTags: ['expressionless', 'half-closed_eyes', 'jitome', 'closed_mouth', 'v-shaped_eyebrows'],
     popularity: 'Core',
-    postCountEst: '95K'
+    postCountEst: '420K'
   },
   {
-    tag: 'bunny_girl',
+    tag: 'rabbit_girl',
     domain: 'character',
     subcategory: 'Archetypes, Occupations & Species',
-    description: 'Kemonomimi rabbit girl or Playboy-style bunny girl archetype.',
-    aliases: ['usagimimi_girl', 'rabbit_girl'],
+    description: 'Kemonomimi rabbit girl with long lop or upright rabbit ears and cotton tail.',
+    aliases: ['bunny_girl', 'usagimimi_girl'],
     relatedTags: ['rabbit_ears', 'fake_rabbit_ears', 'playboy_bunny', 'leotard', 'pantyhose'],
     popularity: 'Core',
     postCountEst: '390K'
@@ -400,14 +400,14 @@ export const COMPREHENSIVE_POLISH_TAGS: BooruTag[] = [
     postCountEst: '390K'
   },
   {
-    tag: 'pixie_cut',
+    tag: 'very_short_hair',
     domain: 'character',
     subcategory: 'Hair Length & Style',
-    description: 'Very short cropped hairstyle framing the ears and nape of the neck.',
-    aliases: ['very_short_hair', 'cropped_hair'],
+    description: 'Very short cropped or pixie-cut hairstyle framing the ears and nape of the neck.',
+    aliases: ['pixie_cut', 'cropped_hair'],
     relatedTags: ['short_hair', 'tomboy', 'bob_cut'],
     popularity: 'Core',
-    postCountEst: '175K'
+    postCountEst: '310K'
   },
   {
     tag: 'hair_up',
@@ -1128,16 +1128,6 @@ export const COMPREHENSIVE_POLISH_TAGS: BooruTag[] = [
   // 04. POSE & CAMERA — Missing Framing, Angles, Poses, Couple, Sensual & Acts
   // ============================================================================
   {
-    tag: 'extreme_close-up',
-    domain: 'pose_camera',
-    subcategory: 'Framing & Shot Size',
-    description: 'Macro-tight camera framing on a single facial feature (eyes, lips) or anatomical detail.',
-    aliases: ['macro_shot', 'tight_close-up'],
-    relatedTags: ['close-up', 'portrait', 'eyes_focus', 'depth_of_field'],
-    popularity: 'Core',
-    postCountEst: '85K'
-  },
-  {
     tag: 'face_focus',
     domain: 'pose_camera',
     subcategory: 'Framing & Shot Size',
@@ -1197,26 +1187,6 @@ export const COMPREHENSIVE_POLISH_TAGS: BooruTag[] = [
     relatedTags: ['pov', 'from_above', 'looking_up', 'fellatio', 'cowgirl_position'],
     popularity: 'Core',
     postCountEst: '165K'
-  },
-  {
-    tag: 'worm\'s-eye_view',
-    domain: 'pose_camera',
-    subcategory: 'Camera Angles & Perspective',
-    description: 'Extreme low-angle shot looking almost vertically upward from ground level.',
-    aliases: ['extreme_from_below', 'ground_level_angle'],
-    relatedTags: ['from_below', 'foreshortening', 'upskirt', 'tall_female'],
-    popularity: 'Common',
-    postCountEst: '75K'
-  },
-  {
-    tag: 'bird\'s-eye_view',
-    domain: 'pose_camera',
-    subcategory: 'Camera Angles & Perspective',
-    description: 'Extreme high-angle overhead shot looking straight down at the subject.',
-    aliases: ['overhead_shot', 'top-down_view'],
-    relatedTags: ['from_above', 'foreshortening', 'on_bed', 'lying'],
-    popularity: 'Common',
-    postCountEst: '85K'
   },
   {
     tag: 'arms_up',
@@ -1445,7 +1415,7 @@ export const COMPREHENSIVE_POLISH_TAGS: BooruTag[] = [
     subcategory: 'Lighting & Optical Effects',
     description: 'Bright contour highlight tracing the outer silhouette of hair, shoulders, and curves against a darker background.',
     aliases: ['edge_lighting', 'halo_lighting', 'contour_light'],
-    relatedTags: ['backlighting', 'cinematic_lighting', 'chiaroscuro', 'dark_theme'],
+    relatedTags: ['backlighting', 'dramatic_shadows', 'chiaroscuro', 'dark_theme'],
     popularity: 'Core',
     postCountEst: '210K',
     illustriousNote: 'One of the best lighting tags in SDXL Illustrious for separating the character from the background.'
@@ -1513,16 +1483,6 @@ export const COMPREHENSIVE_POLISH_TAGS: BooruTag[] = [
     relatedTags: ['dappled_sunlight', 'light_rays', 'blue_sky', 'outdoors'],
     popularity: 'Core',
     postCountEst: '890K'
-  },
-  {
-    tag: 'golden_hour',
-    domain: 'environment',
-    subcategory: 'Nature, Sky & Weather',
-    description: 'Warm amber-gold late-afternoon sunlight right before sunset.',
-    aliases: ['magic_hour', 'evening_sunlight'],
-    relatedTags: ['sunset', 'sunlight', 'backlighting', 'lens_flare'],
-    popularity: 'Core',
-    postCountEst: '195K'
   },
   {
     tag: 'night',
@@ -1615,14 +1575,14 @@ export const COMPREHENSIVE_POLISH_TAGS: BooruTag[] = [
     postCountEst: '115K'
   },
   {
-    tag: 'cyberpunk_city',
+    tag: 'cyberpunk',
     domain: 'environment',
     subcategory: 'Indoor & Urban Architecture',
-    description: 'Futuristic high-tech neon metropolis with holographic signage and rain-slicked streets.',
-    aliases: ['neon_city', 'sci-fi_city'],
+    description: 'Futuristic high-tech neon metropolis with holographic signage, cybernetics, and rain-slicked streets.',
+    aliases: ['cyberpunk_city', 'neon_city', 'sci-fi_city'],
     relatedTags: ['city_lights', 'cityscape', 'night', 'rain', 'glowing'],
     popularity: 'Core',
-    postCountEst: '125K'
+    postCountEst: '95K'
   },
   {
     tag: 'magic_circle',
@@ -1630,7 +1590,7 @@ export const COMPREHENSIVE_POLISH_TAGS: BooruTag[] = [
     subcategory: 'Props, Weapons & Objects',
     description: 'Glowing geometric arcane sigil floating beneath or in front of a spellcaster.',
     aliases: ['arcane_sigil', 'spell_circle'],
-    relatedTags: ['staff', 'witch', 'glowing', 'floating_particles'],
+    relatedTags: ['staff', 'witch', 'glowing', 'light_particles'],
     popularity: 'Core',
     postCountEst: '140K'
   },

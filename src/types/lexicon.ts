@@ -1,8 +1,10 @@
 export type DomainId =
+  | 'art_meta'
   | 'character'
+  | 'species_traits'
+  | 'face_expressions'
   | 'clothing'
   | 'pose_camera'
-  | 'art_meta'
   | 'environment';
 
 export type PopularityTier = 'Core' | 'Common' | 'Specialized';
@@ -122,3 +124,34 @@ export interface PositiveNegativeOverlap {
   reason: string;
 }
 
+export interface ExpressionPreset {
+  id: string;
+  name: string;
+  archetype: string;
+  description: string;
+  tags: string[];
+  isBuiltIn?: boolean;
+}
+
+export interface FacialMixerZone {
+  id: string;
+  label: string;
+  subcategory: string;
+  quickTags: string[];
+}
+
+export interface SpeciesPreset {
+  id: string;
+  name: string;
+  lineage: string;
+  description: string;
+  tags: string[];
+  isBuiltIn?: boolean;
+}
+
+export interface SpeciesMixerZone {
+  id: string;
+  label: string;
+  subcategory: string;
+  quickTags: string[];
+}

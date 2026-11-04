@@ -317,14 +317,14 @@ export const POSE_CAMERA_TAGS: BooruTag[] = [
 
   // Hand Gestures & Arm Placement
   {
-    tag: 'v_sign',
+    tag: 'v',
     domain: 'pose_camera',
     subcategory: 'Hands & Arm Gestures',
     description: 'Index and middle fingers raised in a V peace/victory gesture.',
-    aliases: ['peace_sign', 'victory_sign'],
+    aliases: ['v_sign', 'peace_sign', 'victory_sign'],
     relatedTags: ['one_eye_closed', 'smile', 'double_v'],
     popularity: 'Core',
-    postCountEst: '410K'
+    postCountEst: '650K'
   },
   {
     tag: 'crossed_arms',
@@ -470,22 +470,22 @@ export const POSE_CAMERA_TAGS: BooruTag[] = [
     illustriousNote: 'Creates gorgeous translucent hair edge glow in SDXL Illustrious.'
   },
   {
-    tag: 'cinematic_lighting',
+    tag: 'dramatic_shadows',
     domain: 'pose_camera',
     subcategory: 'Lighting & Optical Effects',
     description: 'High-contrast, moody theatrical illumination with rich shadow falloff and directional highlights.',
-    aliases: ['dramatic_lighting', 'film_lighting'],
+    aliases: ['cinematic_lighting', 'dramatic_lighting', 'film_lighting'],
     relatedTags: ['backlighting', 'chiaroscuro', 'light_rays', 'depth_of_field'],
     popularity: 'Core',
-    postCountEst: '190K'
+    postCountEst: '165K'
   },
   {
     tag: 'chiaroscuro',
     domain: 'pose_camera',
     subcategory: 'Lighting & Optical Effects',
     description: 'Bold artistic interplay between deep dark shadows and bright directional light.',
-    aliases: ['high_contrast_shadow', 'tenebrism', 'dramatic_shadows'],
-    relatedTags: ['shade', 'darkness', 'backlighting', 'sidelighting'],
+    aliases: ['high_contrast_shadow', 'tenebrism'],
+    relatedTags: ['shade', 'dark_theme', 'backlighting', 'sidelighting', 'dramatic_shadows'],
     popularity: 'Common',
     postCountEst: '75K'
   },
@@ -515,7 +515,7 @@ export const POSE_CAMERA_TAGS: BooruTag[] = [
     subcategory: 'Lighting & Optical Effects',
     description: 'Visible volumetric shafts of light (crepuscular or god rays) cutting through dust, mist, or windows.',
     aliases: ['god_rays', 'crepuscular_rays', 'volumetric_lighting', 'sunbeams'],
-    relatedTags: ['sunlight', 'backlighting', 'window', 'floating_particles'],
+    relatedTags: ['sunlight', 'backlighting', 'window', 'light_particles'],
     popularity: 'Core',
     postCountEst: '230K'
   },

@@ -267,14 +267,14 @@ export const CLOTHING_TAGS: BooruTag[] = [
     postCountEst: '340K'
   },
   {
-    tag: 'off-shoulder',
+    tag: 'off_shoulder',
     domain: 'clothing',
     subcategory: 'Tops, Jackets & Sleeves',
     description: 'Garment neckline designed or slipped down to leave one or both shoulders bare.',
-    aliases: ['off_shoulder', 'bare_shoulders_top'],
+    aliases: ['off-shoulder', 'bare_shoulders_top'],
     relatedTags: ['bare_shoulders', 'collarbone', 'single_off_shoulder'],
     popularity: 'Core',
-    postCountEst: '310K'
+    postCountEst: '690K'
   },
   {
     tag: 'detached_sleeves',

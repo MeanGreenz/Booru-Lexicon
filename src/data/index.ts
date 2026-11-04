@@ -10,6 +10,26 @@ import { EXPLICIT_ACTION_TAGS } from './tagsExplicitActions';
 import { ARCHETYPES_FEATURES_TAGS } from './tagsArchetypesFeatures';
 import { INTERACTIONS_MATERIALS_TAGS } from './tagsInteractionsMaterials';
 import { COMPREHENSIVE_POLISH_TAGS } from './tagsComprehensivePolish';
+import { CANONICAL_EXPANSION_TAGS } from './tagsCanonicalExpansion';
+import {
+  FACE_AND_GAZE_TAGS,
+  FACIAL_AND_GAZE_MIGRATION_MAP,
+  BUILT_IN_EXPRESSION_PRESETS,
+  FACIAL_MIXER_ZONES
+} from './tagsFaceExpressions';
+import {
+  SPECIES_AND_TRAITS_TAGS,
+  SPECIES_AND_TRAITS_MIGRATION_MAP,
+  BUILT_IN_SPECIES_PRESETS,
+  SPECIES_MIXER_ZONES
+} from './tagsSpeciesRaces';
+
+export {
+  BUILT_IN_EXPRESSION_PRESETS,
+  FACIAL_MIXER_ZONES,
+  BUILT_IN_SPECIES_PRESETS,
+  SPECIES_MIXER_ZONES
+};
 
 export const DOMAINS: DomainMetadata[] = [
   {
@@ -28,29 +48,56 @@ export const DOMAINS: DomainMetadata[] = [
   {
     id: 'character',
     indexNumber: '02',
-    label: 'Character Traits, Archetypes, Anatomy & Expressions',
+    label: 'Character Traits, Archetypes, Body & Hair',
     shortLabel: 'Character',
-    description: 'Subject counts, archetypes/occupations, hairstyles, bangs, iris shapes, expressions, body proportions, tanlines/tattoos, and fantasy traits.',
+    description: 'Subject counts, social archetypes/occupations, body proportions, skin/tanlines/tattoos, hairstyles, bangs, and hair colors.',
     promptOrderPriority: 2,
     subcategories: [
       'Subject & Count',
-      'Archetypes, Occupations & Species',
+      'Archetypes & Occupations',
       'Body Proportions & Anatomy',
       'Skin, Tanlines, Tattoos & Piercings',
       'Hair Length & Style',
-      'Bangs & Hair Color',
-      'Eyes, Pupils & Gaze',
-      'Facial Expressions',
-      'Ears, Horns & Fantasy Traits'
+      'Bangs & Hair Color'
+    ]
+  },
+  {
+    id: 'species_traits',
+    indexNumber: '03',
+    label: 'Species, Fantasy Races, Beastkin, Monster Girls & Anthro',
+    shortLabel: 'Species & Races',
+    description: 'Kemonomimi, beastkin, fantasy races (elf, dark elf, dwarf, orc, goblin, oni, succubus), monster girls, anthro/furry/scalie, ears, horns, wings, tails, and exotic racial anatomy.',
+    promptOrderPriority: 3,
+    subcategories: [
+      'Kemonomimi & Beastkin',
+      'Fantasy Races & Demihumans',
+      'Monster Girls & Exotic Hybrids',
+      'Anthro, Furry & Scalie',
+      'Ears, Horns, Wings & Tails',
+      'Exotic Skin, Scales & Racial Anatomy'
+    ]
+  },
+  {
+    id: 'face_expressions',
+    indexNumber: '04',
+    label: 'Face, Eyes & Expressions',
+    shortLabel: 'Face & Expressions',
+    description: 'Eyebrow shapes, eyelid states, pupil geometry, iris colors, mouth/teeth/tongue shapes, blush levels, tears, sweat drops, and composite expressions.',
+    promptOrderPriority: 4,
+    subcategories: [
+      'Eyebrows, Eye Shapes & Eyelids',
+      'Pupils, Irises & Eye Colors',
+      'Mouth, Lips, Teeth & Tongue',
+      'Blush, Tears, Sweat & Emotion Symbols'
     ]
   },
   {
     id: 'clothing',
-    indexNumber: '03',
+    indexNumber: '05',
     label: 'Clothing, Lingerie, Materials & Fashion States',
     shortLabel: 'Clothing',
     description: 'School uniforms, traditional wafuku, dresses, swimwear, lingerie, latex/fetish materials, suggestive/disheveled states, and legwear.',
-    promptOrderPriority: 3,
+    promptOrderPriority: 5,
     subcategories: [
       'Uniforms & Formal',
       'Traditional & Fantasy',
@@ -65,14 +112,15 @@ export const DOMAINS: DomainMetadata[] = [
   },
   {
     id: 'pose_camera',
-    indexNumber: '04',
-    label: 'Poses, Camera Angles, Couple Interactions & Acts',
+    indexNumber: '06',
+    label: 'Poses, Camera Angles, Gaze, Couple Interactions & Acts',
     shortLabel: 'Pose & Camera',
-    description: 'Framing shots, Dutch angles, foreshortening, stances, couple/multi-character interactions, sensual poses, intimate acts, and lighting.',
-    promptOrderPriority: 4,
+    description: 'Framing shots, Dutch angles, facial angles/head tilts/gaze direction, stances, couple interactions, sensual poses, intimate acts, and lighting.',
+    promptOrderPriority: 6,
     subcategories: [
       'Framing & Shot Size',
       'Camera Angles & Perspective',
+      'Facial Angles, Head Tilts & Gaze',
       'Body Poses & Stances',
       'Multi-Character & Couple Interactions',
       'Sensual & Suggestive Poses',
@@ -83,11 +131,11 @@ export const DOMAINS: DomainMetadata[] = [
   },
   {
     id: 'environment',
-    indexNumber: '05',
+    indexNumber: '07',
     label: 'Backgrounds, Environments & Props',
     shortLabel: 'Environment',
     description: 'Minimal studio backdrops, Shinkai skies, weather, indoor rooms, urban architecture, and handheld weapons/props.',
-    promptOrderPriority: 5,
+    promptOrderPriority: 7,
     subcategories: [
       'Studio & Minimal Backgrounds',
       'Nature, Sky & Weather',
@@ -105,11 +153,13 @@ export const DOMAIN_MAP: Record<DomainId, DomainMetadata> = DOMAINS.reduce(
   {} as Record<DomainId, DomainMetadata>
 );
 
-// Combine all tags and deduplicate by canonical tag string
+// Combine all tags, apply facial/gaze & species/traits domain migrations, and deduplicate by canonical tag string
 const rawTags: BooruTag[] = [
   ...ART_META_TAGS,
   ...CHARACTER_TAGS,
   ...ARCHETYPES_FEATURES_TAGS,
+  ...SPECIES_AND_TRAITS_TAGS,
+  ...FACE_AND_GAZE_TAGS,
   ...CLOTHING_TAGS,
   ...POSE_CAMERA_TAGS,
   ...INTERACTIONS_MATERIALS_TAGS,
@@ -117,14 +167,34 @@ const rawTags: BooruTag[] = [
   ...EXTENDED_TAGS,
   ...RISQUE_TAGS,
   ...EXPLICIT_ACTION_TAGS,
-  ...COMPREHENSIVE_POLISH_TAGS
+  ...COMPREHENSIVE_POLISH_TAGS,
+  ...CANONICAL_EXPANSION_TAGS
 ];
 
 const seen = new Set<string>();
-export const ALL_BOORU_TAGS: BooruTag[] = rawTags.filter((item) => {
+const uniqueRawTags = rawTags.filter((item) => {
   if (seen.has(item.tag)) return false;
   seen.add(item.tag);
   return true;
+});
+
+export const ALL_BOORU_TAGS: BooruTag[] = uniqueRawTags.map((item) => {
+  const migrated =
+    FACIAL_AND_GAZE_MIGRATION_MAP[item.tag] || SPECIES_AND_TRAITS_MIGRATION_MAP[item.tag];
+  // Ensure no alias collides with an existing standalone canonical tag in the lexicon;
+  // if an alias is itself a canonical tag entry, promote it to relatedTags instead.
+  const collidingAliases = item.aliases.filter((a) => a !== item.tag && seen.has(a));
+  const cleanAliases = item.aliases.filter((a) => !seen.has(a));
+  const mergedRelated = Array.from(
+    new Set([...item.relatedTags, ...collidingAliases].filter((r) => r !== item.tag))
+  );
+
+  return {
+    ...item,
+    ...(migrated ? { domain: migrated.domain, subcategory: migrated.subcategory } : {}),
+    aliases: cleanAliases,
+    relatedTags: mergedRelated
+  };
 });
 
 export const ILLUSTRIOUS_NEGATIVE_PRESETS = [
@@ -276,7 +346,7 @@ export const BUILT_IN_PROMPT_PRESETS: PromptPreset[] = [
       'cleavage_cutout',
       'from_below',
       'looking_down',
-      'cinematic_lighting',
+      'dramatic_shadows',
       'stained_glass'
     ],
     isBuiltIn: true
@@ -314,7 +384,7 @@ export const BUILT_IN_PROMPT_PRESETS: PromptPreset[] = [
       'on_bed',
       'kneeling',
       'all_fours',
-      'cinematic_lighting',
+      'dramatic_shadows',
       'bedroom'
     ],
     isBuiltIn: true

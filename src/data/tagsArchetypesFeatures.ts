@@ -16,14 +16,14 @@ export const ARCHETYPES_FEATURES_TAGS: BooruTag[] = [
     illustriousNote: 'Combine gyaru with tan, blonde_hair, and colored_inner_hair for authentic modern gal aesthetics.'
   },
   {
-    tag: 'ojou-sama',
+    tag: 'ojou',
     domain: 'character',
     subcategory: 'Archetypes, Occupations & Species',
     description: 'Wealthy, aristocratic high-class young lady archetype, often with drill ringlets, a folding fan, or a haughty laugh.',
-    aliases: ['rich_girl', 'heiress', 'ojou'],
+    aliases: ['ojou-sama', 'rich_girl', 'heiress'],
     relatedTags: ['drill_hair', 'smug', 'hand_to_own_mouth', 'gothic_lolita', 'teacup'],
     popularity: 'Core',
-    postCountEst: '85K'
+    postCountEst: '115K'
   },
   {
     tag: 'succubus',
@@ -156,14 +156,14 @@ export const ARCHETYPES_FEATURES_TAGS: BooruTag[] = [
     postCountEst: '185K'
   },
   {
-    tag: 'kunoichi',
+    tag: 'ninja',
     domain: 'character',
     subcategory: 'Archetypes, Occupations & Species',
-    description: 'Female shinobi / ninja wearing agile stealth attire, fishnet armor panels, bandages, and carrying kunai or a katana.',
-    aliases: ['female_ninja', 'ninja'],
+    description: 'Shinobi / kunoichi wearing agile stealth attire, fishnet armor panels, bandages, and carrying kunai or a katana.',
+    aliases: ['kunoichi', 'female_ninja', 'shinobi'],
     relatedTags: ['katana', 'fishnets', 'bandages', 'scarf', 'ponytail'],
     popularity: 'Core',
-    postCountEst: '175K'
+    postCountEst: '240K'
   },
   {
     tag: 'idol',
@@ -171,7 +171,7 @@ export const ARCHETYPES_FEATURES_TAGS: BooruTag[] = [
     subcategory: 'Archetypes, Occupations & Species',
     description: 'Pop stage performer in a sparkly, frilled stage costume holding a microphone.',
     aliases: ['pop_idol', 'stage_idol'],
-    relatedTags: ['star-shaped_pupils', 'frills', 'sparkles', 'one_eye_closed', 'v_sign'],
+    relatedTags: ['star-shaped_pupils', 'frills', 'sparkles', 'one_eye_closed', 'v'],
     popularity: 'Core',
     postCountEst: '310K'
   },

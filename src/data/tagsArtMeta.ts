@@ -125,19 +125,19 @@ export const ART_META_TAGS: BooruTag[] = [
     subcategory: 'Shading, Lineart & Mediums',
     description: 'Hard-edged shadow planes without soft airbrushed gradients.',
     aliases: ['hard_shading', 'flat_shading', 'toon_shading'],
-    relatedTags: ['anime_coloring', 'flat_color', 'bold_lineart'],
+    relatedTags: ['anime_coloring', 'flat_color', 'thick_outline'],
     popularity: 'Core',
     postCountEst: '95K'
   },
   {
-    tag: 'soft_shading',
+    tag: 'painting_(medium)',
     domain: 'art_meta',
     subcategory: 'Shading, Lineart & Mediums',
-    description: 'Smooth, blended gradient transitions across skin, hair, and clothing folds.',
-    aliases: ['smooth_shading', 'airbrush_shading'],
+    description: 'Smoothly blended painted shading and rich digital or traditional brushwork.',
+    aliases: ['soft_shading', 'smooth_shading', 'airbrush_shading', 'painted'],
     relatedTags: ['painterly', 'depth_of_field', 'newest'],
     popularity: 'Core',
-    postCountEst: '85K'
+    postCountEst: '450K'
   },
   {
     tag: 'painterly',
@@ -195,7 +195,7 @@ export const ART_META_TAGS: BooruTag[] = [
     subcategory: 'Shading, Lineart & Mediums',
     description: 'Clean inked contour lines with minimal or no color fill.',
     aliases: ['ink_drawing', 'clean_lines'],
-    relatedTags: ['monochrome', 'bold_lineart', 'sketch'],
+    relatedTags: ['monochrome', 'thick_outline', 'sketch'],
     popularity: 'Core',
     postCountEst: '290K'
   },
@@ -293,14 +293,14 @@ export const ART_META_TAGS: BooruTag[] = [
     postCountEst: '135K'
   },
   {
-    tag: 'vibrant_colors',
+    tag: 'colorful',
     domain: 'art_meta',
     subcategory: 'Color, Tone & Visual Effects',
-    description: 'Richly saturated, high-energy color harmony.',
-    aliases: ['colorful', 'vivid_colors', 'saturated_colors'],
-    relatedTags: ['colorful', 'high_contrast', 'glowing'],
+    description: 'Richly saturated, high-energy multi-color harmony.',
+    aliases: ['vibrant_colors', 'vivid_colors', 'saturated_colors'],
+    relatedTags: ['high_contrast', 'glowing', 'sparkles'],
     popularity: 'Core',
-    postCountEst: '160K'
+    postCountEst: '420K'
   },
   {
     tag: 'high_contrast',
@@ -318,7 +318,7 @@ export const ART_META_TAGS: BooruTag[] = [
     subcategory: 'Color, Tone & Visual Effects',
     description: 'Luminous bioluminescent or magical bloom radiating from objects, eyes, or particles.',
     aliases: ['luminescent', 'neon_glow', 'bloom_effect'],
-    relatedTags: ['glowing_eyes', 'floating_particles', 'magic', 'sparkles'],
+    relatedTags: ['glowing_eyes', 'light_particles', 'magic_circle', 'sparkles'],
     popularity: 'Core',
     postCountEst: '410K'
   },
@@ -328,28 +328,28 @@ export const ART_META_TAGS: BooruTag[] = [
     subcategory: 'Color, Tone & Visual Effects',
     description: 'Glittering four-point star glints and shimmering dust around the character.',
     aliases: ['glitter', 'shimmering', 'kirakira'],
-    relatedTags: ['glowing', 'star-shaped_pupils', 'floating_particles'],
+    relatedTags: ['glowing', 'star-shaped_pupils', 'light_particles'],
     popularity: 'Core',
     postCountEst: '390K'
   },
   {
-    tag: 'floating_particles',
+    tag: 'light_particles',
     domain: 'art_meta',
     subcategory: 'Color, Tone & Visual Effects',
-    description: 'Drifting motes of light, embers, dust, or snow suspended in the air.',
-    aliases: ['light_particles', 'dust_motes', 'embers'],
+    description: 'Drifting motes of glowing light, embers, or ethereal dust suspended in the air.',
+    aliases: ['floating_particles', 'dust_motes', 'embers'],
     relatedTags: ['light_rays', 'glowing', 'falling_petals', 'bokeh'],
     popularity: 'Core',
-    postCountEst: '180K'
+    postCountEst: '410K'
   },
   {
-    tag: 'dutch_border',
+    tag: 'out-of-frame',
     domain: 'art_meta',
     subcategory: 'Color, Tone & Visual Effects',
-    description: 'Stylized white or colored geometric frame/border overlapping which the character breaks out of.',
-    aliases: ['out_of_frame', 'pop_out_border', 'white_border'],
+    description: 'Stylized white or colored geometric frame/border which the character dynamically breaks out of.',
+    aliases: ['dutch_border', 'out_of_frame_border', 'pop_out_border'],
     relatedTags: ['white_border', 'foreshortening', 'official_art'],
-    popularity: 'Common',
-    postCountEst: '65K'
+    popularity: 'Core',
+    postCountEst: '115K'
   }
 ];

@@ -20,13 +20,19 @@ import {
   AlertTriangle,
   Palette,
   Ban,
-  ArrowRightLeft
+  ArrowRightLeft,
+  Smile,
+  Sparkles
 } from 'lucide-react';
 import {
   ALL_BOORU_TAGS,
   DOMAINS,
   DOMAIN_MAP,
-  BUILT_IN_PROMPT_PRESETS
+  BUILT_IN_PROMPT_PRESETS,
+  BUILT_IN_EXPRESSION_PRESETS,
+  FACIAL_MIXER_ZONES,
+  BUILT_IN_SPECIES_PRESETS,
+  SPECIES_MIXER_ZONES
 } from './data';
 import {
   CANONICAL_BOORU_COLORS,
@@ -46,6 +52,8 @@ import {
   PopularityTier,
   PromptPreset,
   NegativePreset,
+  ExpressionPreset,
+  SpeciesPreset,
   PromptHistoryEntry,
   RecentTagEntry,
   LexiconDisplaySettings,
@@ -59,6 +67,8 @@ const STORAGE_KEYS = {
   CUSTOM_TAGS: 'illustrious_lexicon_custom_tags_v1',
   SAVED_PRESETS: 'illustrious_lexicon_saved_presets_v1',
   SAVED_NEGATIVE_PRESETS: 'illustrious_lexicon_saved_neg_presets_v1',
+  SAVED_EXPRESSION_PRESETS: 'illustrious_lexicon_saved_expr_presets_v1',
+  SAVED_SPECIES_PRESETS: 'illustrious_lexicon_saved_species_presets_v1',
   AUTO_SORT: 'illustrious_lexicon_autosort_v1',
   THEME: 'illustrious_lexicon_theme_v1',
   HISTORY_CAP: 'illustrious_lexicon_history_cap_v1',
@@ -492,9 +502,51 @@ export default function App() {
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
   const [customTagInput, setCustomTagInput] = useState('');
   const [customDomainInput, setCustomDomainInput] = useState<DomainId>('character');
-  const [customSubcategoryInput, setCustomSubcategoryInput] = useState('Eyes, Pupils & Gaze');
+  const [customSubcategoryInput, setCustomSubcategoryInput] = useState('Subject & Count');
   const [customDescInput, setCustomDescInput] = useState('');
   const [customAliasesInput, setCustomAliasesInput] = useState('');
+
+  // Face & Expression Studio state
+  const [expressionStudioTab, setExpressionStudioTab] = useState<'presets' | 'mixer'>('presets');
+  const [isExpressionStudioExpanded, setIsExpressionStudioExpanded] = useState<boolean>(true);
+  const [userExpressionPresets, setUserExpressionPresets] = useState<ExpressionPreset[]>(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.SAVED_EXPRESSION_PRESETS);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [newExprPresetName, setNewExprPresetName] = useState<string>('');
+  const [showSaveExprPresetInput, setShowSaveExprPresetInput] = useState<boolean>(false);
+
+  useEffect(() => {
+    localStorage.setItem(
+      STORAGE_KEYS.SAVED_EXPRESSION_PRESETS,
+      JSON.stringify(userExpressionPresets)
+    );
+  }, [userExpressionPresets]);
+
+  // Species, Race & Trait Studio state
+  const [speciesStudioTab, setSpeciesStudioTab] = useState<'presets' | 'mixer'>('presets');
+  const [isSpeciesStudioExpanded, setIsSpeciesStudioExpanded] = useState<boolean>(true);
+  const [userSpeciesPresets, setUserSpeciesPresets] = useState<SpeciesPreset[]>(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.SAVED_SPECIES_PRESETS);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [newSpeciesPresetName, setNewSpeciesPresetName] = useState<string>('');
+  const [showSaveSpeciesPresetInput, setShowSaveSpeciesPresetInput] = useState<boolean>(false);
+
+  useEffect(() => {
+    localStorage.setItem(
+      STORAGE_KEYS.SAVED_SPECIES_PRESETS,
+      JSON.stringify(userSpeciesPresets)
+    );
+  }, [userSpeciesPresets]);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -967,6 +1019,156 @@ export default function App() {
     setUserPresets((prev) => prev.filter((p) => p.id !== id));
   };
 
+  // Active facial/expression tags currently in the positive prompt
+  const activeFacialTags = useMemo(() => {
+    return selectedPromptTags.filter((tagKey) => {
+      const direct = tagMap.get(tagKey);
+      if (direct?.domain === 'face_expressions') return true;
+      const { baseTag } = getBaseUncoloredTag(tagKey);
+      const base = tagMap.get(baseTag);
+      return base?.domain === 'face_expressions';
+    });
+  }, [selectedPromptTags, tagMap]);
+
+  // Apply or toggle a composite expression preset
+  const handleToggleExpressionPreset = (preset: ExpressionPreset, replaceExistingFacial: boolean) => {
+    const allAlreadyActive = preset.tags.every((t) => selectedPromptTags.includes(t));
+    if (allAlreadyActive && !replaceExistingFacial) {
+      const presetSet = new Set(preset.tags);
+      setSelectedPromptTags((prev) => prev.filter((t) => !presetSet.has(t)));
+      return;
+    }
+
+    setSelectedPromptTags((prev) => {
+      const baseList = replaceExistingFacial
+        ? prev.filter((tagKey) => {
+            const direct = tagMap.get(tagKey);
+            if (direct?.domain === 'face_expressions') return false;
+            const { baseTag } = getBaseUncoloredTag(tagKey);
+            const base = tagMap.get(baseTag);
+            return base?.domain !== 'face_expressions';
+          })
+        : prev;
+      const merged = new Set([...baseList, ...preset.tags]);
+      return Array.from(merged);
+    });
+    preset.tags.forEach((t) => recordTagHistory(t));
+    recordPromptHistory(
+      Array.from(new Set([...selectedPromptTags, ...preset.tags])),
+      `Expression: ${preset.name}`
+    );
+  };
+
+  // Clear only facial/expression tags from the active prompt
+  const handleClearFacialTags = () => {
+    setSelectedPromptTags((prev) =>
+      prev.filter((tagKey) => {
+        const direct = tagMap.get(tagKey);
+        if (direct?.domain === 'face_expressions') return false;
+        const { baseTag } = getBaseUncoloredTag(tagKey);
+        const base = tagMap.get(baseTag);
+        return base?.domain !== 'face_expressions';
+      })
+    );
+  };
+
+  // Save current active facial tags as a custom expression preset
+  const handleSaveExpressionPreset = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = newExprPresetName.trim();
+    if (!trimmed || activeFacialTags.length === 0) return;
+    const newExpr: ExpressionPreset = {
+      id: `user_expr_${Date.now()}`,
+      name: trimmed,
+      archetype: 'Custom Expression',
+      description: `${activeFacialTags.length} facial tags saved from active prompt.`,
+      tags: [...activeFacialTags],
+      isBuiltIn: false
+    };
+    setUserExpressionPresets((prev) => [newExpr, ...prev]);
+    setNewExprPresetName('');
+    setShowSaveExprPresetInput(false);
+  };
+
+  const handleDeleteExpressionPreset = (id: string) => {
+    setUserExpressionPresets((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  // Active species/racial/trait tags currently in the positive prompt
+  const activeSpeciesTags = useMemo(() => {
+    return selectedPromptTags.filter((tagKey) => {
+      const direct = tagMap.get(tagKey);
+      if (direct?.domain === 'species_traits') return true;
+      const { baseTag } = getBaseUncoloredTag(tagKey);
+      const base = tagMap.get(baseTag);
+      return base?.domain === 'species_traits';
+    });
+  }, [selectedPromptTags, tagMap]);
+
+  // Apply or toggle a composite species/racial preset
+  const handleToggleSpeciesPreset = (preset: SpeciesPreset, replaceExistingSpecies: boolean) => {
+    const allAlreadyActive = preset.tags.every((t) => selectedPromptTags.includes(t));
+    if (allAlreadyActive && !replaceExistingSpecies) {
+      const presetSet = new Set(preset.tags);
+      setSelectedPromptTags((prev) => prev.filter((t) => !presetSet.has(t)));
+      return;
+    }
+
+    setSelectedPromptTags((prev) => {
+      const baseList = replaceExistingSpecies
+        ? prev.filter((tagKey) => {
+            const direct = tagMap.get(tagKey);
+            if (direct?.domain === 'species_traits') return false;
+            const { baseTag } = getBaseUncoloredTag(tagKey);
+            const base = tagMap.get(baseTag);
+            return base?.domain !== 'species_traits';
+          })
+        : prev;
+      const merged = new Set([...baseList, ...preset.tags]);
+      return Array.from(merged);
+    });
+    preset.tags.forEach((t) => recordTagHistory(t));
+    recordPromptHistory(
+      Array.from(new Set([...selectedPromptTags, ...preset.tags])),
+      `Species: ${preset.name}`
+    );
+  };
+
+  // Clear only species/racial tags from the active prompt
+  const handleClearSpeciesTags = () => {
+    setSelectedPromptTags((prev) =>
+      prev.filter((tagKey) => {
+        const direct = tagMap.get(tagKey);
+        if (direct?.domain === 'species_traits') return false;
+        const { baseTag } = getBaseUncoloredTag(tagKey);
+        const base = tagMap.get(baseTag);
+        return base?.domain !== 'species_traits';
+      })
+    );
+  };
+
+  // Save current active species tags as a custom species preset
+  const handleSaveSpeciesPreset = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = newSpeciesPresetName.trim();
+    if (!trimmed || activeSpeciesTags.length === 0) return;
+    const newSpec: SpeciesPreset = {
+      id: `user_species_${Date.now()}`,
+      name: trimmed,
+      lineage: 'Custom Lineage',
+      description: `${activeSpeciesTags.length} species & trait tags saved from active prompt.`,
+      tags: [...activeSpeciesTags],
+      isBuiltIn: false
+    };
+    setUserSpeciesPresets((prev) => [newSpec, ...prev]);
+    setNewSpeciesPresetName('');
+    setShowSaveSpeciesPresetInput(false);
+  };
+
+  const handleDeleteSpeciesPreset = (id: string) => {
+    setUserSpeciesPresets((prev) => prev.filter((p) => p.id !== id));
+  };
+
   // Create custom booru tag (normalizing spaces to underscores)
   const handleCreateCustomTag = (e: React.FormEvent) => {
     e.preventDefault();
@@ -974,7 +1176,7 @@ export default function App() {
       .trim()
       .toLowerCase()
       .replace(/\s+/g, '_')
-      .replace(/[^a-z0-9_()!-]/g, '');
+      .replace(/[^a-z0-9_()!:'><-]/g, '');
 
     if (!normalizedTag) return;
 
@@ -1728,6 +1930,512 @@ export default function App() {
                     Clear Tag History
                   </button>
                 </div>
+              </div>
+            )}
+
+            {/* Interactive Species, Race & Trait Studio (Composite Lineages + 4-Zone Racial Mixer) */}
+            {selectedDomain === 'species_traits' && (
+              <div className="rounded-xl bg-slate-50 dark:bg-[#0B0F17] border border-slate-200 dark:border-slate-800 overflow-hidden">
+                <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/60 dark:bg-[#0F1522]/80">
+                  <div className="flex items-center gap-3">
+                    <Sparkles className="w-4 h-4 text-indigo-500 shrink-0" />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 font-display">
+                          Species, Race & Trait Studio
+                        </h2>
+                        <span className="text-xs text-slate-500 dark:text-slate-400 font-mono tabular-nums">
+                          · {activeSpeciesTags.length} species/trait tags active
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center p-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSpeciesStudioTab('presets');
+                          setIsSpeciesStudioExpanded(true);
+                        }}
+                        className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
+                          speciesStudioTab === 'presets' && isSpeciesStudioExpanded
+                            ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                        }`}
+                      >
+                        Composite Lineages ({BUILT_IN_SPECIES_PRESETS.length + userSpeciesPresets.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSpeciesStudioTab('mixer');
+                          setIsSpeciesStudioExpanded(true);
+                        }}
+                        className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
+                          speciesStudioTab === 'mixer' && isSpeciesStudioExpanded
+                            ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                        }`}
+                      >
+                        4-Zone Trait Mixer
+                      </button>
+                    </div>
+
+                    {activeSpeciesTags.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleClearSpeciesTags}
+                        className="px-2.5 py-1 text-xs font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-md transition-colors cursor-pointer whitespace-nowrap"
+                      >
+                        Reset Species ({activeSpeciesTags.length})
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => setIsSpeciesStudioExpanded((prev) => !prev)}
+                      className="px-2.5 py-1 text-xs font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer whitespace-nowrap"
+                    >
+                      {isSpeciesStudioExpanded ? 'Collapse' : 'Expand'}
+                    </button>
+                  </div>
+                </div>
+
+                {isSpeciesStudioExpanded && (
+                  <div className="p-4 space-y-4">
+                    {speciesStudioTab === 'presets' ? (
+                      <div className="space-y-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            Click any composite lineage to add or toggle its species, ear, horn, wing, tail, and fur/scale combination, or use <strong>Swap Species</strong> to replace your current racial traits cleanly.
+                          </p>
+                          {!showSaveSpeciesPresetInput ? (
+                            <button
+                              type="button"
+                              disabled={activeSpeciesTags.length === 0}
+                              onClick={() => setShowSaveSpeciesPresetInput(true)}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 disabled:opacity-40 rounded-md transition-colors cursor-pointer whitespace-nowrap shrink-0"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              <span>Save Active Species as Preset</span>
+                            </button>
+                          ) : (
+                            <form onSubmit={handleSaveSpeciesPreset} className="flex items-center gap-1.5">
+                              <input
+                                type="text"
+                                value={newSpeciesPresetName}
+                                onChange={(e) => setNewSpeciesPresetName(e.target.value)}
+                                placeholder="Species preset name..."
+                                className="px-2.5 py-1 text-xs bg-white dark:bg-[#0F1522] border border-slate-200 dark:border-slate-700 rounded text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
+                              />
+                              <button
+                                type="submit"
+                                className="px-2.5 py-1 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded cursor-pointer"
+                              >
+                                Save
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setShowSaveSpeciesPresetInput(false)}
+                                className="px-2 py-1 text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+                              >
+                                Cancel
+                              </button>
+                            </form>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2.5">
+                          {[...userSpeciesPresets, ...BUILT_IN_SPECIES_PRESETS].map((preset) => {
+                            const activeCount = preset.tags.filter((t) =>
+                              selectedPromptTags.includes(t)
+                            ).length;
+                            const isFullyActive = activeCount === preset.tags.length;
+
+                            return (
+                              <div
+                                key={preset.id}
+                                className={`p-3 rounded-lg border transition-colors flex flex-col justify-between gap-2.5 ${
+                                  isFullyActive
+                                    ? 'bg-indigo-50/70 dark:bg-indigo-950/30 border-indigo-400 dark:border-indigo-600'
+                                    : 'bg-white dark:bg-[#0F1522] border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                                }`}
+                              >
+                                <div className="space-y-1">
+                                  <div className="flex items-center justify-between gap-1">
+                                    <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                                      {preset.lineage}
+                                    </span>
+                                    <div className="flex items-center gap-1 shrink-0">
+                                      <span className="text-[11px] font-mono tabular-nums text-slate-400 dark:text-slate-500">
+                                        {activeCount}/{preset.tags.length}
+                                      </span>
+                                      {!preset.isBuiltIn && (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleDeleteSpeciesPreset(preset.id)}
+                                          title="Delete custom species preset"
+                                          className="text-slate-400 hover:text-rose-500 cursor-pointer p-0.5"
+                                        >
+                                          <Trash2 className="w-3 h-3" />
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 font-display">
+                                    {preset.name}
+                                  </h3>
+                                  <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2">
+                                    {preset.description}
+                                  </p>
+                                  <p className="text-[11px] font-mono text-indigo-600 dark:text-indigo-400 truncate pt-0.5">
+                                    {preset.tags.join(', ')}
+                                  </p>
+                                </div>
+
+                                <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-slate-800/80">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleSpeciesPreset(preset, false)}
+                                    className={`flex-1 py-1 px-2 text-[11px] font-semibold rounded transition-colors cursor-pointer whitespace-nowrap ${
+                                      isFullyActive
+                                        ? 'bg-indigo-600 text-white hover:bg-indigo-500'
+                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                    }`}
+                                  >
+                                    {isFullyActive ? 'Active (Remove)' : '+ Add Lineage'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleSpeciesPreset(preset, true)}
+                                    title="Replace all currently active species & trait tags with this lineage preset"
+                                    className="py-1 px-2 text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/70 hover:bg-indigo-600 hover:text-white rounded transition-colors cursor-pointer whitespace-nowrap"
+                                  >
+                                    Swap Species
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : (
+                      /* 4-Zone Species & Trait Mixer */
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+                        {SPECIES_MIXER_ZONES.map((zone) => {
+                          const isSubcatSelected = selectedSubcategory === zone.subcategory;
+                          return (
+                            <div
+                              key={zone.id}
+                              className="p-3 rounded-lg bg-white dark:bg-[#0F1522] border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3"
+                            >
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                                  <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 font-display">
+                                    {zone.label}
+                                  </h3>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setSelectedSubcategory(
+                                        isSubcatSelected ? 'all' : zone.subcategory
+                                      )
+                                    }
+                                    className={`text-[11px] font-medium cursor-pointer whitespace-nowrap ${
+                                      isSubcatSelected
+                                        ? 'text-indigo-600 dark:text-indigo-400 font-semibold underline'
+                                        : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+                                    }`}
+                                  >
+                                    {isSubcatSelected ? 'Showing Zone' : 'Filter Table →'}
+                                  </button>
+                                </div>
+
+                                <div className="flex flex-wrap gap-1.5">
+                                  {zone.quickTags.map((tagKey) => {
+                                    const isActive = selectedPromptTags.includes(tagKey);
+                                    const isConflicting = conflictingTagSet.has(tagKey);
+                                    return (
+                                      <button
+                                        key={tagKey}
+                                        type="button"
+                                        onClick={() => toggleTagInPrompt(tagKey)}
+                                        className={`px-2 py-1 text-[11px] font-mono rounded border transition-colors cursor-pointer whitespace-nowrap ${
+                                          isActive
+                                            ? isConflicting
+                                              ? 'bg-amber-500/20 border-amber-500 text-amber-700 dark:text-amber-300 font-semibold'
+                                              : 'bg-indigo-600 border-indigo-600 text-white font-semibold'
+                                            : 'bg-slate-50 dark:bg-[#0B0F17] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-400'
+                                        }`}
+                                      >
+                                        {tagKey}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Interactive Face & Expression Studio (Composite Presets + 4-Zone Facial Mixer) */}
+            {selectedDomain === 'face_expressions' && (
+              <div className="rounded-xl bg-slate-50 dark:bg-[#0B0F17] border border-slate-200 dark:border-slate-800 overflow-hidden">
+                <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/60 dark:bg-[#0F1522]/80">
+                  <div className="flex items-center gap-3">
+                    <Smile className="w-4 h-4 text-indigo-500 shrink-0" />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 font-display">
+                          Face & Expression Studio
+                        </h2>
+                        <span className="text-xs text-slate-500 dark:text-slate-400 font-mono tabular-nums">
+                          · {activeFacialTags.length} facial tags active
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center p-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setExpressionStudioTab('presets');
+                          setIsExpressionStudioExpanded(true);
+                        }}
+                        className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
+                          expressionStudioTab === 'presets' && isExpressionStudioExpanded
+                            ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                        }`}
+                      >
+                        Composite Presets ({BUILT_IN_EXPRESSION_PRESETS.length + userExpressionPresets.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setExpressionStudioTab('mixer');
+                          setIsExpressionStudioExpanded(true);
+                        }}
+                        className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
+                          expressionStudioTab === 'mixer' && isExpressionStudioExpanded
+                            ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                        }`}
+                      >
+                        4-Zone Feature Mixer
+                      </button>
+                    </div>
+
+                    {activeFacialTags.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleClearFacialTags}
+                        className="px-2.5 py-1 text-xs font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-md transition-colors cursor-pointer whitespace-nowrap"
+                      >
+                        Reset Face ({activeFacialTags.length})
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => setIsExpressionStudioExpanded((prev) => !prev)}
+                      className="px-2.5 py-1 text-xs font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer whitespace-nowrap"
+                    >
+                      {isExpressionStudioExpanded ? 'Collapse' : 'Expand'}
+                    </button>
+                  </div>
+                </div>
+
+                {isExpressionStudioExpanded && (
+                  <div className="p-4 space-y-4">
+                    {expressionStudioTab === 'presets' ? (
+                      <div className="space-y-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            Click any composite preset to add or toggle its eyebrow, eye, mouth, and blush combination, or use <strong>Swap Face</strong> to replace your current facial tags cleanly.
+                          </p>
+                          {!showSaveExprPresetInput ? (
+                            <button
+                              type="button"
+                              disabled={activeFacialTags.length === 0}
+                              onClick={() => setShowSaveExprPresetInput(true)}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 disabled:opacity-40 rounded-md transition-colors cursor-pointer whitespace-nowrap shrink-0"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              <span>Save Active Face as Preset</span>
+                            </button>
+                          ) : (
+                            <form onSubmit={handleSaveExpressionPreset} className="flex items-center gap-1.5">
+                              <input
+                                type="text"
+                                value={newExprPresetName}
+                                onChange={(e) => setNewExprPresetName(e.target.value)}
+                                placeholder="Expression preset name..."
+                                className="px-2.5 py-1 text-xs bg-white dark:bg-[#0F1522] border border-slate-200 dark:border-slate-700 rounded text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
+                              />
+                              <button
+                                type="submit"
+                                className="px-2.5 py-1 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded cursor-pointer"
+                              >
+                                Save
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setShowSaveExprPresetInput(false)}
+                                className="px-2 py-1 text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+                              >
+                                Cancel
+                              </button>
+                            </form>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-2.5">
+                          {[...userExpressionPresets, ...BUILT_IN_EXPRESSION_PRESETS].map((preset) => {
+                            const activeCount = preset.tags.filter((t) =>
+                              selectedPromptTags.includes(t)
+                            ).length;
+                            const isFullyActive = activeCount === preset.tags.length;
+
+                            return (
+                              <div
+                                key={preset.id}
+                                className={`p-3 rounded-lg border transition-colors flex flex-col justify-between gap-2.5 ${
+                                  isFullyActive
+                                    ? 'bg-indigo-50/70 dark:bg-indigo-950/30 border-indigo-400 dark:border-indigo-600'
+                                    : 'bg-white dark:bg-[#0F1522] border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                                }`}
+                              >
+                                <div className="space-y-1">
+                                  <div className="flex items-center justify-between gap-1">
+                                    <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                                      {preset.archetype}
+                                    </span>
+                                    <div className="flex items-center gap-1 shrink-0">
+                                      <span className="text-[11px] font-mono tabular-nums text-slate-400 dark:text-slate-500">
+                                        {activeCount}/{preset.tags.length}
+                                      </span>
+                                      {!preset.isBuiltIn && (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleDeleteExpressionPreset(preset.id)}
+                                          title="Delete custom expression preset"
+                                          className="text-slate-400 hover:text-rose-500 cursor-pointer p-0.5"
+                                        >
+                                          <Trash2 className="w-3 h-3" />
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 font-display">
+                                    {preset.name}
+                                  </h3>
+                                  <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2">
+                                    {preset.description}
+                                  </p>
+                                  <p className="text-[11px] font-mono text-indigo-600 dark:text-indigo-400 truncate pt-0.5">
+                                    {preset.tags.join(', ')}
+                                  </p>
+                                </div>
+
+                                <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-slate-800/80">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleExpressionPreset(preset, false)}
+                                    className={`flex-1 py-1 px-2 text-[11px] font-semibold rounded transition-colors cursor-pointer whitespace-nowrap ${
+                                      isFullyActive
+                                        ? 'bg-indigo-600 text-white hover:bg-indigo-500'
+                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                    }`}
+                                  >
+                                    {isFullyActive ? 'Active (Remove)' : '+ Add Combo'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleExpressionPreset(preset, true)}
+                                    title="Replace all currently active facial tags with this expression preset"
+                                    className="py-1 px-2 text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/70 hover:bg-indigo-600 hover:text-white rounded transition-colors cursor-pointer whitespace-nowrap"
+                                  >
+                                    Swap Face
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : (
+                      /* 4-Zone Facial Feature Mixer */
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+                        {FACIAL_MIXER_ZONES.map((zone) => {
+                          const isSubcatSelected = selectedSubcategory === zone.subcategory;
+                          return (
+                            <div
+                              key={zone.id}
+                              className="p-3 rounded-lg bg-white dark:bg-[#0F1522] border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3"
+                            >
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                                  <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 font-display">
+                                    {zone.label}
+                                  </h3>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setSelectedSubcategory(
+                                        isSubcatSelected ? 'all' : zone.subcategory
+                                      )
+                                    }
+                                    className={`text-[11px] font-medium cursor-pointer whitespace-nowrap ${
+                                      isSubcatSelected
+                                        ? 'text-indigo-600 dark:text-indigo-400 font-semibold underline'
+                                        : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+                                    }`}
+                                  >
+                                    {isSubcatSelected ? 'Showing Zone' : 'Filter Table →'}
+                                  </button>
+                                </div>
+
+                                <div className="flex flex-wrap gap-1.5">
+                                  {zone.quickTags.map((tagKey) => {
+                                    const isActive = selectedPromptTags.includes(tagKey);
+                                    const isConflicting = conflictingTagSet.has(tagKey);
+                                    return (
+                                      <button
+                                        key={tagKey}
+                                        type="button"
+                                        onClick={() => toggleTagInPrompt(tagKey)}
+                                        className={`px-2 py-1 text-[11px] font-mono rounded border transition-colors cursor-pointer whitespace-nowrap ${
+                                          isActive
+                                            ? isConflicting
+                                              ? 'bg-amber-500/20 border-amber-500 text-amber-700 dark:text-amber-300 font-semibold'
+                                              : 'bg-indigo-600 border-indigo-600 text-white font-semibold'
+                                            : 'bg-slate-50 dark:bg-[#0B0F17] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-400'
+                                        }`}
+                                      >
+                                        {tagKey}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 

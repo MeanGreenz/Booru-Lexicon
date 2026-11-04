@@ -133,8 +133,54 @@ const COLORABLE_BASE_TAGS = new Set([
   'cat_ears',
   'fox_ears',
   'rabbit_ears',
+  'dog_ears',
+  'horse_ears',
+  'wolf_ears',
+  'mouse_ears',
+  'sheep_ears',
+  'tiger_ears',
+  'lion_ears',
+  'bear_ears',
+  'deer_ears',
+  'cow_ears',
+  'wolf_tail',
+  'dog_tail',
+  'rabbit_tail',
+  'horse_tail',
+  'cow_tail',
+  'demon_tail',
+  'shark_tail',
+  'snake_tail',
+  'fish_tail',
+  'demon_wings',
+  'dragon_wings',
+  'fairy_wings',
+  'butterfly_wings',
+  'insect_wings',
+  'demon_horns',
+  'dragon_horns',
+  'oni_horns',
+  'curled_horns',
+  'fur',
+  'skin',
+  'sclera',
+  'scales',
   'umbrella',
-  'parasol'
+  'parasol',
+  'eyeshadow',
+  'lipstick',
+  'suit',
+  'vest',
+  'sweater_vest',
+  'sleeveless_shirt',
+  'sleeveless_dress',
+  'pants',
+  'overalls',
+  'frilled_bikini',
+  'front-tie_bikini',
+  'bandeau',
+  'sarong',
+  'thigh_ribbon'
 ]);
 
 /**
@@ -156,6 +202,10 @@ export function getBaseUncoloredTag(tag: string): {
     }
   }
 
+  // Special case: colored_skin / colored_sclera
+  if (tag === 'colored_skin') return { colorPrefix: null, baseTag: 'skin' };
+  if (tag === 'colored_sclera') return { colorPrefix: null, baseTag: 'sclera' };
+
   const firstUnderscore = tag.indexOf('_');
   if (firstUnderscore > 0) {
     const potentialColor = tag.slice(0, firstUnderscore);
@@ -173,6 +223,7 @@ export function getBaseUncoloredTag(tag: string): {
  */
 export function isTagColorable(tag: string): boolean {
   if (tag === 'colored_inner_hair' || tag.endsWith('_inner_hair')) return true;
+  if (tag === 'colored_skin' || tag === 'colored_sclera') return true;
   if (tag.endsWith('_hair') || tag.endsWith('_eyes')) {
     const { colorPrefix, baseTag } = getBaseUncoloredTag(tag);
     if (colorPrefix && (baseTag === 'hair' || baseTag === 'eyes')) {
@@ -228,7 +279,7 @@ export const CONFLICT_RULES: ConflictGroupRule[] = [
     id: 'hair_length_conflict',
     categoryLabel: 'Hair Length Contradiction',
     mode: 'mutually_exclusive',
-    tagsA: ['short_hair', 'medium_hair', 'long_hair', 'very_long_hair', 'absurdly_long_hair'],
+    tagsA: ['very_short_hair', 'short_hair', 'medium_hair', 'long_hair', 'very_long_hair', 'absurdly_long_hair'],
     reason: 'Combining short and long hair length tags causes inconsistent hair strand rendering.'
   },
   {
@@ -373,7 +424,7 @@ export const CONFLICT_RULES: ConflictGroupRule[] = [
     categoryLabel: 'Underwear State Contradiction',
     mode: 'group_vs_group',
     tagsA: ['no_bra'],
-    tagsB: ['bra', 'lace_bra', 'sports_bra', 'strapless_bra'],
+    tagsB: ['bra', 'frilled_bra', 'sports_bra', 'strapless_bra', 'bandeau'],
     reason: '"no_bra" directly contradicts wearing a bra.'
   },
   {
@@ -422,10 +473,11 @@ export const CONFLICT_RULES: ConflictGroupRule[] = [
     id: 'eye_state_conflict',
     categoryLabel: 'Eye State Contradiction',
     mode: 'group_vs_group',
-    tagsA: ['closed_eyes'],
+    tagsA: ['closed_eyes', '><'],
     tagsB: [
       'one_eye_closed',
       'looking_at_viewer',
+      'eye_contact',
       'half-closed_eyes',
       'wide-eyed',
       'crazy_eyes',
@@ -433,22 +485,76 @@ export const CONFLICT_RULES: ConflictGroupRule[] = [
       'sanpaku',
       'glaring'
     ],
-    reason: '"closed_eyes" shuts both eyelids, preventing iris visibility or direct eye contact.'
+    reason: '"closed_eyes" or "><" shuts both eyelids, preventing iris visibility or direct eye contact.'
+  },
+  {
+    id: 'eyebrow_state_conflict',
+    categoryLabel: 'Eyebrow Shape Contradiction',
+    mode: 'mutually_exclusive',
+    tagsA: ['v-shaped_eyebrows', 'raised_eyebrows'],
+    reason: 'V-shaped (scowling) and raised (surprised) eyebrows pull the brow in opposite directions.'
   },
   {
     id: 'mouth_state_conflict',
     categoryLabel: 'Mouth State Contradiction',
     mode: 'group_vs_group',
     tagsA: ['closed_mouth'],
-    tagsB: ['open_mouth', 'parted_lips', 'tongue_out', 'clenched_teeth', 'grin'],
+    tagsB: [
+      'open_mouth',
+      ':d',
+      'parted_lips',
+      'tongue_out',
+      'long_tongue',
+      'clenched_teeth',
+      'shark_teeth',
+      'grin',
+      'laughing',
+      'yawn',
+      'uvula'
+    ],
     reason: '"closed_mouth" conflicts with open-mouthed or visible-tooth/tongue expressions.'
+  },
+  {
+    id: 'expressionless_vs_emotive_conflict',
+    categoryLabel: 'Expression Contradiction',
+    mode: 'group_vs_group',
+    tagsA: ['expressionless'],
+    tagsB: [
+      'happy',
+      'grin',
+      ':d',
+      'laughing',
+      'ahegao',
+      'torogao',
+      'crying',
+      'angry',
+      'scowl',
+      'panicking',
+      'surprised'
+    ],
+    reason: '"expressionless" specifies a deadpan, stoic face that conflicts with high-intensity emotional expressions.'
+  },
+  {
+    id: 'gaze_direction_conflict',
+    categoryLabel: 'Gaze Direction Clash',
+    mode: 'group_vs_group',
+    tagsA: ['looking_at_viewer', 'eye_contact'],
+    tagsB: ['looking_away', 'looking_at_another'],
+    reason: 'Direct viewer eye contact conflicts with looking away from the camera.'
+  },
+  {
+    id: 'head_orientation_conflict',
+    categoryLabel: 'Head Orientation Clash',
+    mode: 'mutually_exclusive',
+    tagsA: ['straight-on', 'profile', 'facing_away'],
+    reason: 'Front-facing ("straight-on"), 90-degree side profile, and facing-away orientations are mutually exclusive.'
   },
   {
     id: 'camera_vertical_angle_conflict',
     categoryLabel: 'Camera Angle Clash',
     mode: 'group_vs_group',
-    tagsA: ['from_above', "bird's-eye_view"],
-    tagsB: ['from_below', "worm's-eye_view", 'upskirt'],
+    tagsA: ['from_above'],
+    tagsB: ['from_below', 'upskirt'],
     reason: 'High-angle ("from_above") and low-angle ("from_below") camera positions are opposite.'
   },
   {
@@ -469,16 +575,57 @@ export const CONFLICT_RULES: ConflictGroupRule[] = [
     id: 'sky_time_conflict',
     categoryLabel: 'Time of Day / Sky Clash',
     mode: 'mutually_exclusive',
-    tagsA: ['blue_sky', 'sunset', 'golden_hour', 'night_sky', 'night'],
-    reason: 'Daytime blue_sky, sunset/golden_hour, and night/night_sky compete for global scene lighting.'
+    tagsA: ['blue_sky', 'sunset', 'night_sky', 'night'],
+    reason: 'Daytime blue_sky, sunset, and night/night_sky compete for global scene lighting.'
   },
   {
     id: 'color_palette_conflict',
     categoryLabel: 'Color Palette Clash',
     mode: 'group_vs_group',
     tagsA: ['monochrome', 'greyscale'],
-    tagsB: ['vibrant_colors', 'pastel_colors'],
+    tagsB: ['colorful', 'pastel_colors'],
     reason: 'Monochrome/greyscale conflicts with full-color palette tags (unless using spot_color).'
+  },
+  {
+    id: 'kemonomimi_vs_furry_conflict',
+    categoryLabel: 'Kemonomimi vs. Full Anthro Furry Clash',
+    mode: 'group_vs_group',
+    tagsA: ['kemonomimi_mode'],
+    tagsB: ['furry', 'furry_female', 'furry_male', 'anthro', 'feral', 'snout'],
+    reason: '"kemonomimi_mode" specifies human skin/face with animal ears & tail, which conflicts with full-fur/snout "furry" / "anthro" tags.'
+  },
+  {
+    id: 'bipedal_vs_feral_conflict',
+    categoryLabel: 'Anthro vs. Feral Body Plan Clash',
+    mode: 'group_vs_group',
+    tagsA: ['anthro', 'semi-anthro'],
+    tagsB: ['feral'],
+    reason: '"anthro" (bipedal upright anatomy) conflicts with "feral" (quadrupedal non-bipedal beast anatomy).'
+  },
+  {
+    id: 'real_vs_fake_animal_ears_conflict',
+    categoryLabel: 'Real vs. Fake Animal Ears Clash',
+    mode: 'group_vs_group',
+    tagsA: ['kemonomimi_mode', 'animal_ear_fluff'],
+    tagsB: ['fake_animal_ears', 'fake_rabbit_ears'],
+    reason: 'Biological kemonomimi ears conflict with cosplay headband "fake_animal_ears" / "fake_rabbit_ears".'
+  },
+  {
+    id: 'fantasy_skin_color_conflict',
+    categoryLabel: 'Skin Color Contradiction',
+    mode: 'mutually_exclusive',
+    tagsA: [
+      'pale_skin',
+      'dark_skin',
+      'blue_skin',
+      'green_skin',
+      'red_skin',
+      'purple_skin',
+      'grey_skin',
+      'white_skin',
+      'pink_skin'
+    ],
+    reason: 'Multiple primary skin tone tags compete unless paired with "two-tone_skin".'
   }
 ];
 
