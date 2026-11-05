@@ -303,16 +303,6 @@ export const FACE_AND_GAZE_TAGS: BooruTag[] = [
     postCountEst: '320K'
   },
   {
-    tag: 'silver_eyes',
-    domain: 'face_expressions',
-    subcategory: 'Pupils, Irises & Eye Colors',
-    description: 'Cool metallic silver or platinum-grey irises.',
-    aliases: ['grey_eyes', 'platinum_eyes'],
-    relatedTags: ['silver_hair', 'white_hair', 'white_pupils'],
-    popularity: 'Core',
-    postCountEst: '490K'
-  },
-  {
     tag: 'gradient_eyes',
     domain: 'face_expressions',
     subcategory: 'Pupils, Irises & Eye Colors',
@@ -1068,7 +1058,7 @@ export const FACIAL_MIXER_ZONES: FacialMixerZone[] = [
       'yellow_eyes',
       'green_eyes',
       'pink_eyes',
-      'silver_eyes'
+      'grey_eyes'
     ]
   },
   {

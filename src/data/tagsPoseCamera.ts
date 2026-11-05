@@ -357,16 +357,6 @@ export const POSE_CAMERA_TAGS: BooruTag[] = [
     postCountEst: '240K'
   },
   {
-    tag: 'hand_on_hip',
-    domain: 'pose_camera',
-    subcategory: 'Hands & Arm Gestures',
-    description: 'One hand resting on the waist or hip with the elbow bent outward.',
-    aliases: ['akimbo', 'hand_on_waist'],
-    relatedTags: ['hands_on_hips', 'standing', 'contrapposto'],
-    popularity: 'Core',
-    postCountEst: '590K'
-  },
-  {
     tag: 'hand_on_own_chest',
     domain: 'pose_camera',
     subcategory: 'Hands & Arm Gestures',

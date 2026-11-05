@@ -473,7 +473,7 @@ export const CONFLICT_RULES: ConflictGroupRule[] = [
     id: 'eye_state_conflict',
     categoryLabel: 'Eye State Contradiction',
     mode: 'group_vs_group',
-    tagsA: ['closed_eyes', '><'],
+    tagsA: ['closed_eyes', '>_<', '^_^', '><'],
     tagsB: [
       'one_eye_closed',
       'looking_at_viewer',
@@ -485,7 +485,7 @@ export const CONFLICT_RULES: ConflictGroupRule[] = [
       'sanpaku',
       'glaring'
     ],
-    reason: '"closed_eyes" or "><" shuts both eyelids, preventing iris visibility or direct eye contact.'
+    reason: '"closed_eyes", ">_<", or "^_^" shuts both eyelids, preventing iris visibility or direct eye contact.'
   },
   {
     id: 'eyebrow_state_conflict',

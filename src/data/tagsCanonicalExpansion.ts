@@ -288,17 +288,6 @@ export const CANONICAL_EXPANSION_TAGS: BooruTag[] = [
   // 03. FACE, EYES & EXPRESSIONS — Core Emotions & Canonical Emoticon Mouths
   // ============================================================================
   {
-    tag: '><',
-    domain: 'face_expressions',
-    subcategory: 'Eyebrows, Eye Shapes & Eyelids',
-    description: 'Both eyelids squeezed tightly into chevron "> <" shapes from wincing, embarrassment, or exuberant joy.',
-    aliases: ['>_<', 'chevron_eyes', 'squeezed_chevron_eyes'],
-    relatedTags: ['closed_eyes', 'squinting', 'embarrassed', 'laughing'],
-    popularity: 'Core',
-    postCountEst: '290K',
-    illustriousNote: 'Canonical Danbooru tag for the classic anime "> <" squeezed-eye expression.'
-  },
-  {
     tag: ':d',
     domain: 'face_expressions',
     subcategory: 'Mouth, Lips, Teeth & Tongue',
@@ -756,16 +745,6 @@ export const CANONICAL_EXPANSION_TAGS: BooruTag[] = [
     relatedTags: ['knees_together_feet_apart', 'standing', 'embarrassed'],
     popularity: 'Core',
     postCountEst: '165K'
-  },
-  {
-    tag: 'lying_on_side',
-    domain: 'pose_camera',
-    subcategory: 'Body Poses & Stances',
-    description: 'Reclining horizontally on one hip and shoulder, emphasizing the waist-to-hip curve.',
-    aliases: ['on_side', 'side_recline'],
-    relatedTags: ['lying', 'on_bed', 'wide_hips', 'head_rest'],
-    popularity: 'Core',
-    postCountEst: '185K'
   },
   {
     tag: 'walking',

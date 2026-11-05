@@ -318,19 +318,9 @@ export const ART_META_TAGS: BooruTag[] = [
     subcategory: 'Color, Tone & Visual Effects',
     description: 'Luminous bioluminescent or magical bloom radiating from objects, eyes, or particles.',
     aliases: ['luminescent', 'neon_glow', 'bloom_effect'],
-    relatedTags: ['glowing_eyes', 'light_particles', 'magic_circle', 'sparkles'],
+    relatedTags: ['glowing_eyes', 'light_particles', 'magic_circle', 'sparkle'],
     popularity: 'Core',
     postCountEst: '410K'
-  },
-  {
-    tag: 'sparkles',
-    domain: 'art_meta',
-    subcategory: 'Color, Tone & Visual Effects',
-    description: 'Glittering four-point star glints and shimmering dust around the character.',
-    aliases: ['glitter', 'shimmering', 'kirakira'],
-    relatedTags: ['glowing', 'star-shaped_pupils', 'light_particles'],
-    popularity: 'Core',
-    postCountEst: '390K'
   },
   {
     tag: 'light_particles',

@@ -11,6 +11,7 @@ import { ARCHETYPES_FEATURES_TAGS } from './tagsArchetypesFeatures';
 import { INTERACTIONS_MATERIALS_TAGS } from './tagsInteractionsMaterials';
 import { COMPREHENSIVE_POLISH_TAGS } from './tagsComprehensivePolish';
 import { CANONICAL_EXPANSION_TAGS } from './tagsCanonicalExpansion';
+import { MISSING_CANONICAL_TAGS } from './tagsMissingCanonical';
 import {
   FACE_AND_GAZE_TAGS,
   FACIAL_AND_GAZE_MIGRATION_MAP,
@@ -37,12 +38,13 @@ export const DOMAINS: DomainMetadata[] = [
     indexNumber: '01',
     label: 'Art Styles, Mediums & Meta Quality',
     shortLabel: 'Art & Meta',
-    description: 'SDXL Illustrious quality score triggers, rating tokens, era tags, shading styles, mediums, and color palettes.',
+    description: 'SDXL Illustrious quality score triggers, rating tokens, era tags, shading styles, mediums, page layouts, and color palettes.',
     promptOrderPriority: 1,
     subcategories: [
       'Illustrious Quality & Era',
       'Shading, Lineart & Mediums',
-      'Color, Tone & Visual Effects'
+      'Color, Tone & Visual Effects',
+      'Format & Page Layout'
     ]
   },
   {
@@ -82,13 +84,14 @@ export const DOMAINS: DomainMetadata[] = [
     indexNumber: '04',
     label: 'Face, Eyes & Expressions',
     shortLabel: 'Face & Expressions',
-    description: 'Eyebrow shapes, eyelid states, pupil geometry, iris colors, mouth/teeth/tongue shapes, blush levels, tears, sweat drops, and composite expressions.',
+    description: 'Eyebrow shapes, eyelid states, pupil geometry, iris colors, mouth/teeth/tongue shapes, blush levels, tears, sweat drops, facial hair, and composite expressions.',
     promptOrderPriority: 4,
     subcategories: [
       'Eyebrows, Eye Shapes & Eyelids',
       'Pupils, Irises & Eye Colors',
       'Mouth, Lips, Teeth & Tongue',
-      'Blush, Tears, Sweat & Emotion Symbols'
+      'Blush, Tears, Sweat & Emotion Symbols',
+      'Facial Hair'
     ]
   },
   {
@@ -96,7 +99,7 @@ export const DOMAINS: DomainMetadata[] = [
     indexNumber: '05',
     label: 'Clothing, Lingerie, Materials & Fashion States',
     shortLabel: 'Clothing',
-    description: 'School uniforms, traditional wafuku, dresses, swimwear, lingerie, latex/fetish materials, suggestive/disheveled states, and legwear.',
+    description: 'School uniforms, traditional wafuku, dresses, swimwear, lingerie, latex/fetish materials, suggestive/disheveled states, prints/patterns, and legwear.',
     promptOrderPriority: 5,
     subcategories: [
       'Uniforms & Formal',
@@ -106,6 +109,7 @@ export const DOMAINS: DomainMetadata[] = [
       'Swimwear, Lingerie & Bodysuits',
       'Materials, Latex & Fetish Gear',
       'Suggestive & Disheveled State',
+      'Prints & Patterns',
       'Legwear & Footwear',
       'Headwear, Eyewear & Accessories'
     ]
@@ -168,7 +172,8 @@ const rawTags: BooruTag[] = [
   ...RISQUE_TAGS,
   ...EXPLICIT_ACTION_TAGS,
   ...COMPREHENSIVE_POLISH_TAGS,
-  ...CANONICAL_EXPANSION_TAGS
+  ...CANONICAL_EXPANSION_TAGS,
+  ...MISSING_CANONICAL_TAGS
 ];
 
 const seen = new Set<string>();
