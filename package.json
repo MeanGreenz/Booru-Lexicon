@@ -6,6 +6,24 @@
   "description": "High-density Booru-style tag lexicon and one-click prompt composer for SDXL Illustrious anime diffusion models.",
   "author": "Illustrious Lexicon Contributors",
   "license": "Apache-2.0",
+  "homepage": "https://github.com/MeanGreenz/Booru-Lexicon#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MeanGreenz/Booru-Lexicon.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MeanGreenz/Booru-Lexicon/issues"
+  },
+  "keywords": [
+    "booru",
+    "danbooru",
+    "sdxl",
+    "illustrious",
+    "stable-diffusion",
+    "prompt-composer",
+    "tag-lexicon",
+    "anime-diffusion"
+  ],
   "main": "electron/main.cjs",
   "type": "module",
   "scripts": {

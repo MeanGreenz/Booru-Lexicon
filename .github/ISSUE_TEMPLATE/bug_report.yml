@@ -1,0 +1,22 @@
+name: "🐛 Bug Report / UI Issue"
+description: "Report a bug in the web app, standalone HTML, or Windows Electron executable"
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: platform
+    attributes:
+      label: "Platform / Build"
+      options:
+        - "Windows Portable / Setup (.exe)"
+        - "Standalone HTML (Illustrious-Lexicon-Standalone.html)"
+        - "Web Browser (GitHub Pages / Dev Server)"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: "What happened?"
+      description: "Describe the issue and steps to reproduce."
+    validations:
+      required: true

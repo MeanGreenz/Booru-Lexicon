@@ -1,15 +1,45 @@
+# Dependencies
 node_modules/
+
+# Build outputs
 build/
 dist/
+.vite/
 coverage/
+*.tsbuildinfo
+
+# AI Studio internal & temporary uploaded attachments
 .aistudio/
+public/assets/aistudio/
+
+# Electron Builder binary & intermediate artifacts
+# (Keeps release/Illustrious-Lexicon-Standalone.html, Launch-Illustrious-Lexicon-PC.bat, and illustrious-lexicon-tags.csv tracked)
 release/*.exe
+release/*.msi
 release/*.blockmap
 release/*.yml
+release/*.yaml
+release/*.7z
+release/*.zip
+release/*.tar.gz
+release/*.dmg
+release/*.AppImage
+release/*.deb
+release/*.rpm
 release/win-unpacked/
 release/mac*/
 release/linux-unpacked/
-.DS_Store
-*.log
+
+# Environment variables
 .env*
 !.env.example
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.log
+npm-debug.log*
+.vscode/*
+!.vscode/extensions.json
+.idea/

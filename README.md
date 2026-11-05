@@ -1,13 +1,32 @@
+<div align="center">
+
 # Illustrious Lexicon
 
 **High-Density Booru Tag Index & One-Click Prompt Composer for SDXL Illustrious Anime Diffusion Models**
 
-![Version](https://img.shields.io/badge/version-2.0.0-4f46e5)
-![Tags](https://img.shields.io/badge/canonical_tags-1267-06b6d4)
-![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux%20%7C%20Web-0f172a)
-![Syntax](https://img.shields.io/badge/booru_syntax-canonical__underscores-10b981)
+[![Latest Release](https://img.shields.io/badge/release-v2.0.0-4f46e5?style=for-the-badge)](https://github.com/MeanGreenz/Booru-Lexicon/releases/latest)
+[![Canonical Tags](https://img.shields.io/badge/canonical_tags-1%2C267-06b6d4?style=for-the-badge)](./illustrious-lexicon-tags.csv)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Web%20%7C%20Standalone_HTML-0f172a?style=for-the-badge)](https://github.com/MeanGreenz/Booru-Lexicon/releases/latest)
+[![License](https://img.shields.io/badge/license-Apache_2.0-10b981?style=for-the-badge)](./LICENSE)
 
-**Illustrious Lexicon** is a fast, offline-capable desktop and web reference utility built specifically for **SDXL Illustrious** and Danbooru-trained anime diffusion models. It indexes **1,267 canonical Booru tags** across 7 domains and 44 subcategories using strict Danbooru underscore formatting (`big_eyes`, `long_hair`, `cat_ears`, `fox_tail`, `sailor_collar`, `dutch_angle`, `best_quality`) and assembles clean, comma-separated positive and negative prompts without unwanted weight clutter.
+[**⬇ Download Windows `.exe` / Standalone Release**](https://github.com/MeanGreenz/Booru-Lexicon/releases/latest) · [**📊 Browse 1,267-Tag CSV**](./illustrious-lexicon-tags.csv) · [**🗂 7-Domain Taxonomy**](#1-comprehensive-7-domain-sdxl-illustrious-taxonomy-1267-canonical-tags) · [**✨ Features**](#2-smart-prompt-composer--workflow-studios) · [**🛠 Build & Deploy**](#deploying-on-github-web--pc-desktop-releases)
+
+</div>
+
+---
+
+**Illustrious Lexicon** is a fast, offline-capable desktop and web reference utility built specifically for **SDXL Illustrious** and Danbooru-trained anime diffusion models. It indexes **1,267 canonical Booru tags** across **7 domains** and **44 subcategories** using strict Danbooru underscore formatting (`big_eyes`, `long_hair`, `cat_ears`, `fox_tail`, `sailor_collar`, `dutch_angle`, `best_quality`) and assembles clean, comma-separated positive and negative prompts without unwanted weight clutter.
+
+| # | Domain | Subcategories | Canonical Tags | Prompt Order Priority |
+| :---: | :--- | :---: | :---: | :--- |
+| **01** | **Art Styles, Mediums & Meta Quality** | 4 | **63** | `1st` — Quality triggers, era, medium, page layout |
+| **02** | **Character Traits, Archetypes, Body & Hair** | 6 | **201** | `2nd` — Subject count, occupation, body, hair, bangs |
+| **03** | **Species, Races & Demihuman Traits** | 6 | **233** | `3rd` — Kemonomimi, elf/demon/monster, horns, wings, tails |
+| **04** | **Face, Eyes & Expressions** | 5 | **166** | `4th` — Brows, eye shapes, pupils, mouth, blush, facial hair |
+| **05** | **Clothing, Lingerie, Materials & Fashion States** | 10 | **290** | `5th` — Outfits, swimwear, lingerie, patterns, accessories |
+| **06** | **Poses, Camera Angles, Gaze & Interactions** | 9 | **213** | `6th` — Framing, perspective, gaze, stances, gestures, lighting |
+| **07** | **Backgrounds, Environments & Props** | 4 | **101** | `7th` — Studio backdrops, sky/weather, architecture, props |
+| | **Total Indexed Lexicon** | **44** | **1,267** | **Strict Canonical Danbooru Underscore Syntax** |
 
 ---
 

@@ -1,0 +1,33 @@
+name: "🏷️ Request Missing Booru Tag(s)"
+description: "Suggest canonical Danbooru / SDXL Illustrious tags to add to the lexicon"
+title: "[Tag Request]: "
+labels: ["enhancement", "lexicon-tags"]
+body:
+  - type: textarea
+    id: tags
+    attributes:
+      label: "Canonical Tag Name(s)"
+      description: "Enter one or more canonical Danbooru tags using underscore syntax (or attach a CSV file)."
+      placeholder: "e.g., sailor_collar, pleated_skirt, twin_drills"
+    validations:
+      required: true
+  - type: dropdown
+    id: domain
+    attributes:
+      label: "Primary Taxonomy Domain"
+      options:
+        - "01. Art Styles, Mediums & Meta Quality"
+        - "02. Character Traits, Archetypes, Body & Hair"
+        - "03. Species, Fantasy Races, Beastkin, Monster Girls & Anthro"
+        - "04. Face, Eyes & Expressions"
+        - "05. Clothing, Lingerie, Materials & Fashion States"
+        - "06. Poses, Camera Angles, Gaze, Couple Interactions & Acts"
+        - "07. Backgrounds, Environments & Props"
+        - "Multiple Domains (CSV / Batch)"
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: "Aliases, Subcategory, or SDXL Illustrious Notes (Optional)"
+      description: "Any aliases, related tags, or model behavior notes."
