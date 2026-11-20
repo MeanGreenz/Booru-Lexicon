@@ -3,6 +3,7 @@ import {
   NegativePreset,
   PositiveNegativeOverlap
 } from '../types/lexicon';
+import { getBaseUncoloredTag } from './conflictAndColorRules';
 
 export const MODULAR_NEGATIVE_PACKS: NegativeModularPack[] = [
   {
@@ -252,7 +253,7 @@ export const BUILT_IN_NEGATIVE_PRESETS: NegativePreset[] = [
       'bad_hands',
       'mutated_hands',
       'missing_fingers',
-      'extra_digits',
+      'extra_digit',
       'watermark',
       'signature'
     ]
@@ -285,7 +286,7 @@ export const BUILT_IN_NEGATIVE_PRESETS: NegativePreset[] = [
       'bad_anatomy',
       'bad_hands',
       'missing_fingers',
-      'extra_digits',
+      'extra_digit',
       'watermark',
       'signature'
     ]
@@ -387,22 +388,54 @@ export const BUILT_IN_NEGATIVE_PRESETS: NegativePreset[] = [
 const EXPLICIT_POSITIVE_SET = new Set([
   'nsfw',
   'explicit',
+  'rating_explicit',
+  'rating_questionable',
+  'questionable',
   'nude',
   'completely_nude',
   'nipples',
+  'areolae',
   'pussy',
   'penis',
+  'erection',
+  'testicles',
+  'anus',
   'sex',
-  'vaginal',
+  'cowgirl_position',
+  'reverse_cowgirl_position',
+  'doggystyle',
+  'sex_from_behind',
+  'missionary',
+  'mating_press',
+  'standing_sex',
   'anal',
   'fellatio',
   'paizuri',
   'cunnilingus',
   'handjob',
   'footjob',
+  'thigh_sex',
+  'masturbation',
+  'fingering',
+  'after_sex',
   'cum',
-  'creampie',
+  'cum_in_pussy',
+  'cum_on_body',
+  'facial',
+  'bukkake',
+  'irrumatio',
+  'double_penetration',
+  'sixty-nine',
+  'facesitting',
+  'prone_bone',
+  'suspended_congress',
+  'spitroast',
+  'group_sex',
+  'gangbang',
+  'spreading_own_pussy',
+  'pussy_focus',
   'ahegao',
+  'torogao',
   'topless',
   'bottomless'
 ]);
@@ -410,6 +443,9 @@ const EXPLICIT_POSITIVE_SET = new Set([
 const SFW_BLOCKER_NEGATIVE_SET = new Set([
   'nsfw',
   'explicit',
+  'questionable',
+  'rating_explicit',
+  'rating_questionable',
   'nude',
   'completely_nude',
   'nipples',
@@ -421,100 +457,219 @@ const SFW_BLOCKER_NEGATIVE_SET = new Set([
 const CLOTHED_POSITIVE_SET = new Set([
   'safe',
   'general',
+  'rating_general',
+  'rating_sensitive',
   'serafuku',
   'school_uniform',
+  'military_uniform',
+  'police_uniform',
+  'nurse_uniform',
+  'waitress_uniform',
+  'business_suit',
+  'suit',
+  'tuxedo',
+  'track_suit',
+  'gym_uniform',
   'blazer',
   'shirt',
+  'white_shirt',
+  'blouse',
+  'dress_shirt',
   'collared_shirt',
   't-shirt',
+  'tank_top',
+  'camisole',
   'sweater',
+  'ribbed_sweater',
+  'turtleneck',
+  'turtleneck_sweater',
+  'cardigan',
   'hoodie',
   'jacket',
   'coat',
+  'cloak',
+  'robe',
   'dress',
+  'white_dress',
+  'black_dress',
   'sundress',
+  'sailor_dress',
   'evening_gown',
+  'wedding_dress',
+  'gothic_lolita',
   'china_dress',
   'kimono',
+  'furisode',
   'yukata',
+  'hanfu',
+  'dirndl',
   'miko',
   'maid',
   'nun',
   'nurse',
   'office_lady',
+  'armor',
+  'plate_armor',
   'skirt',
   'pleated_skirt',
   'miniskirt',
+  'microskirt',
+  'pencil_skirt',
+  'plaid_skirt',
   'pants',
   'jeans',
-  'shorts',
+  'overalls',
+  'short_shorts',
+  'dolphin_shorts',
+  'denim_shorts',
+  'bike_shorts',
+  'buruma',
   'bikini',
+  'bikini_top',
+  'bikini_bottom',
   'micro_bikini',
+  'string_bikini',
+  'side-tie_bikini',
+  'o-ring_bikini',
   'swimsuit',
+  'one-piece_swimsuit',
   'school_swimsuit',
   'competition_swimsuit',
+  'highleg_swimsuit',
+  'leotard',
+  'highleg_leotard',
   'bra',
+  'sports_bra',
+  'strapless_bra',
+  'frilled_bra',
   'panties',
+  'striped_panties',
+  'side-tie_panties',
+  'thong',
+  'underwear',
   'lingerie',
   'babydoll',
+  'chemise',
+  'negligee',
+  'nightgown',
+  'pajamas',
   'corset',
   'bodysuit',
-  'bunnysuit',
-  'latex_bodysuit'
+  'plugsuit',
+  'playboy_bunny',
+  'reverse_bunny_suit',
+  'virgin_killer_sweater'
 ]);
 
 const NSFW_GUARD_CLOTHING_BLOCKERS = new Set([
   'fully_clothed',
   'clothes',
   'safe',
-  'general'
+  'general',
+  'rating_general',
+  'sensitive',
+  'rating_sensitive'
 ]);
 
+const RATING_EQUIVALENTS: Record<string, string[]> = {
+  rating_explicit: ['explicit'],
+  explicit: ['rating_explicit'],
+  rating_questionable: ['questionable'],
+  questionable: ['rating_questionable'],
+  rating_sensitive: ['sensitive'],
+  sensitive: ['rating_sensitive'],
+  rating_general: ['general', 'safe'],
+  general: ['rating_general', 'safe'],
+  safe: ['rating_general', 'general']
+};
+
 /**
- * Detects exact duplicates and semantic contradictions between the active Positive and Negative prompts.
+ * Detects exact duplicates, color-variant overlaps (e.g. +black_bikini vs -bikini),
+ * rating equivalents (e.g. +rating_explicit vs -explicit), and SFW/NSFW guard contradictions.
  */
 export function detectPositiveNegativeOverlaps(
   positiveTags: string[],
   negativeTags: string[]
 ): PositiveNegativeOverlap[] {
   const overlaps: PositiveNegativeOverlap[] = [];
+  const emittedPairs = new Set<string>();
   const negSet = new Set(negativeTags);
 
-  // 1. Exact same tag in both Positive and Negative prompts
+  const pushOverlap = (ov: PositiveNegativeOverlap) => {
+    const key = `${ov.positiveTag}::${ov.negativeTag}`;
+    if (emittedPairs.has(key)) return;
+    emittedPairs.add(key);
+    overlaps.push(ov);
+  };
+
+  // 1. Exact same tag, color-variant base match, or rating-token equivalent in both Positive and Negative
   for (const posTag of positiveTags) {
     if (negSet.has(posTag)) {
-      overlaps.push({
+      pushOverlap({
         id: `exact::${posTag}`,
         type: 'exact',
         positiveTag: posTag,
         negativeTag: posTag,
         reason: `"${posTag}" is active in both your Positive and Negative prompts, cancelling out its conditioning.`
       });
+      continue;
+    }
+
+    // Color-prefixed positive tag colliding with uncolored negative base tag (e.g. +black_bikini vs -bikini)
+    const { colorPrefix, baseTag } = getBaseUncoloredTag(posTag);
+    if (colorPrefix && baseTag !== posTag && negSet.has(baseTag)) {
+      pushOverlap({
+        id: `variant::${posTag}::${baseTag}`,
+        type: 'exact',
+        positiveTag: posTag,
+        negativeTag: baseTag,
+        reason: `Your Positive prompt requests "${posTag}" while your Negative prompt blocks its base tag "${baseTag}".`
+      });
+    }
+
+    // Equivalent Illustrious / Danbooru rating tags (e.g. +rating_explicit vs -explicit)
+    const equivalents = RATING_EQUIVALENTS[posTag];
+    if (equivalents) {
+      for (const eq of equivalents) {
+        if (negSet.has(eq)) {
+          pushOverlap({
+            id: `rating_eq::${posTag}::${eq}`,
+            type: 'contradiction',
+            positiveTag: posTag,
+            negativeTag: eq,
+            reason: `Your Positive prompt requests rating "${posTag}" while your Negative prompt blocks its equivalent "${eq}".`
+          });
+        }
+      }
     }
   }
 
   // 2. Semantic contradiction: Explicit/Nude tags in Positive while SFW Guard blockers are in Negative
   const firstExplicitPos = positiveTags.find((t) => EXPLICIT_POSITIVE_SET.has(t));
   const firstSfwBlockerNeg = negativeTags.find(
-    (t) => SFW_BLOCKER_NEGATIVE_SET.has(t) && t !== firstExplicitPos
+    (t) => SFW_BLOCKER_NEGATIVE_SET.has(t) && !emittedPairs.has(`${firstExplicitPos}::${t}`)
   );
   if (firstExplicitPos && firstSfwBlockerNeg) {
-    overlaps.push({
+    pushOverlap({
       id: `contradiction::sfw_vs_nsfw::${firstExplicitPos}::${firstSfwBlockerNeg}`,
       type: 'contradiction',
       positiveTag: firstExplicitPos,
       negativeTag: firstSfwBlockerNeg,
-      reason: `Your Positive prompt includes explicit/nude tag "${firstExplicitPos}" while your Negative prompt blocks "${firstSfwBlockerNeg}" (SFW Guard).`
+      reason: `Your Positive prompt includes explicit/risqué tag "${firstExplicitPos}" while your Negative prompt blocks "${firstSfwBlockerNeg}" (SFW Guard).`
     });
   }
 
-  // 3. Semantic contradiction: Clothed/Safe tags in Positive while NSFW Guard clothing blockers are in Negative
-  const firstClothedPos = positiveTags.find((t) => CLOTHED_POSITIVE_SET.has(t));
+  // 3. Semantic contradiction: Clothed/Safe tags (including colored garments) in Positive while NSFW Guard blockers are in Negative
+  const firstClothedPos = positiveTags.find((t) => {
+    if (CLOTHED_POSITIVE_SET.has(t)) return true;
+    const { baseTag } = getBaseUncoloredTag(t);
+    return CLOTHED_POSITIVE_SET.has(baseTag);
+  });
   const firstNsfwClothingBlockerNeg = negativeTags.find(
-    (t) => NSFW_GUARD_CLOTHING_BLOCKERS.has(t) && t !== firstClothedPos
+    (t) => NSFW_GUARD_CLOTHING_BLOCKERS.has(t) && !emittedPairs.has(`${firstClothedPos}::${t}`)
   );
   if (firstClothedPos && firstNsfwClothingBlockerNeg) {
-    overlaps.push({
+    pushOverlap({
       id: `contradiction::clothed_vs_nsfw_guard::${firstClothedPos}::${firstNsfwClothingBlockerNeg}`,
       type: 'contradiction',
       positiveTag: firstClothedPos,

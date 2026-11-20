@@ -120,6 +120,22 @@ function safeReadJsonArray<T>(key: string, fallback: T[]): T[] {
   }
 }
 
+function safeReadUniqueStringArray(key: string, fallback: string[]): string[] {
+  const arr = safeReadJsonArray<unknown>(key, fallback);
+  const cleaned = arr.filter((v): v is string => typeof v === 'string' && v.trim().length > 0);
+  return cleaned.length > 0 || arr.length === 0 ? Array.from(new Set(cleaned)) : fallback;
+}
+
+function normalizeBooruInputTag(raw: string): string {
+  return raw
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '_')
+    .replace(/[^a-z0-9_()!:'+;^><.-]/g, '')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
 // Reliable clipboard helper supporting Electron native bridge, modern Clipboard API, and file:// fallback
 async function copyTextToClipboard(text: string): Promise<boolean> {
   const bridge = (
@@ -204,7 +220,32 @@ export default function App() {
       if (raw) {
         const parsed: unknown = JSON.parse(raw);
         if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-          return { ...DEFAULT_DISPLAY_SETTINGS, ...(parsed as Partial<LexiconDisplaySettings>) };
+          const merged = {
+            ...DEFAULT_DISPLAY_SETTINGS,
+            ...(parsed as Partial<LexiconDisplaySettings>)
+          };
+          const safeScale =
+            typeof merged.fontScalePercent === 'number' && Number.isFinite(merged.fontScalePercent)
+              ? Math.max(85, Math.min(130, Math.round(merged.fontScalePercent)))
+              : DEFAULT_DISPLAY_SETTINGS.fontScalePercent;
+          const safeTextSize = (['sm', 'md', 'lg', 'xl'] as const).includes(merged.textSize)
+            ? merged.textSize
+            : DEFAULT_DISPLAY_SETTINGS.textSize;
+          const safeDensity = (['compact', 'comfortable', 'spacious'] as const).includes(
+            merged.rowDensity
+          )
+            ? merged.rowDensity
+            : DEFAULT_DISPLAY_SETTINGS.rowDensity;
+          const safeCols = ([2, 3, 4] as const).includes(merged.gridColumns)
+            ? merged.gridColumns
+            : DEFAULT_DISPLAY_SETTINGS.gridColumns;
+          return {
+            ...merged,
+            fontScalePercent: safeScale,
+            textSize: safeTextSize,
+            rowDensity: safeDensity,
+            gridColumns: safeCols
+          };
         }
       }
     } catch {
@@ -307,10 +348,51 @@ export default function App() {
     }
   }, [displaySettings.gridColumns]);
 
-  // Custom user-created tags persisted in localStorage
-  const [customTags, setCustomTags] = useState<BooruTag[]>(() =>
-    safeReadJsonArray<BooruTag>(STORAGE_KEYS.CUSTOM_TAGS, [])
-  );
+  // Custom user-created tags persisted in localStorage (sanitized on hydration)
+  const [customTags, setCustomTags] = useState<BooruTag[]>(() => {
+    const raw = safeReadJsonArray<Partial<BooruTag>>(STORAGE_KEYS.CUSTOM_TAGS, []);
+    const seenCustom = new Set<string>();
+    const valid: BooruTag[] = [];
+    for (const item of raw) {
+      if (!item || typeof item.tag !== 'string' || !item.tag.trim()) continue;
+      const cleanTag = item.tag.trim();
+      if (seenCustom.has(cleanTag)) continue;
+      seenCustom.add(cleanTag);
+      const validDomain: DomainId =
+        item.domain && DOMAIN_MAP[item.domain] ? item.domain : 'character';
+      const validSubcat =
+        typeof item.subcategory === 'string' &&
+        DOMAIN_MAP[validDomain].subcategories.includes(item.subcategory)
+          ? item.subcategory
+          : DOMAIN_MAP[validDomain].subcategories[0];
+      valid.push({
+        tag: cleanTag,
+        domain: validDomain,
+        subcategory: validSubcat,
+        description:
+          typeof item.description === 'string' && item.description.trim()
+            ? item.description
+            : `Custom SDXL Illustrious booru tag (${cleanTag}).`,
+        aliases: Array.isArray(item.aliases)
+          ? item.aliases.filter((a): a is string => typeof a === 'string')
+          : [],
+        relatedTags: Array.isArray(item.relatedTags)
+          ? item.relatedTags.filter((r): r is string => typeof r === 'string')
+          : [],
+        popularity:
+          item.popularity === 'Core' ||
+          item.popularity === 'Common' ||
+          item.popularity === 'Specialized'
+            ? item.popularity
+            : 'Specialized',
+        postCountEst: typeof item.postCountEst === 'string' ? item.postCountEst : 'Custom',
+        illustriousNote:
+          typeof item.illustriousNote === 'string' ? item.illustriousNote : undefined,
+        isCustom: true
+      });
+    }
+    return valid;
+  });
 
   useEffect(() => {
     safeWriteStorage(STORAGE_KEYS.CUSTOM_TAGS, JSON.stringify(customTags));
@@ -349,15 +431,28 @@ export default function App() {
     return Number.isFinite(parsed) && parsed >= 1 ? Math.min(parsed, 200) : 25;
   });
 
-  // Prompt History state
+  // Prompt History state (sanitized on hydration)
   const [promptHistory, setPromptHistory] = useState<PromptHistoryEntry[]>(() =>
-    safeReadJsonArray<PromptHistoryEntry>(STORAGE_KEYS.PROMPT_HISTORY, [])
+    safeReadJsonArray<PromptHistoryEntry>(STORAGE_KEYS.PROMPT_HISTORY, []).filter(
+      (entry) =>
+        Boolean(entry) &&
+        typeof entry.id === 'string' &&
+        Array.isArray(entry.tags) &&
+        entry.tags.every((t) => typeof t === 'string')
+    )
   );
 
-  // Recently used tags history state
-  const [recentTagsHistory, setRecentTagsHistory] = useState<RecentTagEntry[]>(() =>
-    safeReadJsonArray<RecentTagEntry>(STORAGE_KEYS.RECENT_TAGS, [])
-  );
+  // Recently used tags history state (sanitized & deduplicated on hydration)
+  const [recentTagsHistory, setRecentTagsHistory] = useState<RecentTagEntry[]>(() => {
+    const raw = safeReadJsonArray<RecentTagEntry>(STORAGE_KEYS.RECENT_TAGS, []);
+    const seenRecent = new Set<string>();
+    return raw.filter((entry) => {
+      if (!entry || typeof entry.tag !== 'string' || !entry.tag.trim()) return false;
+      if (seenRecent.has(entry.tag)) return false;
+      seenRecent.add(entry.tag);
+      return true;
+    });
+  });
 
   // Enforce cap whenever historyCap changes
   useEffect(() => {
@@ -375,17 +470,28 @@ export default function App() {
     safeWriteStorage(STORAGE_KEYS.RECENT_TAGS, JSON.stringify(recentTagsHistory));
   }, [recentTagsHistory]);
 
-  // Helper to record a tag in Recent Tags History (bounded by historyCap)
-  const recordTagHistory = (tagKey: string) => {
+  // Helper to batch-record one or more tags in Recent Tags History in a single state update
+  const recordTagsHistory = (tagKeys: string[]) => {
+    const uniqueIncoming = Array.from(new Set(tagKeys.filter(Boolean)));
+    if (uniqueIncoming.length === 0) return;
     const now = new Date().toLocaleTimeString([], {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit'
     });
+    const incomingSet = new Set(uniqueIncoming);
     setRecentTagsHistory((prev) => {
-      const filtered = prev.filter((item) => item.tag !== tagKey);
-      return [{ tag: tagKey, timestamp: now }, ...filtered].slice(0, historyCap);
+      const filtered = prev.filter((item) => !incomingSet.has(item.tag));
+      const newEntries: RecentTagEntry[] = uniqueIncoming.map((tag) => ({
+        tag,
+        timestamp: now
+      }));
+      return [...newEntries, ...filtered].slice(0, historyCap);
     });
+  };
+
+  const recordTagHistory = (tagKey: string) => {
+    recordTagsHistory([tagKey]);
   };
 
   // Helper to record a prompt snapshot in Prompt History (bounded by historyCap)
@@ -399,7 +505,7 @@ export default function App() {
     const joinedNew = tagsToRecord.join(', ');
 
     setPromptHistory((prev) => {
-      if (prev.length > 0 && prev[0].tags.join(', ') === joinedNew) {
+      if (prev.length > 0 && Array.isArray(prev[0].tags) && prev[0].tags.join(', ') === joinedNew) {
         const updatedTop: PromptHistoryEntry = {
           ...prev[0],
           timestamp: now,
@@ -419,7 +525,7 @@ export default function App() {
 
   // Prompt Composer state
   const [selectedPromptTags, setSelectedPromptTags] = useState<string[]>(() =>
-    safeReadJsonArray<string>(STORAGE_KEYS.PROMPT_TAGS, [
+    safeReadUniqueStringArray(STORAGE_KEYS.PROMPT_TAGS, [
       'masterpiece',
       'best_quality',
       'very_awa',
@@ -451,7 +557,7 @@ export default function App() {
 
   // Favorites state
   const [favoriteTags, setFavoriteTags] = useState<string[]>(() =>
-    safeReadJsonArray<string>(STORAGE_KEYS.FAVORITES, [
+    safeReadUniqueStringArray(STORAGE_KEYS.FAVORITES, [
       'masterpiece',
       'best_quality',
       'very_awa',
@@ -472,7 +578,9 @@ export default function App() {
 
   // Saved user presets (Favorite Prompts)
   const [userPresets, setUserPresets] = useState<PromptPreset[]>(() =>
-    safeReadJsonArray<PromptPreset>(STORAGE_KEYS.SAVED_PRESETS, [])
+    safeReadJsonArray<PromptPreset>(STORAGE_KEYS.SAVED_PRESETS, []).filter(
+      (p) => Boolean(p) && typeof p.id === 'string' && typeof p.name === 'string' && Array.isArray(p.tags)
+    )
   );
 
   useEffect(() => {
@@ -481,7 +589,7 @@ export default function App() {
 
   // Active Negative Prompt Builder state
   const [selectedNegativeTags, setSelectedNegativeTags] = useState<string[]>(() =>
-    safeReadJsonArray<string>(STORAGE_KEYS.NEGATIVE_TAGS, [...BUILT_IN_NEGATIVE_PRESETS[0].tags])
+    safeReadUniqueStringArray(STORAGE_KEYS.NEGATIVE_TAGS, [...BUILT_IN_NEGATIVE_PRESETS[0].tags])
   );
 
   useEffect(() => {
@@ -490,7 +598,9 @@ export default function App() {
 
   // Saved Custom Negative Presets state
   const [userNegativePresets, setUserNegativePresets] = useState<NegativePreset[]>(() =>
-    safeReadJsonArray<NegativePreset>(STORAGE_KEYS.SAVED_NEGATIVE_PRESETS, [])
+    safeReadJsonArray<NegativePreset>(STORAGE_KEYS.SAVED_NEGATIVE_PRESETS, []).filter(
+      (p) => Boolean(p) && typeof p.id === 'string' && typeof p.name === 'string' && Array.isArray(p.tags)
+    )
   );
 
   useEffect(() => {
@@ -576,7 +686,9 @@ export default function App() {
   const [expressionStudioTab, setExpressionStudioTab] = useState<'presets' | 'mixer'>('presets');
   const [isExpressionStudioExpanded, setIsExpressionStudioExpanded] = useState<boolean>(false);
   const [userExpressionPresets, setUserExpressionPresets] = useState<ExpressionPreset[]>(() =>
-    safeReadJsonArray<ExpressionPreset>(STORAGE_KEYS.SAVED_EXPRESSION_PRESETS, [])
+    safeReadJsonArray<ExpressionPreset>(STORAGE_KEYS.SAVED_EXPRESSION_PRESETS, []).filter(
+      (p) => Boolean(p) && typeof p.id === 'string' && typeof p.name === 'string' && Array.isArray(p.tags)
+    )
   );
   const [newExprPresetName, setNewExprPresetName] = useState<string>('');
   const [showSaveExprPresetInput, setShowSaveExprPresetInput] = useState<boolean>(false);
@@ -592,7 +704,9 @@ export default function App() {
   const [speciesStudioTab, setSpeciesStudioTab] = useState<'presets' | 'mixer'>('presets');
   const [isSpeciesStudioExpanded, setIsSpeciesStudioExpanded] = useState<boolean>(false);
   const [userSpeciesPresets, setUserSpeciesPresets] = useState<SpeciesPreset[]>(() =>
-    safeReadJsonArray<SpeciesPreset>(STORAGE_KEYS.SAVED_SPECIES_PRESETS, [])
+    safeReadJsonArray<SpeciesPreset>(STORAGE_KEYS.SAVED_SPECIES_PRESETS, []).filter(
+      (p) => Boolean(p) && typeof p.id === 'string' && typeof p.name === 'string' && Array.isArray(p.tags)
+    )
   );
   const [newSpeciesPresetName, setNewSpeciesPresetName] = useState<string>('');
   const [showSaveSpeciesPresetInput, setShowSaveSpeciesPresetInput] = useState<boolean>(false);
@@ -639,13 +753,29 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // O(1) lookup Sets for fast rendering across 1,267 lexicon rows
+  // O(1) lookup Sets for fast rendering across 1,370 lexicon rows
   const selectedPromptSet = useMemo(() => new Set(selectedPromptTags), [selectedPromptTags]);
   const selectedNegativeSet = useMemo(
     () => new Set(selectedNegativeTags),
     [selectedNegativeTags]
   );
   const favoriteTagSet = useMemo(() => new Set(favoriteTags), [favoriteTags]);
+
+  // Resolve any tag key (including color-prefixed variants like 'black_bikini') to a renderable BooruTag
+  const resolveTagForList = (tagKey: string): BooruTag | undefined => {
+    const direct = tagMap.get(tagKey);
+    if (direct) return direct;
+    const { baseTag } = getBaseUncoloredTag(tagKey);
+    const base = tagMap.get(baseTag);
+    if (base) {
+      return {
+        ...base,
+        tag: tagKey,
+        description: `Color-modified variant (${tagKey}) of ${base.tag}: ${base.description}`
+      };
+    }
+    return undefined;
+  };
 
   // Filtered and sorted lexicon tags
   const filteredTags = useMemo(() => {
@@ -656,23 +786,15 @@ export default function App() {
     let sourceList: BooruTag[] = allTags;
     if (selectedDomain === 'history') {
       sourceList = recentTagsHistory
-        .map((entry) => {
-          const direct = tagMap.get(entry.tag);
-          if (direct) return direct;
-          const { baseTag } = getBaseUncoloredTag(entry.tag);
-          const base = tagMap.get(baseTag);
-          if (base) {
-            return { ...base, tag: entry.tag };
-          }
-          return undefined;
-        })
+        .map((entry) => resolveTagForList(entry.tag))
+        .filter((item): item is BooruTag => Boolean(item));
+    } else if (selectedDomain === 'favorites') {
+      sourceList = favoriteTags
+        .map((favTag) => resolveTagForList(favTag))
         .filter((item): item is BooruTag => Boolean(item));
     }
 
     const results = sourceList.filter((item) => {
-      if (selectedDomain === 'favorites' && !favoriteTags.includes(item.tag)) {
-        return false;
-      }
       if (selectedDomain === 'custom' && !item.isCustom) {
         return false;
       }
@@ -743,12 +865,17 @@ export default function App() {
     tagMap
   ]);
 
-  // Domain & subcategory counts precomputed once for fast sidebar rendering
+  // Domain & subcategory counts precomputed once for fast sidebar rendering (matching resolvable rows)
   const { domainCounts, subcategoryCounts } = useMemo(() => {
+    const isResolvable = (tagKey: string) => {
+      if (tagMap.has(tagKey)) return true;
+      const { baseTag } = getBaseUncoloredTag(tagKey);
+      return tagMap.has(baseTag);
+    };
     const counts: Record<string, number> = {
       all: allTags.length,
-      favorites: favoriteTags.length,
-      history: recentTagsHistory.length,
+      favorites: favoriteTags.filter(isResolvable).length,
+      history: recentTagsHistory.filter((entry) => isResolvable(entry.tag)).length,
       custom: customTags.length
     };
     for (const d of DOMAINS) {
@@ -761,7 +888,7 @@ export default function App() {
       subCounts.set(subKey, (subCounts.get(subKey) ?? 0) + 1);
     }
     return { domainCounts: counts, subcategoryCounts: subCounts };
-  }, [allTags, favoriteTags, recentTagsHistory, customTags]);
+  }, [allTags, favoriteTags, recentTagsHistory, customTags, tagMap]);
 
   // Helper to resolve domain priority even for color-prefixed tags (e.g. black_bikini -> clothing)
   const getTagPriority = (tagKey: string): number => {
@@ -799,6 +926,16 @@ export default function App() {
     return detectPositiveNegativeOverlaps(selectedPromptTags, selectedNegativeTags);
   }, [selectedPromptTags, selectedNegativeTags]);
 
+  const { overlappingPositiveTagSet, overlappingNegativeTagSet } = useMemo(() => {
+    const pos = new Set<string>();
+    const neg = new Set<string>();
+    for (const ov of positiveNegativeOverlaps) {
+      pos.add(ov.positiveTag);
+      neg.add(ov.negativeTag);
+    }
+    return { overlappingPositiveTagSet: pos, overlappingNegativeTagSet: neg };
+  }, [positiveNegativeOverlaps]);
+
   // Format a single tag according to output parameters (e.g., escaping parentheses if enabled)
   const formatSingleTagForOutput = (rawTag: string) => {
     if (!displaySettings.escapeParentheses) return rawTag;
@@ -821,14 +958,17 @@ export default function App() {
 
   // Toggle tag in prompt composer + record in recent tag history when adding
   const toggleTagInPrompt = (tagKey: string) => {
-    const isAdding = !selectedPromptTags.includes(tagKey);
+    const isAdding = !selectedPromptSet.has(tagKey);
     setSelectedPromptTags((prev) =>
       prev.includes(tagKey) ? prev.filter((t) => t !== tagKey) : [...prev, tagKey]
     );
     if (isAdding) {
       recordTagHistory(tagKey);
     }
-    setInspectedTagKey(tagKey);
+    const { baseTag } = getBaseUncoloredTag(tagKey);
+    if (tagMap.has(tagKey) || tagMap.has(baseTag)) {
+      setInspectedTagKey(tagKey);
+    }
   };
 
   // Toggle tag in Active Negative Prompt
@@ -859,13 +999,7 @@ export default function App() {
     e.preventDefault();
     const parts = quickNegInput
       .split(',')
-      .map((s) =>
-        s
-          .trim()
-          .toLowerCase()
-          .replace(/\s+/g, '_')
-          .replace(/[^a-z0-9_()!'-]/g, '')
-      )
+      .map(normalizeBooruInputTag)
       .filter(Boolean);
     if (parts.length === 0) return;
 
@@ -973,11 +1107,7 @@ export default function App() {
   // Add a tag to Favorites by name from the Favorites quick-add input
   const handleQuickAddFavorite = (e: React.FormEvent) => {
     e.preventDefault();
-    const normalized = quickFavInput
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, '_')
-      .replace(/[^a-z0-9_()!-]/g, '');
+    const normalized = normalizeBooruInputTag(quickFavInput);
     if (!normalized) return;
 
     if (!tagMap.has(normalized)) {
@@ -992,7 +1122,7 @@ export default function App() {
         postCountEst: 'Fav',
         isCustom: true
       };
-      setCustomTags((prev) => [newCustom, ...prev]);
+      setCustomTags((prev) => [newCustom, ...prev.filter((t) => t.tag !== normalized)]);
     }
 
     setFavoriteTags((prev) => (prev.includes(normalized) ? prev : [normalized, ...prev]));
@@ -1048,7 +1178,7 @@ export default function App() {
       const missing = headerTags.filter((t) => !prev.includes(t));
       return [...missing, ...prev];
     });
-    headerTags.forEach((t) => recordTagHistory(t));
+    recordTagsHistory(headerTags);
   };
 
   // Save current prompt as preset / favorite prompt
@@ -1093,8 +1223,12 @@ export default function App() {
       return;
     }
 
-    const baseList = replaceExistingFacial
+    const expressionSwapAuxTags = new Set(
+      [...BUILT_IN_EXPRESSION_PRESETS, ...userExpressionPresets].flatMap((p) => p.tags)
+    );
+    let baseList = replaceExistingFacial
       ? selectedPromptTags.filter((tagKey) => {
+          if (expressionSwapAuxTags.has(tagKey)) return false;
           const direct = tagMap.get(tagKey);
           if (direct?.domain === 'face_expressions') return false;
           const { baseTag } = getBaseUncoloredTag(tagKey);
@@ -1102,10 +1236,25 @@ export default function App() {
           return base?.domain !== 'face_expressions';
         })
       : selectedPromptTags;
+
+    if (replaceExistingFacial) {
+      // Remove any remaining tags that directly conflict with the incoming expression preset
+      const presetTagSet = new Set(preset.tags);
+      const conflicts = detectPromptConflicts(Array.from(new Set([...baseList, ...preset.tags])));
+      const conflictingOld = new Set<string>();
+      for (const c of conflicts) {
+        if (presetTagSet.has(c.tagA) && !presetTagSet.has(c.tagB)) conflictingOld.add(c.tagB);
+        if (presetTagSet.has(c.tagB) && !presetTagSet.has(c.tagA)) conflictingOld.add(c.tagA);
+      }
+      if (conflictingOld.size > 0) {
+        baseList = baseList.filter((t) => !conflictingOld.has(t));
+      }
+    }
+
     const nextTags = Array.from(new Set([...baseList, ...preset.tags]));
 
     setSelectedPromptTags(nextTags);
-    preset.tags.forEach((t) => recordTagHistory(t));
+    recordTagsHistory(preset.tags);
     recordPromptHistory(nextTags, `Expression: ${preset.name}`);
   };
 
@@ -1164,7 +1313,7 @@ export default function App() {
       return;
     }
 
-    const baseList = replaceExistingSpecies
+    let baseList = replaceExistingSpecies
       ? selectedPromptTags.filter((tagKey) => {
           const direct = tagMap.get(tagKey);
           if (direct?.domain === 'species_traits') return false;
@@ -1173,10 +1322,25 @@ export default function App() {
           return base?.domain !== 'species_traits';
         })
       : selectedPromptTags;
+
+    if (replaceExistingSpecies) {
+      // Remove any remaining tags (e.g. dark_skin vs pale_skin) that conflict with the incoming lineage
+      const presetTagSet = new Set(preset.tags);
+      const conflicts = detectPromptConflicts(Array.from(new Set([...baseList, ...preset.tags])));
+      const conflictingOld = new Set<string>();
+      for (const c of conflicts) {
+        if (presetTagSet.has(c.tagA) && !presetTagSet.has(c.tagB)) conflictingOld.add(c.tagB);
+        if (presetTagSet.has(c.tagB) && !presetTagSet.has(c.tagA)) conflictingOld.add(c.tagA);
+      }
+      if (conflictingOld.size > 0) {
+        baseList = baseList.filter((t) => !conflictingOld.has(t));
+      }
+    }
+
     const nextTags = Array.from(new Set([...baseList, ...preset.tags]));
 
     setSelectedPromptTags(nextTags);
-    preset.tags.forEach((t) => recordTagHistory(t));
+    recordTagsHistory(preset.tags);
     recordPromptHistory(nextTags, `Species: ${preset.name}`);
   };
 
@@ -1215,20 +1379,16 @@ export default function App() {
     setUserSpeciesPresets((prev) => prev.filter((p) => p.id !== id));
   };
 
-  // Create custom booru tag (normalizing spaces to underscores)
+  // Create custom booru tag (normalizing spaces to underscores & collapsing repeated underscores)
   const handleCreateCustomTag = (e: React.FormEvent) => {
     e.preventDefault();
-    const normalizedTag = customTagInput
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, '_')
-      .replace(/[^a-z0-9_()!:'><-]/g, '');
+    const normalizedTag = normalizeBooruInputTag(customTagInput);
 
     if (!normalizedTag) return;
 
     const aliases = customAliasesInput
       .split(',')
-      .map((s) => s.trim().toLowerCase().replace(/\s+/g, '_'))
+      .map(normalizeBooruInputTag)
       .filter(Boolean);
 
     const newTag: BooruTag = {
@@ -1255,6 +1415,16 @@ export default function App() {
     setCustomDescInput('');
     setCustomAliasesInput('');
     setIsSettingsModalOpen(false);
+  };
+
+  // Delete a user-created custom tag (or revert a local built-in override)
+  const handleDeleteCustomTag = (tagKey: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const remaining = customTags.filter((t) => t.tag !== tagKey);
+    setCustomTags(remaining);
+    if (selectedDomain === 'custom' && remaining.length === 0) {
+      setSelectedDomain('all');
+    }
   };
 
   // Adjust History Cap handler (clamped 1..200)
@@ -1322,7 +1492,7 @@ export default function App() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
   };
 
   const alphabet = ['#', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')];
@@ -1829,7 +1999,7 @@ export default function App() {
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2.5">
                           {[...userSpeciesPresets, ...BUILT_IN_SPECIES_PRESETS].map((preset) => {
                             const activeCount = preset.tags.filter((t) =>
-                              selectedPromptTags.includes(t)
+                              selectedPromptSet.has(t)
                             ).length;
                             const isFullyActive = activeCount === preset.tags.length;
 
@@ -1934,7 +2104,7 @@ export default function App() {
 
                                 <div className="flex flex-wrap gap-1.5">
                                   {zone.quickTags.map((tagKey) => {
-                                    const isActive = selectedPromptTags.includes(tagKey);
+                                    const isActive = selectedPromptSet.has(tagKey);
                                     const isConflicting = conflictingTagSet.has(tagKey);
                                     return (
                                       <button
@@ -2082,7 +2252,7 @@ export default function App() {
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-2.5">
                           {[...userExpressionPresets, ...BUILT_IN_EXPRESSION_PRESETS].map((preset) => {
                             const activeCount = preset.tags.filter((t) =>
-                              selectedPromptTags.includes(t)
+                              selectedPromptSet.has(t)
                             ).length;
                             const isFullyActive = activeCount === preset.tags.length;
 
@@ -2187,7 +2357,7 @@ export default function App() {
 
                                 <div className="flex flex-wrap gap-1.5">
                                   {zone.quickTags.map((tagKey) => {
-                                    const isActive = selectedPromptTags.includes(tagKey);
+                                    const isActive = selectedPromptSet.has(tagKey);
                                     const isConflicting = conflictingTagSet.has(tagKey);
                                     return (
                                       <button
@@ -2661,6 +2831,17 @@ export default function App() {
                                 >
                                   <Info className="w-3.5 h-3.5" />
                                 </button>
+                                {item.isCustom && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => handleDeleteCustomTag(item.tag, e)}
+                                    title={`Delete custom tag "${item.tag}"`}
+                                    aria-label={`Delete custom tag ${item.tag}`}
+                                    className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 p-1.5 rounded text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-150 cursor-pointer"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
                               </div>
                             </td>
                           </tr>
@@ -2798,6 +2979,17 @@ export default function App() {
                             >
                               <Info className="w-3.5 h-3.5" />
                             </button>
+                            {item.isCustom && (
+                              <button
+                                type="button"
+                                onClick={(e) => handleDeleteCustomTag(item.tag, e)}
+                                title={`Delete custom tag "${item.tag}"`}
+                                aria-label={`Delete custom tag ${item.tag}`}
+                                className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 p-1 rounded text-slate-400 hover:text-rose-500 transition-all duration-150 cursor-pointer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                           </div>
                         </div>
 
@@ -3133,16 +3325,19 @@ export default function App() {
                     ) : (
                       <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto pr-1">
                         {orderedPromptTags.map((tagKey) => {
-                          const isFav = favoriteTags.includes(tagKey);
+                          const isFav = favoriteTagSet.has(tagKey);
                           const canColor = isTagColorable(tagKey);
                           const hasConflict = conflictingTagSet.has(tagKey);
+                          const hasNegOverlap = overlappingPositiveTagSet.has(tagKey);
                           return (
                             <div
                               key={tagKey}
                               className={`inline-flex items-center rounded overflow-hidden border ${
-                                hasConflict
-                                  ? 'bg-amber-500/10 border-amber-500/50'
-                                  : 'bg-white dark:bg-slate-800/90 border-slate-200 dark:border-slate-700/80'
+                                hasNegOverlap
+                                  ? 'bg-rose-500/10 border-rose-500/50'
+                                  : hasConflict
+                                    ? 'bg-amber-500/10 border-amber-500/50'
+                                    : 'bg-white dark:bg-slate-800/90 border-slate-200 dark:border-slate-700/80'
                               }`}
                             >
                               <button
@@ -3210,22 +3405,39 @@ export default function App() {
                       </button>
                     </div>
                     <div className="flex flex-wrap gap-1">
-                      {CANONICAL_BOORU_COLORS.map((c) => (
-                        <button
-                          key={c.prefix}
-                          type="button"
-                          onClick={() =>
-                            handleApplyColorPrefix(colorPickerTargetTag, c.prefix)
-                          }
-                          className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-mono bg-white dark:bg-[#0F1522] hover:bg-indigo-600 hover:text-white border border-slate-200 dark:border-slate-700 rounded transition-colors cursor-pointer"
-                        >
-                          <span
-                            className="w-2 h-2 rounded-full border border-slate-400/40"
-                            style={{ backgroundColor: c.hex }}
-                          />
-                          <span>{c.label}</span>
-                        </button>
-                      ))}
+                      {(() => {
+                        const seenTargets = new Set<string>();
+                        return CANONICAL_BOORU_COLORS.map((c) => {
+                          const targetColored = applyColorPrefixToTag(
+                            colorPickerTargetTag,
+                            c.prefix
+                          );
+                          if (seenTargets.has(targetColored)) return null;
+                          seenTargets.add(targetColored);
+                          const isCurrent = targetColored === colorPickerTargetTag;
+                          return (
+                            <button
+                              key={c.prefix}
+                              type="button"
+                              onClick={() =>
+                                handleApplyColorPrefix(colorPickerTargetTag, c.prefix)
+                              }
+                              title={`Swap to ${targetColored}`}
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-mono border rounded transition-colors cursor-pointer ${
+                                isCurrent
+                                  ? 'bg-indigo-600 text-white border-indigo-600 font-semibold'
+                                  : 'bg-white dark:bg-[#0F1522] hover:bg-indigo-600 hover:text-white border-slate-200 dark:border-slate-700'
+                              }`}
+                            >
+                              <span
+                                className="w-2 h-2 rounded-full border border-slate-400/40"
+                                style={{ backgroundColor: c.hex }}
+                              />
+                              <span>{targetColored}</span>
+                            </button>
+                          );
+                        });
+                      })()}
                       {getResetColorTarget(colorPickerTargetTag) && (
                         <button
                           type="button"
@@ -3335,8 +3547,10 @@ export default function App() {
                           <button
                             type="button"
                             onClick={() => {
-                              setSelectedPromptTags(preset.tags);
-                              recordPromptHistory(preset.tags, `Loaded ${preset.name}`);
+                              const nextTags = Array.from(new Set(preset.tags));
+                              setSelectedPromptTags(nextTags);
+                              setColorPickerTargetTag(null);
+                              recordPromptHistory(nextTags, `Loaded ${preset.name}`);
                               setComposerSection('positive');
                             }}
                             className="px-2.5 py-1 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-500 rounded transition-colors cursor-pointer"
@@ -3421,7 +3635,8 @@ export default function App() {
                             <button
                               type="button"
                               onClick={() => {
-                                setSelectedPromptTags(entry.tags);
+                                setSelectedPromptTags(Array.from(new Set(entry.tags)));
+                                setColorPickerTargetTag(null);
                                 setComposerSection('positive');
                               }}
                               className="px-2 py-0.5 text-[11px] font-medium text-white bg-indigo-600 hover:bg-indigo-500 rounded transition-colors cursor-pointer"
@@ -3519,12 +3734,12 @@ export default function App() {
                       ) : (
                         <div className="flex flex-wrap gap-1 max-h-40 overflow-y-auto pr-1">
                           {selectedNegativeTags.map((negTag) => {
-                            const isExactOverlap = selectedPromptTags.includes(negTag);
+                            const isOverlapping = overlappingNegativeTagSet.has(negTag);
                             return (
                               <div
                                 key={negTag}
                                 className={`inline-flex items-center rounded overflow-hidden border ${
-                                  isExactOverlap
+                                  isOverlapping
                                     ? 'bg-rose-500/15 border-rose-500/60'
                                     : 'bg-white dark:bg-slate-800/90 border-slate-200 dark:border-slate-700/80'
                                 }`}
@@ -3631,7 +3846,7 @@ export default function App() {
                         {MODULAR_NEGATIVE_PACKS.map((pack) => {
                           const isCurrentPack = activeNegativePackId === pack.id;
                           const activeCount = pack.tags.filter((t) =>
-                            selectedNegativeTags.includes(t.tag)
+                            selectedNegativeSet.has(t.tag)
                           ).length;
                           return (
                             <button
@@ -3661,7 +3876,7 @@ export default function App() {
                           MODULAR_NEGATIVE_PACKS[0];
                         const packTagKeys = currentPack.tags.map((t) => t.tag);
                         const activeInPackCount = packTagKeys.filter((k) =>
-                          selectedNegativeTags.includes(k)
+                          selectedNegativeSet.has(k)
                         ).length;
                         const allInPackActive =
                           packTagKeys.length > 0 && activeInPackCount === packTagKeys.length;
@@ -3696,7 +3911,7 @@ export default function App() {
 
                             <div className="flex flex-wrap gap-1 max-h-36 overflow-y-auto pr-1">
                               {currentPack.tags.map((negItem) => {
-                                const isNegActive = selectedNegativeTags.includes(negItem.tag);
+                                const isNegActive = selectedNegativeSet.has(negItem.tag);
                                 return (
                                   <button
                                     key={negItem.tag}
@@ -3874,19 +4089,19 @@ export default function App() {
                             type="button"
                             onClick={(e) => toggleFavorite(inspectedTag.tag, e)}
                             title={
-                              favoriteTags.includes(inspectedTag.tag)
+                              favoriteTagSet.has(inspectedTag.tag)
                                 ? 'Remove from Favorites'
                                 : 'Add to Favorites'
                             }
                             className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-lg border transition-colors cursor-pointer ${
-                              favoriteTags.includes(inspectedTag.tag)
+                              favoriteTagSet.has(inspectedTag.tag)
                                 ? 'bg-amber-500/10 border-amber-500/40 text-amber-500'
                                 : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-amber-500/50 hover:text-amber-500'
                             }`}
                           >
                             <Star
                               className="w-3.5 h-3.5"
-                              fill={favoriteTags.includes(inspectedTag.tag) ? 'currentColor' : 'none'}
+                              fill={favoriteTagSet.has(inspectedTag.tag) ? 'currentColor' : 'none'}
                             />
                           </button>
 
@@ -3894,19 +4109,19 @@ export default function App() {
                             type="button"
                             onClick={(e) => toggleTagInNegative(inspectedTag.tag, e)}
                             title={
-                              selectedNegativeTags.includes(inspectedTag.tag)
+                              selectedNegativeSet.has(inspectedTag.tag)
                                 ? 'Remove from Negative Prompt'
                                 : 'Add to Negative Prompt'
                             }
                             className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-lg border transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                              selectedNegativeTags.includes(inspectedTag.tag)
+                              selectedNegativeSet.has(inspectedTag.tag)
                                 ? 'bg-rose-600 border-rose-600 text-white'
                                 : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-rose-500/60 hover:text-rose-500'
                             }`}
                           >
                             <Ban className="w-3.5 h-3.5" />
                             <span>
-                              {selectedNegativeTags.includes(inspectedTag.tag) ? 'Negated' : '- Neg'}
+                              {selectedNegativeSet.has(inspectedTag.tag) ? 'Negated' : '- Neg'}
                             </span>
                           </button>
 
@@ -3914,15 +4129,26 @@ export default function App() {
                             type="button"
                             onClick={() => toggleTagInPrompt(inspectedTag.tag)}
                             className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                              selectedPromptTags.includes(inspectedTag.tag)
+                              selectedPromptSet.has(inspectedTag.tag)
                                 ? 'bg-rose-500/10 text-rose-500 hover:bg-rose-500/20'
                                 : 'bg-indigo-600 text-white hover:bg-indigo-500'
                             }`}
                           >
-                            {selectedPromptTags.includes(inspectedTag.tag)
+                            {selectedPromptSet.has(inspectedTag.tag)
                               ? 'Remove'
                               : '+ Prompt'}
                           </button>
+                          {inspectedTag.isCustom && (
+                            <button
+                              type="button"
+                              onClick={(e) => handleDeleteCustomTag(inspectedTag.tag, e)}
+                              title={`Delete custom tag "${inspectedTag.tag}"`}
+                              aria-label={`Delete custom tag ${inspectedTag.tag}`}
+                              className="inline-flex items-center justify-center p-1.5 text-slate-400 hover:text-rose-500 border border-slate-200 dark:border-slate-700 hover:border-rose-500/50 rounded-lg transition-colors cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       </div>
 
@@ -3955,34 +4181,39 @@ export default function App() {
                           )}
                         </div>
                         <div className="grid grid-cols-3 gap-1.5">
-                          {CANONICAL_BOORU_COLORS.map((c) => {
-                            const targetColored = applyColorPrefixToTag(
-                              inspectedTag.tag,
-                              c.prefix
-                            );
-                            const isCurrentlyActive = selectedPromptTags.includes(targetColored);
-                            return (
-                              <button
-                                key={c.prefix}
-                                type="button"
-                                onClick={() =>
-                                  handleApplyColorPrefix(inspectedTag.tag, c.prefix)
-                                }
-                                title={`Add or swap to ${targetColored}`}
-                                className={`flex items-center gap-1.5 px-2 py-1 text-[11px] font-mono rounded border transition-colors cursor-pointer truncate ${
-                                  isCurrentlyActive
-                                    ? 'bg-indigo-600 border-indigo-600 text-white font-semibold'
-                                    : 'bg-white dark:bg-[#0F1522] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-500'
-                                }`}
-                              >
-                                <span
-                                  className="w-2.5 h-2.5 rounded-full shrink-0 border border-slate-400/40"
-                                  style={{ backgroundColor: c.hex }}
-                                />
-                                <span className="truncate">{targetColored}</span>
-                              </button>
-                            );
-                          })}
+                          {(() => {
+                            const seenTargets = new Set<string>();
+                            return CANONICAL_BOORU_COLORS.map((c) => {
+                              const targetColored = applyColorPrefixToTag(
+                                inspectedTag.tag,
+                                c.prefix
+                              );
+                              if (seenTargets.has(targetColored)) return null;
+                              seenTargets.add(targetColored);
+                              const isCurrentlyActive = selectedPromptSet.has(targetColored);
+                              return (
+                                <button
+                                  key={c.prefix}
+                                  type="button"
+                                  onClick={() =>
+                                    handleApplyColorPrefix(inspectedTag.tag, c.prefix)
+                                  }
+                                  title={`Add or swap to ${targetColored}`}
+                                  className={`flex items-center gap-1.5 px-2 py-1 text-[11px] font-mono rounded border transition-colors cursor-pointer truncate ${
+                                    isCurrentlyActive
+                                      ? 'bg-indigo-600 border-indigo-600 text-white font-semibold'
+                                      : 'bg-white dark:bg-[#0F1522] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-500'
+                                  }`}
+                                >
+                                  <span
+                                    className="w-2.5 h-2.5 rounded-full shrink-0 border border-slate-400/40"
+                                    style={{ backgroundColor: c.hex }}
+                                  />
+                                  <span className="truncate">{targetColored}</span>
+                                </button>
+                              );
+                            });
+                          })()}
                         </div>
                       </div>
                     )}
@@ -4031,7 +4262,7 @@ export default function App() {
                         </span>
                         <div className="flex flex-wrap gap-1.5">
                           {inspectedTag.relatedTags.map((rel) => {
-                            const relSelected = selectedPromptTags.includes(rel);
+                            const relSelected = selectedPromptSet.has(rel);
                             const existsInLexicon = tagMap.has(rel);
                             return (
                               <button
@@ -4115,6 +4346,7 @@ export default function App() {
         onCustomAliasesInputChange={setCustomAliasesInput}
         onCreateCustomTag={handleCreateCustomTag}
         customTagsCount={customTags.length}
+        existingTags={allTags}
         onJumpToCustomTags={() => {
           handleSelectDomain('custom');
           setIsSettingsModalOpen(false);

@@ -18,6 +18,9 @@ fs.mkdirSync(releaseDir, { recursive: true });
 // 1. Read compiled index.html and inline all CSS and JS assets into a single self-contained offline file
 let html = fs.readFileSync(path.join(distDir, 'index.html'), 'utf-8');
 
+let inlinedCssCount = 0;
+let inlinedJsCount = 0;
+
 // Inline CSS <link rel="stylesheet" crossorigin href="./assets/...">
 html = html.replace(
   /<link[^>]+rel="stylesheet"[^>]+href="(\.?\/?assets\/[^"]+\.css)"[^>]*>/g,
@@ -25,7 +28,8 @@ html = html.replace(
     const cleanRel = relHref.replace(/^\.?\//, '');
     const cssPath = path.join(distDir, cleanRel);
     if (fs.existsSync(cssPath)) {
-      const cssContent = fs.readFileSync(cssPath, 'utf-8');
+      const cssContent = fs.readFileSync(cssPath, 'utf-8').replace(/<\/style>/gi, '<\\/style>');
+      inlinedCssCount++;
       return `<style>${cssContent}</style>`;
     }
     return _match;
@@ -42,11 +46,19 @@ html = html.replace(
       const jsContent = fs.readFileSync(jsPath, 'utf-8');
       // Escape any closing script tags inside string literals so HTML parser does not terminate early
       const safeJs = jsContent.replace(/<\/script>/gi, '<\\/script>');
+      inlinedJsCount++;
       return `<script type="module">${safeJs}</script>`;
     }
     return _match;
   }
 );
+
+if (inlinedCssCount === 0 || inlinedJsCount === 0) {
+  console.error(
+    `Error: Standalone bundle inlining incomplete (CSS: ${inlinedCssCount}, JS: ${inlinedJsCount}).`
+  );
+  process.exit(1);
+}
 
 const standaloneHtmlPath = path.join(releaseDir, 'Illustrious-Lexicon-Standalone.html');
 fs.writeFileSync(standaloneHtmlPath, html, 'utf-8');

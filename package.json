@@ -30,6 +30,7 @@
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
     "export:csv": "npx tsx scripts/export-csv.ts",
+    "audit:tags": "npx tsx scripts/audit-tags.ts",
     "build:standalone": "npx tsx scripts/export-csv.ts && vite build && node scripts/build-standalone.mjs",
     "electron:dev": "electron .",
     "dist:win": "vite build && npx electron-builder --win portable nsis",

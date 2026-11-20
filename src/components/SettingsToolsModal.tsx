@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import {
   X,
   SlidersHorizontal,
@@ -9,10 +9,11 @@ import {
   Download,
   Terminal,
   Trash2,
-  Check
+  Check,
+  AlertTriangle
 } from 'lucide-react';
 import { DOMAINS, DOMAIN_MAP } from '../data';
-import { DomainId, LexiconDisplaySettings } from '../types/lexicon';
+import { BooruTag, DomainId, LexiconDisplaySettings } from '../types/lexicon';
 
 export type SettingsModalTab = 'display' | 'output' | 'custom' | 'export';
 
@@ -53,6 +54,7 @@ interface SettingsToolsModalProps {
   onCustomAliasesInputChange: (val: string) => void;
   onCreateCustomTag: (e: React.FormEvent) => void;
   customTagsCount: number;
+  existingTags: BooruTag[];
   onJumpToCustomTags: () => void;
   // CSV Export
   totalTagsCount: number;
@@ -92,6 +94,7 @@ export function SettingsToolsModal({
   onCustomAliasesInputChange,
   onCreateCustomTag,
   customTagsCount,
+  existingTags,
   onJumpToCustomTags,
   totalTagsCount,
   builtInTagsCount,
@@ -138,7 +141,28 @@ export function SettingsToolsModal({
     .trim()
     .toLowerCase()
     .replace(/\s+/g, '_')
-    .replace(/[^a-z0-9_()!:'><-]/g, '');
+    .replace(/[^a-z0-9_()!:'+;^><.-]/g, '')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '');
+
+  const customTagMatchHint = useMemo(() => {
+    if (!normalizedPreview) return null;
+    const exactMatch = existingTags.find((t) => t.tag === normalizedPreview);
+    if (exactMatch) {
+      const domainLabel = DOMAIN_MAP[exactMatch.domain]?.shortLabel ?? exactMatch.domain;
+      return exactMatch.isCustom
+        ? `Already in your custom tags (${domainLabel} · ${exactMatch.subcategory}) — saving will update it.`
+        : `Already exists in built-in lexicon (${domainLabel} · ${exactMatch.subcategory}) — saving will override it locally.`;
+    }
+    const aliasMatch = existingTags.find((t) =>
+      (t.aliases ?? []).some((a) => a.trim().toLowerCase().replace(/\s+/g, '_') === normalizedPreview)
+    );
+    if (aliasMatch) {
+      const domainLabel = DOMAIN_MAP[aliasMatch.domain]?.shortLabel ?? aliasMatch.domain;
+      return `Matches known alias of canonical tag "${aliasMatch.tag}" (${domainLabel} · ${aliasMatch.subcategory}).`;
+    }
+    return null;
+  }, [normalizedPreview, existingTags]);
 
   return (
     <div
@@ -611,6 +635,12 @@ export function SettingsToolsModal({
                   placeholder="e.g. glowing_halo or cyber_visor"
                   className="w-full px-3 py-2 text-xs font-mono bg-slate-50 dark:bg-[#0B0F17] border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
                 />
+                {customTagMatchHint && (
+                  <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-amber-700 dark:text-amber-400">
+                    <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{customTagMatchHint}</span>
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
