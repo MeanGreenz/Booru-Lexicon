@@ -72,7 +72,7 @@ export const CANONICAL_EXPANSION_TAGS: BooruTag[] = [
   {
     tag: 'white_border',
     domain: 'art_meta',
-    subcategory: 'Color, Tone & Visual Effects',
+    subcategory: 'Format & Page Layout',
     description: 'Clean white margin framing the illustration like an artbook print or polaroid.',
     aliases: ['white_frame', 'framed_border'],
     relatedTags: ['out-of-frame', 'official_art', 'simple_background'],
@@ -85,7 +85,7 @@ export const CANONICAL_EXPANSION_TAGS: BooruTag[] = [
     subcategory: 'Color, Tone & Visual Effects',
     description: 'Subtle analog photographic noise and cinematic celluloid texture across the frame.',
     aliases: ['analog_grain', 'noise_texture'],
-    relatedTags: ['retro_artstyle', 'chromatic_aberration', 'anime_screencap', 'vignette'],
+    relatedTags: ['retro_artstyle', 'chromatic_aberration', 'anime_screencap', 'vignetting'],
     popularity: 'Common',
     postCountEst: '85K'
   },

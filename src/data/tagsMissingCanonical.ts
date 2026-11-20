@@ -17,8 +17,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "open_shirt"
     ],
     "popularity": "Core",
-    "postCountEst": "1.4M",
-    "illustriousNote": "Feb 2024 Danbooru count, rounded."
+    "postCountEst": "1.4M"
   },
   {
     "tag": "white_shirt",
@@ -35,8 +34,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "collared_shirt"
     ],
     "popularity": "Core",
-    "postCountEst": "629K",
-    "illustriousNote": "Feb 2024 Danbooru count, rounded."
+    "postCountEst": "629K"
   },
   {
     "tag": "blouse",
@@ -53,7 +51,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "frills"
     ],
     "popularity": "Core",
-    "postCountEst": "est.",
+    "postCountEst": "210K",
     "illustriousNote": "open_blouse is an alias of open_shirt, not of blouse."
   },
   {
@@ -72,7 +70,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "business_suit"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "195K"
   },
   {
     "tag": "camisole",
@@ -89,7 +87,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "negligee"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "92K"
   },
   {
     "tag": "tube_top",
@@ -124,7 +122,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "bikini"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "95K"
   },
   {
     "tag": "strapless",
@@ -159,7 +157,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "naked_shirt"
     ],
     "popularity": "Core",
-    "postCountEst": "est.",
+    "postCountEst": "190K",
     "illustriousNote": "open_blouse is an alias of this tag."
   },
   {
@@ -177,8 +175,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "hood"
     ],
     "popularity": "Core",
-    "postCountEst": "700K",
-    "illustriousNote": "Feb 2024 Danbooru count, rounded."
+    "postCountEst": "700K"
   },
   {
     "tag": "open_jacket",
@@ -194,8 +191,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "hoodie"
     ],
     "popularity": "Core",
-    "postCountEst": "172K",
-    "illustriousNote": "Feb 2024 Danbooru count, rounded."
+    "postCountEst": "172K"
   },
   {
     "tag": "coat",
@@ -212,7 +208,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "fur_trim"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "460K"
   },
   {
     "tag": "cloak",
@@ -228,8 +224,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "hood",
       "armor"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "115K"
   },
   {
     "tag": "hood",
@@ -246,8 +242,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "animal_hood"
     ],
     "popularity": "Core",
-    "postCountEst": "236K",
-    "illustriousNote": "Feb 2024 Danbooru count, rounded."
+    "postCountEst": "236K"
   },
   {
     "tag": "hood_up",
@@ -263,7 +258,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "hoodie"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "125K"
   },
   {
     "tag": "hood_down",
@@ -278,8 +273,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "hood_up",
       "hoodie"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "145K"
   },
   {
     "tag": "animal_hood",
@@ -297,7 +292,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "hoodie"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "58K"
   },
   {
     "tag": "fur_trim",
@@ -313,8 +308,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "cape",
       "jacket"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "280K"
   },
   {
     "tag": "skirt",
@@ -331,8 +326,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "pencil_skirt"
     ],
     "popularity": "Core",
-    "postCountEst": "1.3M",
-    "illustriousNote": "Feb 2024 Danbooru count, rounded."
+    "postCountEst": "1.3M"
   },
   {
     "tag": "socks",
@@ -349,7 +343,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "shoes"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "780K"
   },
   {
     "tag": "leggings",
@@ -366,7 +360,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "skintight"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "135K"
   },
   {
     "tag": "shoes",
@@ -384,8 +378,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "barefoot"
     ],
     "popularity": "Core",
-    "postCountEst": "344K",
-    "illustriousNote": "Feb 2024 Danbooru count, rounded."
+    "postCountEst": "344K"
   },
   {
     "tag": "swimsuit",
@@ -402,7 +395,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "competition_swimsuit"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "760K"
   },
   {
     "tag": "underwear",
@@ -420,7 +413,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "no_panties"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "1.1M"
   },
   {
     "tag": "bikini_top",
@@ -437,7 +430,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "underboob"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "110K"
   },
   {
     "tag": "bikini_bottom",
@@ -453,8 +446,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "side-tie_bikini_bottom",
       "thong"
     ],
-    "popularity": "Core",
-    "postCountEst": "est."
+    "popularity": "Common",
+    "postCountEst": "98K"
   },
   {
     "tag": "chemise",
@@ -470,8 +463,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "babydoll",
       "see-through"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Specialized",
+    "postCountEst": "22K"
   },
   {
     "tag": "negligee",
@@ -487,8 +480,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "lingerie",
       "chemise"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Specialized",
+    "postCountEst": "24K"
   },
   {
     "tag": "nightgown",
@@ -504,7 +497,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "see-through"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "42K"
   },
   {
     "tag": "pajamas",
@@ -521,7 +514,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "shorts"
     ],
     "popularity": "Common",
-    "postCountEst": "est.",
+    "postCountEst": "95K",
     "illustriousNote": "pyjamas and pajama are aliases."
   },
   {
@@ -539,7 +532,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "bare_shoulders"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "115K"
   },
   {
     "tag": "clothing_cutout",
@@ -556,7 +549,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "side_cutout"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "460K"
   },
   {
     "tag": "shoulder_cutout",
@@ -571,8 +564,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "bare_shoulders",
       "off_shoulder"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "115K"
   },
   {
     "tag": "back_cutout",
@@ -588,7 +581,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "bare_back"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "48K"
   },
   {
     "tag": "plaid",
@@ -604,7 +597,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "striped"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "410K"
   },
   {
     "tag": "striped",
@@ -620,7 +613,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "horizontal_stripes"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "720K"
   },
   {
     "tag": "polka_dot",
@@ -636,7 +629,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "skirt"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "95K"
   },
   {
     "tag": "argyle",
@@ -651,8 +644,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "socks",
       "thighhighs"
     ],
-    "popularity": "Specialized",
-    "postCountEst": "est."
+    "popularity": "Common",
+    "postCountEst": "52K"
   },
   {
     "tag": "checkered",
@@ -668,8 +661,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "skirt",
       "dress"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "165K"
   },
   {
     "tag": "lace",
@@ -686,7 +679,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "gloves"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "310K"
   },
   {
     "tag": "animal_print",
@@ -703,7 +696,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "cow_print"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "78K"
   },
   {
     "tag": "floral_print",
@@ -720,8 +713,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "skirt",
       "bikini"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "225K"
   },
   {
     "tag": "hat",
@@ -739,8 +732,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "baseball_cap"
     ],
     "popularity": "Core",
-    "postCountEst": "1.0M",
-    "illustriousNote": "Feb 2024 Danbooru count, rounded."
+    "postCountEst": "1.0M"
   },
   {
     "tag": "baseball_cap",
@@ -755,8 +747,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "peaked_cap",
       "hoodie"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "110K"
   },
   {
     "tag": "santa_hat",
@@ -772,7 +764,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "christmas"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "98K"
   },
   {
     "tag": "crown",
@@ -788,8 +780,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "jewelry",
       "gold_trim"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "145K"
   },
   {
     "tag": "tiara",
@@ -805,8 +797,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "hair_ornament",
       "jewelry"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "130K"
   },
   {
     "tag": "mob_cap",
@@ -821,8 +813,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "maid_headdress",
       "frills"
     ],
-    "popularity": "Specialized",
-    "postCountEst": "est."
+    "popularity": "Common",
+    "postCountEst": "58K"
   },
   {
     "tag": "nurse_cap",
@@ -837,7 +829,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "white_dress"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "68K"
   },
   {
     "tag": "mask",
@@ -851,8 +843,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "surgical_mask",
       "eyepatch"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "275K"
   },
   {
     "tag": "surgical_mask",
@@ -867,7 +859,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "nurse"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "62K"
   },
   {
     "tag": "goggles",
@@ -882,8 +874,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "eyewear_on_head",
       "science"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "140K"
   },
   {
     "tag": "monocle",
@@ -897,8 +889,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "glasses",
       "formal"
     ],
-    "popularity": "Specialized",
-    "postCountEst": "est."
+    "popularity": "Common",
+    "postCountEst": "36K"
   },
   {
     "tag": "bow",
@@ -931,8 +923,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "bow"
     ],
     "popularity": "Core",
-    "postCountEst": "937K",
-    "illustriousNote": "Feb 2024 Danbooru count, rounded."
+    "postCountEst": "937K"
   },
   {
     "tag": "jewelry",
@@ -949,8 +940,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "ring"
     ],
     "popularity": "Core",
-    "postCountEst": "830K",
-    "illustriousNote": "Feb 2024 Danbooru count, rounded."
+    "postCountEst": "830K"
   },
   {
     "tag": "necklace",
@@ -967,7 +957,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "cross_necklace"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "540K"
   },
   {
     "tag": "pendant",
@@ -981,8 +971,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "necklace",
       "jewelry"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "125K"
   },
   {
     "tag": "cross_necklace",
@@ -998,7 +988,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "jewelry"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "72K"
   },
   {
     "tag": "bracelet",
@@ -1013,8 +1003,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "wrist_cuffs",
       "gloves"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "380K"
   },
   {
     "tag": "wrist_cuffs",
@@ -1029,8 +1019,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "playboy_bunny",
       "detached_sleeves"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "290K"
   },
   {
     "tag": "bell",
@@ -1046,8 +1036,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "hair_bell",
       "cat_ears"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "160K"
   },
   {
     "tag": "cowbell",
@@ -1062,8 +1052,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "collar",
       "cow_girl"
     ],
-    "popularity": "Specialized",
-    "postCountEst": "est."
+    "popularity": "Common",
+    "postCountEst": "32K"
   },
   {
     "tag": "ring",
@@ -1077,8 +1067,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "jewelry",
       "earrings"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "215K"
   },
   {
     "tag": "hair_tubes",
@@ -1094,7 +1084,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "detached_sleeves"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "120K"
   },
   {
     "tag": "hair_rings",
@@ -1110,7 +1100,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "hair_bobbles"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "82K"
   },
   {
     "tag": "hair_bobbles",
@@ -1126,7 +1116,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "hair_rings"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "85K"
   },
   {
     "tag": "hair_bell",
@@ -1141,8 +1131,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "hair_ornament",
       "twintails"
     ],
-    "popularity": "Specialized",
-    "postCountEst": "est."
+    "popularity": "Common",
+    "postCountEst": "38K"
   },
   {
     "tag": "scrunchie",
@@ -1158,7 +1148,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "hair_ornament"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "54K"
   },
   {
     "tag": "hair_scrunchie",
@@ -1175,7 +1165,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "hair_ornament"
     ],
     "popularity": "Common",
-    "postCountEst": "est.",
+    "postCountEst": "42K",
     "illustriousNote": "Implicates scrunchie and hair_ornament."
   },
   {
@@ -1193,7 +1183,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "gyaru"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "440K"
   },
   {
     "tag": "fingernails",
@@ -1209,7 +1199,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "nail_polish"
     ],
     "popularity": "Core",
-    "postCountEst": "est.",
+    "postCountEst": "490K",
     "illustriousNote": "Parent of sharp_fingernails, already in the lexicon."
   },
   {
@@ -1225,8 +1215,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "nail_polish",
       "sharp_fingernails"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "165K"
   },
   {
     "tag": "4girls",
@@ -1243,7 +1233,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "multiple_girls"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "190K"
   },
   {
     "tag": "5girls",
@@ -1259,7 +1249,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "multiple_girls"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "115K"
   },
   {
     "tag": "6+girls",
@@ -1292,8 +1282,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "4boys",
       "multiple_boys"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "110K"
   },
   {
     "tag": "4boys",
@@ -1309,7 +1299,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "multiple_boys"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "58K"
   },
   {
     "tag": "6+boys",
@@ -1325,7 +1315,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "multiple_boys"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "65K"
   },
   {
     "tag": "no_humans",
@@ -1341,8 +1331,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "1girl"
     ],
     "popularity": "Core",
-    "postCountEst": "113K",
-    "illustriousNote": "Feb 2024 Danbooru count, rounded."
+    "postCountEst": "113K"
   },
   {
     "tag": "twin_drills",
@@ -1359,7 +1348,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "ojou"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "115K"
   },
   {
     "tag": "side_braid",
@@ -1374,8 +1363,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "single_braid",
       "long_hair"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "160K"
   },
   {
     "tag": "hair_over_eyes",
@@ -1391,7 +1380,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "blunt_bangs"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "195K"
   },
   {
     "tag": "covered_eyes",
@@ -1406,8 +1395,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "blindfold",
       "one_eye_covered"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "185K"
   },
   {
     "tag": "eyes_visible_through_hair",
@@ -1422,8 +1411,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "covered_eyes",
       "blunt_bangs"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "320K"
   },
   {
     "tag": "v-bangs",
@@ -1439,7 +1428,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "hair_intakes"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "68K"
   },
   {
     "tag": "diagonal_bangs",
@@ -1454,7 +1443,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "asymmetrical_bangs"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "52K"
   },
   {
     "tag": "colored_bangs",
@@ -1470,7 +1459,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "blunt_bangs"
     ],
     "popularity": "Common",
-    "postCountEst": "est.",
+    "postCountEst": "42K",
     "illustriousNote": "Not for a small streak inside the bangs. dyed_bangs is an alias."
   },
   {
@@ -1487,7 +1476,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "sidelocks"
     ],
     "popularity": "Specialized",
-    "postCountEst": "est.",
+    "postCountEst": "24K",
     "illustriousNote": "ribbon_bangs is an alias."
   },
   {
@@ -1505,7 +1494,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "streaked_hair"
     ],
     "popularity": "Common",
-    "postCountEst": "est.",
+    "postCountEst": "78K",
     "illustriousNote": "Use gradient_hair if the change is gradual. Implicates multicolored_hair."
   },
   {
@@ -1522,7 +1511,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "silver_hair"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "195K"
   },
   {
     "tag": "dark_blue_hair",
@@ -1537,7 +1526,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "black_hair"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "165K"
   },
   {
     "tag": "light_brown_hair",
@@ -1551,8 +1540,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "brown_hair",
       "blonde_hair"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "190K"
   },
   {
     "tag": "grey_eyes",
@@ -1569,7 +1558,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "black_eyes"
     ],
     "popularity": "Core",
-    "postCountEst": "est.",
+    "postCountEst": "230K",
     "illustriousNote": "gray_eyes and silver_eyes are aliases. Do not add them as separate rows."
   },
   {
@@ -1585,8 +1574,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "grey_eyes",
       "glowing_eyes"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "110K"
   },
   {
     "tag": "extra_eyes",
@@ -1602,7 +1591,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "cyclops"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "48K"
   },
   {
     "tag": "facial_hair",
@@ -1619,7 +1608,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "goatee"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "235K"
   },
   {
     "tag": "beard",
@@ -1636,7 +1625,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "1boy"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "145K"
   },
   {
     "tag": "mustache",
@@ -1651,8 +1640,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "beard",
       "goatee"
     ],
-    "popularity": "Common",
-    "postCountEst": "est.",
+    "popularity": "Core",
+    "postCountEst": "115K",
     "illustriousNote": "Implicates facial_hair."
   },
   {
@@ -1669,7 +1658,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "mustache"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "68K"
   },
   {
     "tag": "goatee",
@@ -1684,8 +1673,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "mustache",
       "facial_hair"
     ],
-    "popularity": "Specialized",
-    "postCountEst": "est."
+    "popularity": "Common",
+    "postCountEst": "42K"
   },
   {
     "tag": "sideburns",
@@ -1699,8 +1688,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "facial_hair",
       "beard"
     ],
-    "popularity": "Specialized",
-    "postCountEst": "est."
+    "popularity": "Common",
+    "postCountEst": "38K"
   },
   {
     "tag": "muscular",
@@ -1717,7 +1706,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "pectorals"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "420K"
   },
   {
     "tag": "pectorals",
@@ -1733,8 +1722,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "1boy",
       "bara"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "240K"
   },
   {
     "tag": "bara",
@@ -1750,8 +1739,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "beard",
       "pectorals"
     ],
-    "popularity": "Specialized",
-    "postCountEst": "est."
+    "popularity": "Common",
+    "postCountEst": "35K"
   },
   {
     "tag": "knight",
@@ -1768,7 +1757,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "cape"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "68K"
   },
   {
     "tag": "princess",
@@ -1785,7 +1774,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "jewelry"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "62K"
   },
   {
     "tag": "samurai",
@@ -1802,7 +1791,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "hakama"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "54K"
   },
   {
     "tag": "waitress",
@@ -1818,7 +1807,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "cafe"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "48K"
   },
   {
     "tag": "police",
@@ -1833,7 +1822,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "peaked_cap"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "72K"
   },
   {
     "tag": "teacher",
@@ -1850,7 +1839,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "suit"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "52K"
   },
   {
     "tag": "santa",
@@ -1865,8 +1854,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "beard",
       "coat"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "125K"
   },
   {
     "tag": "^_^",
@@ -1882,7 +1871,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       ">_<"
     ],
     "popularity": "Core",
-    "postCountEst": "est.",
+    "postCountEst": "360K",
     "illustriousNote": "^^ is an alias. Implicates closed_eyes. Use >_< if the eyes are squeezed shut."
   },
   {
@@ -1899,7 +1888,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "^_^"
     ],
     "popularity": "Core",
-    "postCountEst": "est.",
+    "postCountEst": "115K",
     "illustriousNote": "Canonical form. The existing >< row is an alias. Prefer this tag."
   },
   {
@@ -1915,8 +1904,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "surprised",
       "parted_lips"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "165K"
   },
   {
     "tag": ";d",
@@ -1932,7 +1921,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       ":d"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "95K"
   },
   {
     "tag": "nosebleed",
@@ -1947,8 +1936,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "surprised",
       "embarrassed"
     ],
-    "popularity": "Core",
-    "postCountEst": "est."
+    "popularity": "Common",
+    "postCountEst": "48K"
   },
   {
     "tag": "heart",
@@ -1964,7 +1953,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "heart_censor"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "840K"
   },
   {
     "tag": "musical_note",
@@ -1979,8 +1968,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "smile",
       "spoken_heart"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "145K"
   },
   {
     "tag": "spoken_ellipsis",
@@ -1995,8 +1984,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "spoken_heart",
       "embarrassed"
     ],
-    "popularity": "Specialized",
-    "postCountEst": "est.",
+    "popularity": "Common",
+    "postCountEst": "36K",
     "illustriousNote": "Implicates the ... tag."
   },
   {
@@ -2011,8 +2000,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "spoken_ellipsis",
       "spoken_heart"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "225K"
   },
   {
     "tag": "hand_up",
@@ -2028,8 +2017,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "waving"
     ],
     "popularity": "Core",
-    "postCountEst": "265K",
-    "illustriousNote": "Feb 2024 Danbooru count, rounded."
+    "postCountEst": "265K"
   },
   {
     "tag": "arm_up",
@@ -2045,8 +2033,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "stretching"
     ],
     "popularity": "Core",
-    "postCountEst": "168K",
-    "illustriousNote": "Feb 2024 Danbooru count, rounded."
+    "postCountEst": "168K"
   },
   {
     "tag": "own_hands_together",
@@ -2061,8 +2048,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "praying"
     ],
     "popularity": "Common",
-    "postCountEst": "62K",
-    "illustriousNote": "Feb 2024 Danbooru count, rounded."
+    "postCountEst": "62K"
   },
   {
     "tag": "hand_on_own_hip",
@@ -2077,7 +2063,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "contrapposto"
     ],
     "popularity": "Core",
-    "postCountEst": "est.",
+    "postCountEst": "175K",
     "illustriousNote": "Canonical form. The existing hand_on_hip row is the older tagger spelling."
   },
   {
@@ -2093,8 +2079,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "hand_on_hip"
     ],
     "popularity": "Common",
-    "postCountEst": "26K",
-    "illustriousNote": "Feb 2024 Danbooru count, rounded."
+    "postCountEst": "26K"
   },
   {
     "tag": "hand_in_pocket",
@@ -2109,8 +2094,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "pants",
       "jacket"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "115K"
   },
   {
     "tag": "hands_in_pockets",
@@ -2125,8 +2110,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "pants",
       "jacket"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "125K"
   },
   {
     "tag": "thumbs_up",
@@ -2142,7 +2127,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "grin"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "85K"
   },
   {
     "tag": "double_v",
@@ -2156,8 +2141,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "v",
       "one_eye_closed"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "135K"
   },
   {
     "tag": "index_finger_raised",
@@ -2171,8 +2156,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "pointing_at_viewer",
       "finger_to_mouth"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "165K"
   },
   {
     "tag": "flexing",
@@ -2188,7 +2173,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "biceps"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "52K"
   },
   {
     "tag": "shrugging",
@@ -2204,7 +2189,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "embarrassed"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "28K"
   },
   {
     "tag": "bent_over",
@@ -2220,7 +2205,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "all_fours"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "245K"
   },
   {
     "tag": "on_side",
@@ -2236,7 +2221,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "on_stomach"
     ],
     "popularity": "Core",
-    "postCountEst": "est.",
+    "postCountEst": "145K",
     "illustriousNote": "Canonical posture tag. Prefer this over the existing lying_on_side row."
   },
   {
@@ -2252,8 +2237,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "standing",
       "indoors"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "140K"
   },
   {
     "tag": "on_chair",
@@ -2269,7 +2254,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "crossed_legs"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "78K"
   },
   {
     "tag": "facing_viewer",
@@ -2302,8 +2287,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "feet_out_of_frame"
     ],
     "popularity": "Common",
-    "postCountEst": "18K",
-    "illustriousNote": "Feb 2024 Danbooru count, rounded."
+    "postCountEst": "18K"
   },
   {
     "tag": "blurry_background",
@@ -2319,8 +2303,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "simple_background"
     ],
     "popularity": "Core",
-    "postCountEst": "104K",
-    "illustriousNote": "Feb 2024 Danbooru count, rounded."
+    "postCountEst": "104K"
   },
   {
     "tag": "emphasis_lines",
@@ -2335,8 +2318,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "sparkle",
       "surprised"
     ],
-    "popularity": "Common",
-    "postCountEst": "est.",
+    "popularity": "Core",
+    "postCountEst": "120K",
     "illustriousNote": "Do not use this as a substitute for speed_lines."
   },
   {
@@ -2354,7 +2337,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "star-shaped_pupils"
     ],
     "popularity": "Core",
-    "postCountEst": "est.",
+    "postCountEst": "760K",
     "illustriousNote": "Canonical form. The existing sparkles row is an alias. Prefer this tag."
   },
   {
@@ -2371,8 +2354,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "monochrome"
     ],
     "popularity": "Core",
-    "postCountEst": "475K",
-    "illustriousNote": "Feb 2024 Danbooru count, rounded."
+    "postCountEst": "475K"
   },
   {
     "tag": "4koma",
@@ -2388,8 +2370,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "monochrome"
     ],
     "popularity": "Common",
-    "postCountEst": "93K",
-    "illustriousNote": "Feb 2024 Danbooru count, rounded."
+    "postCountEst": "93K"
   },
   {
     "tag": "censored",
@@ -2406,7 +2387,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "uncensored"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "790K"
   },
   {
     "tag": "bar_censor",
@@ -2421,8 +2402,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "convenient_censoring",
       "mosaic_censoring"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "195K"
   },
   {
     "tag": "mosaic_censoring",
@@ -2436,8 +2417,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "censored",
       "bar_censor"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "485K"
   },
   {
     "tag": "heart_censor",
@@ -2452,8 +2433,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "heart",
       "convenient_censoring"
     ],
-    "popularity": "Specialized",
-    "postCountEst": "est.",
+    "popularity": "Common",
+    "postCountEst": "28K",
     "illustriousNote": "Implicates censored and heart."
   },
   {
@@ -2489,8 +2470,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "night"
     ],
     "popularity": "Core",
-    "postCountEst": "295K",
-    "illustriousNote": "Feb 2024 Danbooru count, rounded."
+    "postCountEst": "295K"
   },
   {
     "tag": "sun",
@@ -2506,8 +2486,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "sunlight",
       "sky"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "185K"
   },
   {
     "tag": "sunrise",
@@ -2524,7 +2504,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "sunlight"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "45K"
   },
   {
     "tag": "cloudy_sky",
@@ -2539,8 +2519,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "blue_sky",
       "cumulonimbus_cloud"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "165K"
   },
   {
     "tag": "moon",
@@ -2557,8 +2537,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "starry_sky"
     ],
     "popularity": "Common",
-    "postCountEst": "66K",
-    "illustriousNote": "Feb 2024 Danbooru count, rounded."
+    "postCountEst": "66K"
   },
   {
     "tag": "snowing",
@@ -2574,8 +2553,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "sky"
     ],
     "popularity": "Common",
-    "postCountEst": "22K",
-    "illustriousNote": "Feb 2024 Danbooru count, rounded."
+    "postCountEst": "22K"
   },
   {
     "tag": "petals",
@@ -2608,7 +2586,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "grass"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "690K"
   },
   {
     "tag": "grass",
@@ -2624,7 +2602,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "tree"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "540K"
   },
   {
     "tag": "water",
@@ -2641,7 +2619,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "wet_skin"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "840K"
   },
   {
     "tag": "fog",
@@ -2657,7 +2635,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "night"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "52K"
   },
   {
     "tag": "lightning",
@@ -2672,8 +2650,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "night",
       "cloud"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "115K"
   },
   {
     "tag": "flower",
@@ -2690,8 +2668,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "bouquet"
     ],
     "popularity": "Core",
-    "postCountEst": "512K",
-    "illustriousNote": "Feb 2024 Danbooru count, rounded."
+    "postCountEst": "512K"
   },
   {
     "tag": "holding",
@@ -2708,8 +2685,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "food"
     ],
     "popularity": "Core",
-    "postCountEst": "1.0M",
-    "illustriousNote": "Feb 2024 Danbooru count, rounded."
+    "postCountEst": "1.0M"
   },
   {
     "tag": "weapon",
@@ -2726,7 +2702,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "bow_(weapon)"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "1.1M"
   },
   {
     "tag": "gun",
@@ -2742,7 +2718,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "weapon"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "420K"
   },
   {
     "tag": "wand",
@@ -2758,7 +2734,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "magic"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "95K"
   },
   {
     "tag": "bow_(weapon)",
@@ -2774,7 +2750,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "arrow"
     ],
     "popularity": "Common",
-    "postCountEst": "est.",
+    "postCountEst": "85K",
     "illustriousNote": "Do not confuse with bow, the clothing accessory."
   },
   {
@@ -2790,8 +2766,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "armor",
       "knight"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "115K"
   },
   {
     "tag": "microphone",
@@ -2806,8 +2782,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "holding",
       "stage"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "145K"
   },
   {
     "tag": "bag",
@@ -2822,8 +2798,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "holding",
       "school_uniform"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "460K"
   },
   {
     "tag": "backpack",
@@ -2838,8 +2814,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "school_uniform",
       "holding"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "140K"
   },
   {
     "tag": "food",
@@ -2855,7 +2831,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "teacup"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "780K"
   },
   {
     "tag": "street",
@@ -2870,8 +2846,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "cityscape",
       "building"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "145K"
   },
   {
     "tag": "building",
@@ -2886,8 +2862,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "indoors",
       "window"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "410K"
   },
   {
     "tag": "chair",
@@ -2902,8 +2878,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "sitting",
       "desk"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "360K"
   },
   {
     "tag": "bed",
@@ -2919,7 +2895,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "pillow"
     ],
     "popularity": "Core",
-    "postCountEst": "est."
+    "postCountEst": "310K"
   },
   {
     "tag": "couch",
@@ -2934,8 +2910,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "indoors",
       "bedroom"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "135K"
   },
   {
     "tag": "door",
@@ -2950,8 +2926,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "window",
       "hallway"
     ],
-    "popularity": "Common",
-    "postCountEst": "est."
+    "popularity": "Core",
+    "postCountEst": "140K"
   },
   {
     "tag": "bathtub",
@@ -2967,7 +2943,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "showering"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "68K"
   },
   {
     "tag": "showering",
@@ -2984,7 +2960,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "bathroom"
     ],
     "popularity": "Common",
-    "postCountEst": "est.",
+    "postCountEst": "42K",
     "illustriousNote": "Bare shower is deprecated. Use this for the action."
   },
   {
@@ -3000,8 +2976,8 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "bathroom",
       "bathtub"
     ],
-    "popularity": "Specialized",
-    "postCountEst": "est.",
+    "popularity": "Common",
+    "postCountEst": "45K",
     "illustriousNote": "Bare shower is deprecated. Use this for the place."
   },
   {
@@ -3018,7 +2994,7 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "microphone"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "95K"
   },
   {
     "tag": "spotlight",
@@ -3035,6 +3011,6 @@ export const MISSING_CANONICAL_TAGS: BooruTag[] = [
       "light_rays"
     ],
     "popularity": "Common",
-    "postCountEst": "est."
+    "postCountEst": "75K"
   }
 ];

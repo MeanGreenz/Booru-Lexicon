@@ -256,8 +256,8 @@ export const RISQUE_TAGS: BooruTag[] = [
     domain: 'character',
     subcategory: 'Body Proportions & Anatomy',
     description: 'Curvaceous hourglass pelvic and hip silhouette.',
-    aliases: ['curvy_hips', 'childbearing_hips', 'hourglass_figure'],
-    relatedTags: ['thick_thighs', 'narrow_waist', 'curvy', 'ass'],
+    aliases: ['curvy_hips', 'childbearing_hips'],
+    relatedTags: ['thick_thighs', 'narrow_waist', 'hourglass_figure', 'ass'],
     popularity: 'Core',
     postCountEst: '540K'
   },

@@ -5,17 +5,6 @@ export const COMPREHENSIVE_POLISH_TAGS: BooruTag[] = [
   // 01. ART & META — Missing Quality, Mediums & Visual Effects
   // ============================================================================
   {
-    tag: 'official_art',
-    domain: 'art_meta',
-    subcategory: 'Illustrious Quality & Era',
-    description: 'Polished studio promotional or key-visual illustration aesthetic.',
-    aliases: ['official_style', 'key_visual_style'],
-    relatedTags: ['masterpiece', 'best_quality', 'anime_coloring', 'newest'],
-    popularity: 'Core',
-    postCountEst: '480K',
-    illustriousNote: 'Pushes composition and lineart toward clean commercial anime key visuals.'
-  },
-  {
     tag: 'anime_screencap',
     domain: 'art_meta',
     subcategory: 'Illustrious Quality & Era',
@@ -31,7 +20,7 @@ export const COMPREHENSIVE_POLISH_TAGS: BooruTag[] = [
     subcategory: 'Illustrious Quality & Era',
     description: 'Visual novel or gacha game event CG illustration with rich lighting and full background.',
     aliases: ['event_cg', 'visual_novel_cg'],
-    relatedTags: ['official_art', 'painting_(medium)', 'dramatic_shadows', 'pov'],
+    relatedTags: ['official_art', 'painting_(medium)', 'shadow', 'pov'],
     popularity: 'Core',
     postCountEst: '390K'
   },
@@ -76,24 +65,24 @@ export const COMPREHENSIVE_POLISH_TAGS: BooruTag[] = [
     postCountEst: '65K'
   },
   {
-    tag: 'dark_theme',
+    tag: 'dark',
     domain: 'art_meta',
     subcategory: 'Color, Tone & Visual Effects',
     description: 'Low-key, moody dark color palette dominated by deep shadows and rich contrast.',
-    aliases: ['low_key', 'dark_mood'],
+    aliases: ['dark_theme', 'low_key', 'dark_mood'],
     relatedTags: ['chiaroscuro', 'high_contrast', 'night', 'glowing'],
     popularity: 'Core',
-    postCountEst: '160K'
+    postCountEst: '420K'
   },
   {
-    tag: 'vignette',
+    tag: 'vignetting',
     domain: 'art_meta',
     subcategory: 'Color, Tone & Visual Effects',
     description: 'Soft darkening around the outer edges of the frame to draw focus to the center subject.',
-    aliases: ['dark_edges', 'edge_darkening'],
-    relatedTags: ['dramatic_shadows', 'depth_of_field'],
-    popularity: 'Core',
-    postCountEst: '95K'
+    aliases: ['vignette', 'dark_edges', 'edge_darkening'],
+    relatedTags: ['shadow', 'depth_of_field'],
+    popularity: 'Common',
+    postCountEst: '38K'
   },
 
   // ============================================================================
@@ -250,14 +239,14 @@ export const COMPREHENSIVE_POLISH_TAGS: BooruTag[] = [
     postCountEst: '130K'
   },
   {
-    tag: 'curvy',
+    tag: 'hourglass_figure',
     domain: 'character',
     subcategory: 'Body Proportions & Anatomy',
     description: 'Pronounced hourglass body shape with full bust, cinched waist, and wide hips.',
-    aliases: ['hourglass_figure', 'voluptuous'],
+    aliases: ['curvy', 'voluptuous', 'curvaceous'],
     relatedTags: ['wide_hips', 'narrow_waist', 'large_breasts', 'thick_thighs', 'plump'],
-    popularity: 'Core',
-    postCountEst: '410K'
+    popularity: 'Common',
+    postCountEst: '32K'
   },
   {
     tag: 'slender',
@@ -334,10 +323,10 @@ export const COMPREHENSIVE_POLISH_TAGS: BooruTag[] = [
     domain: 'character',
     subcategory: 'Skin, Tanlines, Tattoos & Piercings',
     description: 'Body glistens with massage oil, suntan lotion, or baby oil highlights.',
-    aliases: ['oiled_body', 'suntan_oil'],
+    aliases: ['oiled', 'oiled_skin', 'oiled_body', 'suntan_oil'],
     relatedTags: ['shiny_skin', 'wet_skin', 'tanlines', 'bikini'],
-    popularity: 'Core',
-    postCountEst: '115K'
+    popularity: 'Common',
+    postCountEst: '45K'
   },
   {
     tag: 'beauty_mark',
@@ -1099,7 +1088,7 @@ export const COMPREHENSIVE_POLISH_TAGS: BooruTag[] = [
     subcategory: 'Headwear, Eyewear & Accessories',
     description: 'Glasses, sunglasses, or goggles pushed up to rest atop the forehead or hair.',
     aliases: ['glasses_on_head', 'sunglasses_on_head'],
-    relatedTags: ['glasses', 'sunglasses', 'glasses_off'],
+    relatedTags: ['glasses', 'sunglasses', 'eyewear_removed'],
     popularity: 'Core',
     postCountEst: '240K'
   },
@@ -1159,11 +1148,11 @@ export const COMPREHENSIVE_POLISH_TAGS: BooruTag[] = [
   },
   {
     tag: 'multiple_views',
-    domain: 'pose_camera',
-    subcategory: 'Framing & Shot Size',
+    domain: 'art_meta',
+    subcategory: 'Format & Page Layout',
     description: 'Character design sheet or multi-angle showcase displaying front, side, and back views on one canvas.',
-    aliases: ['character_sheet', 'reference_sheet', 'turnaround'],
-    relatedTags: ['full_body', 'simple_background', 'standing', 'zoom_layer'],
+    aliases: ['turnaround', 'multi_view'],
+    relatedTags: ['character_sheet', 'reference_sheet', 'full_body', 'simple_background'],
     popularity: 'Core',
     postCountEst: '290K'
   },
@@ -1410,25 +1399,25 @@ export const COMPREHENSIVE_POLISH_TAGS: BooruTag[] = [
     postCountEst: '240K'
   },
   {
-    tag: 'rim_lighting',
+    tag: 'silhouette',
     domain: 'pose_camera',
     subcategory: 'Lighting & Optical Effects',
-    description: 'Bright contour highlight tracing the outer silhouette of hair, shoulders, and curves against a darker background.',
-    aliases: ['edge_lighting', 'halo_lighting', 'contour_light'],
-    relatedTags: ['backlighting', 'dramatic_shadows', 'chiaroscuro', 'dark_theme'],
+    description: 'Dark solid outline of a subject viewed against a bright backdrop or glowing rim light.',
+    aliases: ['silhouetted', 'backlit_silhouette'],
+    relatedTags: ['backlighting', 'shadow', 'chiaroscuro', 'dark'],
     popularity: 'Core',
-    postCountEst: '210K',
-    illustriousNote: 'One of the best lighting tags in SDXL Illustrious for separating the character from the background.'
+    postCountEst: '195K',
+    illustriousNote: 'Pair with backlighting for high-contrast rim-lit contours.'
   },
   {
-    tag: 'tyndall_effect',
+    tag: 'sunbeam',
     domain: 'pose_camera',
     subcategory: 'Lighting & Optical Effects',
-    description: 'Visible atmospheric shafts of sunlight or moonlight scattering through dust, mist, or foliage.',
-    aliases: ['god_rays', 'crepuscular_rays', 'volumetric_lighting'],
+    description: 'Visible atmospheric shafts of sunlight streaming through a window, canopy, or mist.',
+    aliases: ['tyndall_effect', 'god_rays', 'crepuscular_rays', 'volumetric_lighting'],
     relatedTags: ['light_rays', 'dappled_sunlight', 'sunlight', 'window', 'forest'],
-    popularity: 'Core',
-    postCountEst: '130K'
+    popularity: 'Common',
+    postCountEst: '52K'
   },
   {
     tag: 'speed_lines',
@@ -1448,9 +1437,9 @@ export const COMPREHENSIVE_POLISH_TAGS: BooruTag[] = [
     tag: 'black_background',
     domain: 'environment',
     subcategory: 'Studio & Minimal Backgrounds',
-    description: 'Solid pitch-black backdrop maximizing subject contrast and rim lighting.',
+    description: 'Solid pitch-black backdrop maximizing subject contrast and backlighting.',
     aliases: ['dark_background', 'void_background'],
-    relatedTags: ['simple_background', 'chiaroscuro', 'rim_lighting', 'glowing'],
+    relatedTags: ['simple_background', 'chiaroscuro', 'backlighting', 'glowing'],
     popularity: 'Core',
     postCountEst: '540K'
   },

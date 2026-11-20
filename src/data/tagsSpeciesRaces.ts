@@ -307,10 +307,10 @@ export const SPECIES_AND_TRAITS_TAGS: BooruTag[] = [
     subcategory: 'Fantasy Races & Demihumans',
     description: 'Stout, compact fantasy race with sturdy or voluptuous shortstack proportions, often paired with braids or smithing/armor motifs.',
     aliases: ['dwarf_girl', 'dwarven'],
-    relatedTags: ['petite', 'curvy', 'braid', 'armor', 'horns'],
+    relatedTags: ['petite', 'hourglass_figure', 'braid', 'armor', 'horns'],
     popularity: 'Common',
     postCountEst: '35K',
-    illustriousNote: 'For female dwarves or shortstack fantasy characters, combine dwarf with petite, curvy, and thick_thighs.'
+    illustriousNote: 'For female dwarves or shortstack fantasy characters, combine dwarf with petite, wide_hips, and thick_thighs.'
   },
   {
     tag: 'goblin',
@@ -449,7 +449,7 @@ export const SPECIES_AND_TRAITS_TAGS: BooruTag[] = [
     subcategory: 'Fantasy Races & Demihumans',
     description: 'Undead skeletal warrior, lich, or bone motif.',
     aliases: ['undead_skeleton', 'lich'],
-    relatedTags: ['glowing_eyes', 'dark_theme', 'scythe'],
+    relatedTags: ['glowing_eyes', 'dark', 'scythe'],
     popularity: 'Common',
     postCountEst: '75K'
   },
@@ -2068,7 +2068,7 @@ export const BUILT_IN_SPECIES_PRESETS: SpeciesPreset[] = [
     name: 'Goblin Demihuman',
     lineage: 'Fantasy Demihuman',
     description: 'Emerald green skin, long pointed ears, sharp teeth, and compact curvy build.',
-    tags: ['goblin', 'colored_skin', 'green_skin', 'long_pointy_ears', 'shark_teeth', 'petite', 'curvy'],
+    tags: ['goblin', 'colored_skin', 'green_skin', 'long_pointy_ears', 'shark_teeth', 'petite', 'hourglass_figure'],
     isBuiltIn: true
   },
   {

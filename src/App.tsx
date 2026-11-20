@@ -7,26 +7,22 @@ import {
   Trash2,
   Star,
   Info,
-  Sun,
-  Moon,
   LayoutGrid,
   List,
   X,
   ArrowUpDown,
   History,
   SlidersHorizontal,
-  RotateCcw,
-  Type,
   AlertTriangle,
   Palette,
   Ban,
   ArrowRightLeft,
   Smile,
   Sparkles,
-  Download,
   ChevronDown,
   ChevronRight,
   PanelLeft,
+  PanelRight,
   Filter
 } from 'lucide-react';
 import {
@@ -44,6 +40,7 @@ import {
   isTagColorable,
   applyColorPrefixToTag,
   getBaseUncoloredTag,
+  getResetColorTarget,
   detectPromptConflicts
 } from './data/conflictAndColorRules';
 import {
@@ -61,9 +58,9 @@ import {
   SpeciesPreset,
   PromptHistoryEntry,
   RecentTagEntry,
-  LexiconDisplaySettings,
-  TextSizePreset
+  LexiconDisplaySettings
 } from './types/lexicon';
+import { SettingsToolsModal, SettingsModalTab } from './components/SettingsToolsModal';
 
 const STORAGE_KEYS = {
   PROMPT_TAGS: 'illustrious_lexicon_prompt_tags_v1',
@@ -95,12 +92,98 @@ const DEFAULT_DISPLAY_SETTINGS: LexiconDisplaySettings = {
   trailingComma: false
 };
 
-const TEXT_SIZE_ORDER: TextSizePreset[] = ['sm', 'md', 'lg', 'xl'];
+// Safe localStorage helpers to prevent QuotaExceededError / SecurityError / corrupt JSON crashes
+function safeReadStorage(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeWriteStorage(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Ignore storage quota or private-mode security errors
+  }
+}
+
+function safeReadJsonArray<T>(key: string, fallback: T[]): T[] {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as T[]) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+// Reliable clipboard helper supporting Electron native bridge, modern Clipboard API, and file:// fallback
+async function copyTextToClipboard(text: string): Promise<boolean> {
+  const bridge = (
+    window as unknown as { desktopBridge?: { copyText?: (val: string) => void } }
+  ).desktopBridge;
+  if (bridge?.copyText) {
+    try {
+      bridge.copyText(text);
+      return true;
+    } catch {
+      // Fall through to browser APIs
+    }
+  }
+
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // Fall through to textarea fallback (e.g. file:// offline HTML)
+    }
+  }
+
+  try {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.top = '-9999px';
+    textarea.style.left = '-9999px';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    return ok;
+  } catch {
+    return false;
+  }
+}
 
 export default function App() {
+  // Managed timeout registry with unmount cleanup to prevent timer leaks & rapid-click races
+  const timersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const scheduleResetTimer = (key: string, callback: () => void, delayMs: number) => {
+    if (timersRef.current[key]) {
+      clearTimeout(timersRef.current[key]);
+    }
+    timersRef.current[key] = setTimeout(() => {
+      delete timersRef.current[key];
+      callback();
+    }, delayMs);
+  };
+
+  useEffect(() => {
+    return () => {
+      Object.values(timersRef.current).forEach((timerId) => clearTimeout(timerId));
+      timersRef.current = {};
+    };
+  }, []);
+
   // Theme state (default dark)
   const [isDark, setIsDark] = useState<boolean>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.THEME);
+    const saved = safeReadStorage(STORAGE_KEYS.THEME);
     return saved ? saved === 'dark' : true;
   });
 
@@ -111,15 +194,18 @@ export default function App() {
     } else {
       root.classList.remove('dark');
     }
-    localStorage.setItem(STORAGE_KEYS.THEME, isDark ? 'dark' : 'light');
+    safeWriteStorage(STORAGE_KEYS.THEME, isDark ? 'dark' : 'light');
   }, [isDark]);
 
   // Display & Typography Settings state
   const [displaySettings, setDisplaySettings] = useState<LexiconDisplaySettings>(() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEYS.DISPLAY_SETTINGS);
+      const raw = safeReadStorage(STORAGE_KEYS.DISPLAY_SETTINGS);
       if (raw) {
-        return { ...DEFAULT_DISPLAY_SETTINGS, ...JSON.parse(raw) };
+        const parsed: unknown = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          return { ...DEFAULT_DISPLAY_SETTINGS, ...(parsed as Partial<LexiconDisplaySettings>) };
+        }
       }
     } catch {
       // ignore
@@ -127,11 +213,13 @@ export default function App() {
     return DEFAULT_DISPLAY_SETTINGS;
   });
 
-  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+  // Unified Settings & Tools Modal state
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
+  const [activeSettingsTab, setActiveSettingsTab] = useState<SettingsModalTab>('display');
 
   // Sync display settings to localStorage & apply root font-size scale
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.DISPLAY_SETTINGS, JSON.stringify(displaySettings));
+    safeWriteStorage(STORAGE_KEYS.DISPLAY_SETTINGS, JSON.stringify(displaySettings));
     const root = document.documentElement;
     root.style.fontSize = `${displaySettings.fontScalePercent}%`;
     return () => {
@@ -144,14 +232,6 @@ export default function App() {
     value: LexiconDisplaySettings[K]
   ) => {
     setDisplaySettings((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const stepTextSize = (direction: -1 | 1) => {
-    setDisplaySettings((prev) => {
-      const currentIndex = TEXT_SIZE_ORDER.indexOf(prev.textSize);
-      const nextIndex = Math.max(0, Math.min(TEXT_SIZE_ORDER.length - 1, currentIndex + direction));
-      return { ...prev, textSize: TEXT_SIZE_ORDER[nextIndex] };
-    });
   };
 
   // Dynamic typography & spacing classes derived from displaySettings
@@ -228,17 +308,12 @@ export default function App() {
   }, [displaySettings.gridColumns]);
 
   // Custom user-created tags persisted in localStorage
-  const [customTags, setCustomTags] = useState<BooruTag[]>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEYS.CUSTOM_TAGS);
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [customTags, setCustomTags] = useState<BooruTag[]>(() =>
+    safeReadJsonArray<BooruTag>(STORAGE_KEYS.CUSTOM_TAGS, [])
+  );
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.CUSTOM_TAGS, JSON.stringify(customTags));
+    safeWriteStorage(STORAGE_KEYS.CUSTOM_TAGS, JSON.stringify(customTags));
   }, [customTags]);
 
   // Combined lexicon
@@ -269,45 +344,35 @@ export default function App() {
 
   // Adjustable History Cap state (1 to 200 items, default 25)
   const [historyCap, setHistoryCap] = useState<number>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.HISTORY_CAP);
+    const saved = safeReadStorage(STORAGE_KEYS.HISTORY_CAP);
     const parsed = saved ? parseInt(saved, 10) : 25;
     return Number.isFinite(parsed) && parsed >= 1 ? Math.min(parsed, 200) : 25;
   });
 
   // Prompt History state
-  const [promptHistory, setPromptHistory] = useState<PromptHistoryEntry[]>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEYS.PROMPT_HISTORY);
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [promptHistory, setPromptHistory] = useState<PromptHistoryEntry[]>(() =>
+    safeReadJsonArray<PromptHistoryEntry>(STORAGE_KEYS.PROMPT_HISTORY, [])
+  );
 
   // Recently used tags history state
-  const [recentTagsHistory, setRecentTagsHistory] = useState<RecentTagEntry[]>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEYS.RECENT_TAGS);
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [recentTagsHistory, setRecentTagsHistory] = useState<RecentTagEntry[]>(() =>
+    safeReadJsonArray<RecentTagEntry>(STORAGE_KEYS.RECENT_TAGS, [])
+  );
 
   // Enforce cap whenever historyCap changes
   useEffect(() => {
     const safeCap = Math.max(1, Math.min(200, historyCap));
-    localStorage.setItem(STORAGE_KEYS.HISTORY_CAP, String(safeCap));
+    safeWriteStorage(STORAGE_KEYS.HISTORY_CAP, String(safeCap));
     setPromptHistory((prev) => (prev.length > safeCap ? prev.slice(0, safeCap) : prev));
     setRecentTagsHistory((prev) => (prev.length > safeCap ? prev.slice(0, safeCap) : prev));
   }, [historyCap]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.PROMPT_HISTORY, JSON.stringify(promptHistory));
+    safeWriteStorage(STORAGE_KEYS.PROMPT_HISTORY, JSON.stringify(promptHistory));
   }, [promptHistory]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.RECENT_TAGS, JSON.stringify(recentTagsHistory));
+    safeWriteStorage(STORAGE_KEYS.RECENT_TAGS, JSON.stringify(recentTagsHistory));
   }, [recentTagsHistory]);
 
   // Helper to record a tag in Recent Tags History (bounded by historyCap)
@@ -353,14 +418,8 @@ export default function App() {
   };
 
   // Prompt Composer state
-  const [selectedPromptTags, setSelectedPromptTags] = useState<string[]>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEYS.PROMPT_TAGS);
-      if (raw) return JSON.parse(raw);
-    } catch {
-      // ignore
-    }
-    return [
+  const [selectedPromptTags, setSelectedPromptTags] = useState<string[]>(() =>
+    safeReadJsonArray<string>(STORAGE_KEYS.PROMPT_TAGS, [
       'masterpiece',
       'best_quality',
       'very_awa',
@@ -371,94 +430,71 @@ export default function App() {
       'long_hair',
       'big_eyes',
       'looking_at_viewer'
-    ];
-  });
+    ])
+  );
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.PROMPT_TAGS, JSON.stringify(selectedPromptTags));
+    safeWriteStorage(STORAGE_KEYS.PROMPT_TAGS, JSON.stringify(selectedPromptTags));
   }, [selectedPromptTags]);
 
   const [autoSortPrompt, setAutoSortPrompt] = useState<boolean>(() => {
-    const raw = localStorage.getItem(STORAGE_KEYS.AUTO_SORT);
+    const raw = safeReadStorage(STORAGE_KEYS.AUTO_SORT);
     return raw ? raw === 'true' : true;
   });
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.AUTO_SORT, String(autoSortPrompt));
+    safeWriteStorage(STORAGE_KEYS.AUTO_SORT, String(autoSortPrompt));
   }, [autoSortPrompt]);
 
   // Active tag currently open in the inline Color Prefixer inside the Prompt Composer
   const [colorPickerTargetTag, setColorPickerTargetTag] = useState<string | null>(null);
 
   // Favorites state
-  const [favoriteTags, setFavoriteTags] = useState<string[]>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEYS.FAVORITES);
-      return raw
-        ? JSON.parse(raw)
-        : [
-            'masterpiece',
-            'best_quality',
-            'very_awa',
-            'newest',
-            'big_eyes',
-            'dutch_angle',
-            'cowboy_shot',
-            'backlighting'
-          ];
-    } catch {
-      return [];
-    }
-  });
+  const [favoriteTags, setFavoriteTags] = useState<string[]>(() =>
+    safeReadJsonArray<string>(STORAGE_KEYS.FAVORITES, [
+      'masterpiece',
+      'best_quality',
+      'very_awa',
+      'newest',
+      'big_eyes',
+      'dutch_angle',
+      'cowboy_shot',
+      'backlighting'
+    ])
+  );
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(favoriteTags));
+    safeWriteStorage(STORAGE_KEYS.FAVORITES, JSON.stringify(favoriteTags));
   }, [favoriteTags]);
 
   // Quick input for adding a tag directly to Favorites
   const [quickFavInput, setQuickFavInput] = useState<string>('');
 
   // Saved user presets (Favorite Prompts)
-  const [userPresets, setUserPresets] = useState<PromptPreset[]>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEYS.SAVED_PRESETS);
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [userPresets, setUserPresets] = useState<PromptPreset[]>(() =>
+    safeReadJsonArray<PromptPreset>(STORAGE_KEYS.SAVED_PRESETS, [])
+  );
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.SAVED_PRESETS, JSON.stringify(userPresets));
+    safeWriteStorage(STORAGE_KEYS.SAVED_PRESETS, JSON.stringify(userPresets));
   }, [userPresets]);
 
   // Active Negative Prompt Builder state
-  const [selectedNegativeTags, setSelectedNegativeTags] = useState<string[]>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEYS.NEGATIVE_TAGS);
-      if (raw) return JSON.parse(raw);
-    } catch {
-      // ignore
-    }
-    return [...BUILT_IN_NEGATIVE_PRESETS[0].tags];
-  });
+  const [selectedNegativeTags, setSelectedNegativeTags] = useState<string[]>(() =>
+    safeReadJsonArray<string>(STORAGE_KEYS.NEGATIVE_TAGS, [...BUILT_IN_NEGATIVE_PRESETS[0].tags])
+  );
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.NEGATIVE_TAGS, JSON.stringify(selectedNegativeTags));
+    safeWriteStorage(STORAGE_KEYS.NEGATIVE_TAGS, JSON.stringify(selectedNegativeTags));
   }, [selectedNegativeTags]);
 
   // Saved Custom Negative Presets state
-  const [userNegativePresets, setUserNegativePresets] = useState<NegativePreset[]>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEYS.SAVED_NEGATIVE_PRESETS);
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [userNegativePresets, setUserNegativePresets] = useState<NegativePreset[]>(() =>
+    safeReadJsonArray<NegativePreset>(STORAGE_KEYS.SAVED_NEGATIVE_PRESETS, [])
+  );
 
   useEffect(() => {
-    localStorage.setItem(
+    safeWriteStorage(
       STORAGE_KEYS.SAVED_NEGATIVE_PRESETS,
       JSON.stringify(userNegativePresets)
     );
@@ -505,38 +541,48 @@ export default function App() {
 
   // Collapsible layout & decluttering states
   const [isLeftSidebarCollapsed, setIsLeftSidebarCollapsed] = useState<boolean>(false);
+  const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState<boolean>(false);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState<boolean>(false);
   const [promptViewMode, setPromptViewMode] = useState<'chips' | 'raw'>('chips');
   const [isConflictsExpanded, setIsConflictsExpanded] = useState<boolean>(false);
   const [isOverlapsExpanded, setIsOverlapsExpanded] = useState<boolean>(false);
-  const [isNegPacksExpanded, setIsNegPacksExpanded] = useState<boolean>(true);
+  const [isNegPacksExpanded, setIsNegPacksExpanded] = useState<boolean>(false);
   const [isNegPresetsExpanded, setIsNegPresetsExpanded] = useState<boolean>(false);
-  const [isInspectorExpanded, setIsInspectorExpanded] = useState<boolean>(true);
+  const [isInspectorExpanded, setIsInspectorExpanded] = useState<boolean>(false);
 
-  // Custom Tag Modal state
-  const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
+  // Custom Tag Form state (hosted inside SettingsToolsModal)
   const [customTagInput, setCustomTagInput] = useState('');
   const [customDomainInput, setCustomDomainInput] = useState<DomainId>('character');
   const [customSubcategoryInput, setCustomSubcategoryInput] = useState('Subject & Count');
   const [customDescInput, setCustomDescInput] = useState('');
   const [customAliasesInput, setCustomAliasesInput] = useState('');
 
+  const openSettingsModal = (tab: SettingsModalTab = 'display') => {
+    if (
+      tab === 'custom' &&
+      selectedDomain !== 'all' &&
+      selectedDomain !== 'favorites' &&
+      selectedDomain !== 'history' &&
+      selectedDomain !== 'custom'
+    ) {
+      setCustomDomainInput(selectedDomain);
+      setCustomSubcategoryInput(DOMAIN_MAP[selectedDomain].subcategories[0]);
+    }
+    setActiveSettingsTab(tab);
+    setIsSettingsModalOpen(true);
+  };
+
   // Face & Expression Studio state (default collapsed to keep tag table above the fold)
   const [expressionStudioTab, setExpressionStudioTab] = useState<'presets' | 'mixer'>('presets');
   const [isExpressionStudioExpanded, setIsExpressionStudioExpanded] = useState<boolean>(false);
-  const [userExpressionPresets, setUserExpressionPresets] = useState<ExpressionPreset[]>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEYS.SAVED_EXPRESSION_PRESETS);
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [userExpressionPresets, setUserExpressionPresets] = useState<ExpressionPreset[]>(() =>
+    safeReadJsonArray<ExpressionPreset>(STORAGE_KEYS.SAVED_EXPRESSION_PRESETS, [])
+  );
   const [newExprPresetName, setNewExprPresetName] = useState<string>('');
   const [showSaveExprPresetInput, setShowSaveExprPresetInput] = useState<boolean>(false);
 
   useEffect(() => {
-    localStorage.setItem(
+    safeWriteStorage(
       STORAGE_KEYS.SAVED_EXPRESSION_PRESETS,
       JSON.stringify(userExpressionPresets)
     );
@@ -545,19 +591,14 @@ export default function App() {
   // Species, Race & Trait Studio state (default collapsed to keep tag table above the fold)
   const [speciesStudioTab, setSpeciesStudioTab] = useState<'presets' | 'mixer'>('presets');
   const [isSpeciesStudioExpanded, setIsSpeciesStudioExpanded] = useState<boolean>(false);
-  const [userSpeciesPresets, setUserSpeciesPresets] = useState<SpeciesPreset[]>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEYS.SAVED_SPECIES_PRESETS);
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [userSpeciesPresets, setUserSpeciesPresets] = useState<SpeciesPreset[]>(() =>
+    safeReadJsonArray<SpeciesPreset>(STORAGE_KEYS.SAVED_SPECIES_PRESETS, [])
+  );
   const [newSpeciesPresetName, setNewSpeciesPresetName] = useState<string>('');
   const [showSaveSpeciesPresetInput, setShowSaveSpeciesPresetInput] = useState<boolean>(false);
 
   useEffect(() => {
-    localStorage.setItem(
+    safeWriteStorage(
       STORAGE_KEYS.SAVED_SPECIES_PRESETS,
       JSON.stringify(userSpeciesPresets)
     );
@@ -565,24 +606,29 @@ export default function App() {
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Keyboard shortcut: '/' to focus search
+  // Keyboard shortcut: '/' to focus search (disabled when Settings modal or form controls are active)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (
-        e.key === '/' &&
-        document.activeElement?.tagName !== 'INPUT' &&
-        document.activeElement?.tagName !== 'TEXTAREA'
-      ) {
+      if (isSettingsModalOpen) return;
+      const activeEl = document.activeElement as HTMLElement | null;
+      const tagName = activeEl?.tagName;
+      const isEditing =
+        tagName === 'INPUT' ||
+        tagName === 'TEXTAREA' ||
+        tagName === 'SELECT' ||
+        Boolean(activeEl?.isContentEditable);
+
+      if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey && !isEditing) {
         e.preventDefault();
         searchInputRef.current?.focus();
-      } else if (e.key === 'Escape' && document.activeElement === searchInputRef.current) {
+      } else if (e.key === 'Escape' && activeEl === searchInputRef.current) {
         setSearchQuery('');
         searchInputRef.current?.blur();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [isSettingsModalOpen]);
 
   // Sync subcategory when domain changes and scroll viewport to top
   const handleSelectDomain = (
@@ -593,18 +639,13 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Available subcategories for current domain
-  const availableSubcategories = useMemo(() => {
-    if (
-      selectedDomain === 'all' ||
-      selectedDomain === 'favorites' ||
-      selectedDomain === 'history' ||
-      selectedDomain === 'custom'
-    ) {
-      return [];
-    }
-    return DOMAIN_MAP[selectedDomain]?.subcategories || [];
-  }, [selectedDomain]);
+  // O(1) lookup Sets for fast rendering across 1,267 lexicon rows
+  const selectedPromptSet = useMemo(() => new Set(selectedPromptTags), [selectedPromptTags]);
+  const selectedNegativeSet = useMemo(
+    () => new Set(selectedNegativeTags),
+    [selectedNegativeTags]
+  );
+  const favoriteTagSet = useMemo(() => new Set(favoriteTags), [favoriteTags]);
 
   // Filtered and sorted lexicon tags
   const filteredTags = useMemo(() => {
@@ -702,8 +743,8 @@ export default function App() {
     tagMap
   ]);
 
-  // Domain counts for sidebar
-  const domainCounts = useMemo(() => {
+  // Domain & subcategory counts precomputed once for fast sidebar rendering
+  const { domainCounts, subcategoryCounts } = useMemo(() => {
     const counts: Record<string, number> = {
       all: allTags.length,
       favorites: favoriteTags.length,
@@ -711,9 +752,15 @@ export default function App() {
       custom: customTags.length
     };
     for (const d of DOMAINS) {
-      counts[d.id] = allTags.filter((t) => t.domain === d.id).length;
+      counts[d.id] = 0;
     }
-    return counts;
+    const subCounts = new Map<string, number>();
+    for (const t of allTags) {
+      counts[t.domain] = (counts[t.domain] ?? 0) + 1;
+      const subKey = `${t.domain}::${t.subcategory}`;
+      subCounts.set(subKey, (subCounts.get(subKey) ?? 0) + 1);
+    }
+    return { domainCounts: counts, subcategoryCounts: subCounts };
   }, [allTags, favoriteTags, recentTagsHistory, customTags]);
 
   // Helper to resolve domain priority even for color-prefixed tags (e.g. black_bikini -> clothing)
@@ -845,12 +892,10 @@ export default function App() {
   // Copy active negative prompt
   const handleCopyActiveNegative = async () => {
     if (!formattedNegativeString) return;
-    try {
-      await navigator.clipboard.writeText(formattedNegativeString);
+    const copied = await copyTextToClipboard(formattedNegativeString);
+    if (copied) {
       setCopiedActiveNegative(true);
-      setTimeout(() => setCopiedActiveNegative(false), 1800);
-    } catch {
-      // ignore
+      scheduleResetTimer('copiedActiveNegative', () => setCopiedActiveNegative(false), 1800);
     }
   };
 
@@ -875,20 +920,19 @@ export default function App() {
     setUserNegativePresets((prev) => prev.filter((p) => p.id !== id));
   };
 
-  // Apply a color prefix to a target tag (either replacing the uncolored/previous-colored tag in prompt or adding the new colored tag)
+  // Apply a color prefix to a target tag (deduplicated to prevent duplicate React keys/tags)
   const handleApplyColorPrefix = (sourceTag: string, colorPrefix: string) => {
     const coloredTag = applyColorPrefixToTag(sourceTag, colorPrefix);
     const { baseTag } = getBaseUncoloredTag(sourceTag);
 
     setSelectedPromptTags((prev) => {
-      // If sourceTag or its uncolored baseTag is already in prompt, replace it in-place with coloredTag
       const hasSource = prev.includes(sourceTag);
       const hasBase = prev.includes(baseTag);
       if (hasSource) {
-        return prev.map((t) => (t === sourceTag ? coloredTag : t));
+        return Array.from(new Set(prev.map((t) => (t === sourceTag ? coloredTag : t))));
       }
       if (hasBase) {
-        return prev.map((t) => (t === baseTag ? coloredTag : t));
+        return Array.from(new Set(prev.map((t) => (t === baseTag ? coloredTag : t))));
       }
       if (prev.includes(coloredTag)) {
         return prev;
@@ -901,11 +945,14 @@ export default function App() {
     setColorPickerTargetTag(null);
   };
 
-  // Strip color prefix back to uncolored base tag
+  // Strip color prefix back to canonical uncolored base tag (safely deduplicated)
   const handleResetTagColor = (sourceTag: string) => {
-    const { baseTag } = getBaseUncoloredTag(sourceTag);
-    setSelectedPromptTags((prev) => prev.map((t) => (t === sourceTag ? baseTag : t)));
-    setInspectedTagKey(baseTag);
+    const resetTarget = getResetColorTarget(sourceTag);
+    if (!resetTarget) return;
+    setSelectedPromptTags((prev) =>
+      Array.from(new Set(prev.map((t) => (t === sourceTag ? resetTarget : t))))
+    );
+    setInspectedTagKey(resetTarget);
     setColorPickerTargetTag(null);
   };
 
@@ -955,13 +1002,11 @@ export default function App() {
   // Copy active positive prompt & record to Prompt History
   const handleCopyPrompt = async () => {
     if (!formattedPromptString) return;
-    try {
-      await navigator.clipboard.writeText(formattedPromptString);
+    const copied = await copyTextToClipboard(formattedPromptString);
+    recordPromptHistory(orderedPromptTags, 'Copied Prompt');
+    if (copied) {
       setCopiedPositive(true);
-      recordPromptHistory(orderedPromptTags, 'Copied Prompt');
-      setTimeout(() => setCopiedPositive(false), 1800);
-    } catch {
-      recordPromptHistory(orderedPromptTags, 'Copied Prompt');
+      scheduleResetTimer('copiedPositive', () => setCopiedPositive(false), 1800);
     }
   };
 
@@ -969,36 +1014,30 @@ export default function App() {
   const handleCopySingleTag = async (tagKey: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     recordTagHistory(tagKey);
-    try {
-      await navigator.clipboard.writeText(formatSingleTagForOutput(tagKey));
+    const copied = await copyTextToClipboard(formatSingleTagForOutput(tagKey));
+    if (copied) {
       setCopiedSingleTag(tagKey);
-      setTimeout(() => setCopiedSingleTag(null), 1400);
-    } catch {
-      // ignore
+      scheduleResetTimer('copiedSingleTag', () => setCopiedSingleTag(null), 1400);
     }
   };
 
   // Copy negative preset
   const handleCopyNegative = async (id: string, tags: string[]) => {
-    try {
-      const out = tags.map(formatSingleTagForOutput).join(', ');
-      await navigator.clipboard.writeText(displaySettings.trailingComma ? `${out}, ` : out);
+    const out = tags.map(formatSingleTagForOutput).join(', ');
+    const copied = await copyTextToClipboard(displaySettings.trailingComma ? `${out}, ` : out);
+    if (copied) {
       setCopiedNegativeId(id);
-      setTimeout(() => setCopiedNegativeId(null), 1800);
-    } catch {
-      // ignore
+      scheduleResetTimer('copiedNegativeId', () => setCopiedNegativeId(null), 1800);
     }
   };
 
   // Copy history entry
   const handleCopyHistoryEntry = async (entry: PromptHistoryEntry) => {
-    try {
-      const out = entry.tags.map(formatSingleTagForOutput).join(', ');
-      await navigator.clipboard.writeText(displaySettings.trailingComma ? `${out}, ` : out);
+    const out = entry.tags.map(formatSingleTagForOutput).join(', ');
+    const copied = await copyTextToClipboard(displaySettings.trailingComma ? `${out}, ` : out);
+    if (copied) {
       setCopiedHistoryId(entry.id);
-      setTimeout(() => setCopiedHistoryId(null), 1600);
-    } catch {
-      // ignore
+      scheduleResetTimer('copiedHistoryId', () => setCopiedHistoryId(null), 1600);
     }
   };
 
@@ -1047,31 +1086,27 @@ export default function App() {
 
   // Apply or toggle a composite expression preset
   const handleToggleExpressionPreset = (preset: ExpressionPreset, replaceExistingFacial: boolean) => {
-    const allAlreadyActive = preset.tags.every((t) => selectedPromptTags.includes(t));
+    const allAlreadyActive = preset.tags.every((t) => selectedPromptSet.has(t));
     if (allAlreadyActive && !replaceExistingFacial) {
       const presetSet = new Set(preset.tags);
       setSelectedPromptTags((prev) => prev.filter((t) => !presetSet.has(t)));
       return;
     }
 
-    setSelectedPromptTags((prev) => {
-      const baseList = replaceExistingFacial
-        ? prev.filter((tagKey) => {
-            const direct = tagMap.get(tagKey);
-            if (direct?.domain === 'face_expressions') return false;
-            const { baseTag } = getBaseUncoloredTag(tagKey);
-            const base = tagMap.get(baseTag);
-            return base?.domain !== 'face_expressions';
-          })
-        : prev;
-      const merged = new Set([...baseList, ...preset.tags]);
-      return Array.from(merged);
-    });
+    const baseList = replaceExistingFacial
+      ? selectedPromptTags.filter((tagKey) => {
+          const direct = tagMap.get(tagKey);
+          if (direct?.domain === 'face_expressions') return false;
+          const { baseTag } = getBaseUncoloredTag(tagKey);
+          const base = tagMap.get(baseTag);
+          return base?.domain !== 'face_expressions';
+        })
+      : selectedPromptTags;
+    const nextTags = Array.from(new Set([...baseList, ...preset.tags]));
+
+    setSelectedPromptTags(nextTags);
     preset.tags.forEach((t) => recordTagHistory(t));
-    recordPromptHistory(
-      Array.from(new Set([...selectedPromptTags, ...preset.tags])),
-      `Expression: ${preset.name}`
-    );
+    recordPromptHistory(nextTags, `Expression: ${preset.name}`);
   };
 
   // Clear only facial/expression tags from the active prompt
@@ -1122,31 +1157,27 @@ export default function App() {
 
   // Apply or toggle a composite species/racial preset
   const handleToggleSpeciesPreset = (preset: SpeciesPreset, replaceExistingSpecies: boolean) => {
-    const allAlreadyActive = preset.tags.every((t) => selectedPromptTags.includes(t));
+    const allAlreadyActive = preset.tags.every((t) => selectedPromptSet.has(t));
     if (allAlreadyActive && !replaceExistingSpecies) {
       const presetSet = new Set(preset.tags);
       setSelectedPromptTags((prev) => prev.filter((t) => !presetSet.has(t)));
       return;
     }
 
-    setSelectedPromptTags((prev) => {
-      const baseList = replaceExistingSpecies
-        ? prev.filter((tagKey) => {
-            const direct = tagMap.get(tagKey);
-            if (direct?.domain === 'species_traits') return false;
-            const { baseTag } = getBaseUncoloredTag(tagKey);
-            const base = tagMap.get(baseTag);
-            return base?.domain !== 'species_traits';
-          })
-        : prev;
-      const merged = new Set([...baseList, ...preset.tags]);
-      return Array.from(merged);
-    });
+    const baseList = replaceExistingSpecies
+      ? selectedPromptTags.filter((tagKey) => {
+          const direct = tagMap.get(tagKey);
+          if (direct?.domain === 'species_traits') return false;
+          const { baseTag } = getBaseUncoloredTag(tagKey);
+          const base = tagMap.get(baseTag);
+          return base?.domain !== 'species_traits';
+        })
+      : selectedPromptTags;
+    const nextTags = Array.from(new Set([...baseList, ...preset.tags]));
+
+    setSelectedPromptTags(nextTags);
     preset.tags.forEach((t) => recordTagHistory(t));
-    recordPromptHistory(
-      Array.from(new Set([...selectedPromptTags, ...preset.tags])),
-      `Species: ${preset.name}`
-    );
+    recordPromptHistory(nextTags, `Species: ${preset.name}`);
   };
 
   // Clear only species/racial tags from the active prompt
@@ -1223,7 +1254,7 @@ export default function App() {
     setCustomTagInput('');
     setCustomDescInput('');
     setCustomAliasesInput('');
-    setIsCustomModalOpen(false);
+    setIsSettingsModalOpen(false);
   };
 
   // Adjust History Cap handler (clamped 1..200)
@@ -1291,7 +1322,7 @@ export default function App() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   const alphabet = ['#', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')];
@@ -1367,8 +1398,8 @@ export default function App() {
           )}
         </div>
 
-        {/* Zone 3: 1 primary action */}
-        <div className="flex items-center shrink-0">
+        {/* Zone 3: Right Panel Toggle & Primary Copy Prompt CTA */}
+        <div className="flex items-center gap-2.5 shrink-0">
           <button
             onClick={handleCopyPrompt}
             disabled={selectedPromptTags.length === 0}
@@ -1385,6 +1416,27 @@ export default function App() {
                 <span>Copy Prompt ({selectedPromptTags.length})</span>
               </>
             )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsRightPanelCollapsed((prev) => !prev)}
+            title={
+              isRightPanelCollapsed
+                ? 'Expand Prompt Composer & Inspector'
+                : 'Collapse Prompt Composer & Inspector'
+            }
+            aria-label={
+              isRightPanelCollapsed
+                ? 'Expand Prompt Composer panel'
+                : 'Collapse Prompt Composer panel'
+            }
+            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+              isRightPanelCollapsed
+                ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/50'
+                : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <PanelRight className="w-4 h-4" />
           </button>
         </div>
       </header>
@@ -1515,9 +1567,7 @@ export default function App() {
                             All {domain.shortLabel}
                           </button>
                           {domain.subcategories.map((sub) => {
-                            const subCount = allTags.filter(
-                              (t) => t.domain === domain.id && t.subcategory === sub
-                            ).length;
+                            const subCount = subcategoryCounts.get(`${domain.id}::${sub}`) ?? 0;
                             return (
                               <button
                                 key={sub}
@@ -1544,74 +1594,19 @@ export default function App() {
             </div>
           </div>
 
-          {/* Workspace Utilities at bottom of sidebar */}
-          <div className="pt-4 border-t border-slate-200 dark:border-slate-800 space-y-2">
-            <button
-              onClick={() => setIsSettingsOpen((prev) => !prev)}
-              className={`w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
-                isSettingsOpen
-                  ? 'bg-indigo-600 text-white'
-                  : 'text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-800'
-              }`}
-            >
-              <span className="inline-flex items-center gap-2 whitespace-nowrap">
-                <SlidersHorizontal className="w-3.5 h-3.5" />
-                <span>Text & Display Settings</span>
-              </span>
-              <span className="font-mono text-[11px] opacity-80">
-                {displaySettings.fontScalePercent}%
-              </span>
-            </button>
-
-            <button
-              onClick={() => {
-                if (
-                  selectedDomain !== 'all' &&
-                  selectedDomain !== 'favorites' &&
-                  selectedDomain !== 'history' &&
-                  selectedDomain !== 'custom'
-                ) {
-                  setCustomDomainInput(selectedDomain);
-                  setCustomSubcategoryInput(DOMAIN_MAP[selectedDomain].subcategories[0]);
-                }
-                setIsCustomModalOpen(true);
-              }}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add Custom Booru Tag</span>
-            </button>
-
+          {/* Single Consolidated Settings & Tools Trigger */}
+          <div className="pt-3 border-t border-slate-200 dark:border-slate-800">
             <button
               type="button"
-              onClick={() => handleExportDatabaseCsv(false)}
-              title="Download a complete CSV file of all tags in the Illustrious Lexicon database"
-              className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200/70 dark:border-indigo-800/60 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
+              onClick={() => openSettingsModal('display')}
+              className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-lg text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             >
-              <span className="inline-flex items-center gap-2">
-                <Download className="w-3.5 h-3.5" />
-                <span>Export Database CSV</span>
+              <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-500" />
+                <span>Settings & Tools</span>
               </span>
-              <span className="font-mono text-[11px] opacity-80">{allTags.length}</span>
-            </button>
-
-            <button
-              onClick={() => setIsDark((prev) => !prev)}
-              className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/50 rounded-lg transition-colors cursor-pointer"
-            >
-              <span className="whitespace-nowrap">Appearance</span>
-              <span className="inline-flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
-                {isDark ? (
-                  <>
-                    <Moon className="w-3.5 h-3.5" />
-                    <span>Dark Slate</span>
-                  </>
-                ) : (
-                  <>
-                    <Sun className="w-3.5 h-3.5" />
-                    <span>Light Paper</span>
-                  </>
-                )}
+              <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                {isDark ? 'Dark' : 'Light'} · {displaySettings.fontScalePercent}%
               </span>
             </button>
           </div>
@@ -1620,305 +1615,8 @@ export default function App() {
 
         {/* Center Main Lexicon Viewport */}
         <main className="flex-1 min-w-0 flex flex-col bg-slate-50 dark:bg-[#0B0F17]">
-          {/* Compact Context Header & Search Toolbar */}
-          <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0E131F] space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-baseline gap-3 flex-wrap">
-                <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100 font-display">
-                  {selectedDomain === 'all'
-                    ? 'Complete Booru Tag Lexicon'
-                    : selectedDomain === 'favorites'
-                    ? 'Favorite Booru Tags'
-                    : selectedDomain === 'history'
-                    ? `Recently Used Tag History`
-                    : selectedDomain === 'custom'
-                    ? 'Custom User Tags'
-                    : `${DOMAIN_MAP[selectedDomain].indexNumber}. ${DOMAIN_MAP[selectedDomain].label}`}
-                </h1>
-                <span className="text-xs font-mono tabular-nums text-slate-400 dark:text-slate-500">
-                  {filteredTags.length} entries
-                </span>
-              </div>
-
-              {/* Streamlined Sort & View Mode Controls (Duplicate CSV & A-/A+ buttons removed) */}
-              <div className="flex flex-wrap items-center gap-2 shrink-0">
-                <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800/90 rounded-lg">
-                  <button
-                    onClick={() => setSortMode('canonical')}
-                    className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                      sortMode === 'canonical'
-                        ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                    }`}
-                  >
-                    {selectedDomain === 'history' ? 'Recent' : 'Taxonomy'}
-                  </button>
-                  <button
-                    onClick={() => setSortMode('alphabetical')}
-                    className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                      sortMode === 'alphabetical'
-                        ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                    }`}
-                  >
-                    A–Z
-                  </button>
-                </div>
-
-                <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800/90 rounded-lg">
-                  <button
-                    onClick={() => setViewMode('table')}
-                    title="Compact Lexicon Table"
-                    className={`p-1.5 rounded-md transition-colors cursor-pointer ${
-                      viewMode === 'table'
-                        ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
-                        : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
-                    }`}
-                  >
-                    <List className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    title="Detailed Lexicon Grid"
-                    className={`p-1.5 rounded-md transition-colors cursor-pointer ${
-                      viewMode === 'grid'
-                        ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
-                        : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
-                    }`}
-                  >
-                    <LayoutGrid className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Expandable Display, Text Size & Lexicon Parameters Panel */}
-            {isSettingsOpen && (
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#0B0F17] border border-slate-200 dark:border-slate-800 space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-                  <div className="flex items-center gap-2">
-                    <Type className="w-4 h-4 text-indigo-500" />
-                    <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 font-display">
-                      Text Size, Density & Output Parameters
-                    </h2>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setDisplaySettings(DEFAULT_DISPLAY_SETTINGS)}
-                      className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer"
-                    >
-                      <RotateCcw className="w-3 h-3" />
-                      <span>Reset Defaults</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setIsSettingsOpen(false)}
-                      className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-                  <div className="space-y-2">
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                      Lexicon Text Size
-                    </label>
-                    <div className="grid grid-cols-4 gap-1 p-1 bg-white dark:bg-[#0F1522] border border-slate-200 dark:border-slate-800 rounded-lg">
-                      {(
-                        [
-                          { id: 'sm', label: 'Small' },
-                          { id: 'md', label: 'Default' },
-                          { id: 'lg', label: 'Large' },
-                          { id: 'xl', label: 'X-Large' }
-                        ] as const
-                      ).map((opt) => (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() => updateSetting('textSize', opt.id)}
-                          className={`py-1.5 px-2 text-xs font-medium rounded transition-colors cursor-pointer ${
-                            displaySettings.textSize === opt.id
-                              ? 'bg-indigo-600 text-white'
-                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="pt-1 space-y-1">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-500 dark:text-slate-400">
-                          Global UI Font Scale
-                        </span>
-                        <span className="font-mono tabular-nums font-semibold text-slate-800 dark:text-slate-200">
-                          {displaySettings.fontScalePercent}%
-                        </span>
-                      </div>
-                      <input
-                        type="range"
-                        min={85}
-                        max={130}
-                        step={5}
-                        value={displaySettings.fontScalePercent}
-                        onChange={(e) =>
-                          updateSetting('fontScalePercent', Number(e.target.value))
-                        }
-                        className="w-full accent-indigo-600 cursor-pointer"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                      Row & Card Density
-                    </label>
-                    <div className="grid grid-cols-3 gap-1 p-1 bg-white dark:bg-[#0F1522] border border-slate-200 dark:border-slate-800 rounded-lg">
-                      {(
-                        [
-                          { id: 'compact', label: 'Compact' },
-                          { id: 'comfortable', label: 'Normal' },
-                          { id: 'spacious', label: 'Spacious' }
-                        ] as const
-                      ).map((opt) => (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() => updateSetting('rowDensity', opt.id)}
-                          className={`py-1.5 px-2 text-xs font-medium rounded transition-colors cursor-pointer ${
-                            displaySettings.rowDensity === opt.id
-                              ? 'bg-indigo-600 text-white'
-                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="pt-1 space-y-1">
-                      <span className="block text-xs text-slate-500 dark:text-slate-400">
-                        Grid View Desktop Columns
-                      </span>
-                      <div className="grid grid-cols-3 gap-1 p-1 bg-white dark:bg-[#0F1522] border border-slate-200 dark:border-slate-800 rounded-lg">
-                        {([2, 3, 4] as const).map((cols) => (
-                          <button
-                            key={cols}
-                            type="button"
-                            onClick={() => {
-                              updateSetting('gridColumns', cols);
-                              setViewMode('grid');
-                            }}
-                            className={`py-1 px-2 text-xs font-mono rounded transition-colors cursor-pointer ${
-                              displaySettings.gridColumns === cols
-                                ? 'bg-indigo-600 text-white font-semibold'
-                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                            }`}
-                          >
-                            {cols} Cols
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                      Visible Lexicon Details
-                    </label>
-                    <div className="space-y-1.5 text-xs">
-                      <label className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-[#0F1522] border border-slate-200 dark:border-slate-800 cursor-pointer">
-                        <span className="text-slate-700 dark:text-slate-300">
-                          Show Definitions Inline
-                        </span>
-                        <input
-                          type="checkbox"
-                          checked={displaySettings.showDescriptions}
-                          onChange={(e) =>
-                            updateSetting('showDescriptions', e.target.checked)
-                          }
-                          className="accent-indigo-600 w-3.5 h-3.5 cursor-pointer"
-                        />
-                      </label>
-                      <label className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-[#0F1522] border border-slate-200 dark:border-slate-800 cursor-pointer">
-                        <span className="text-slate-700 dark:text-slate-300">
-                          Show Search Aliases Inline
-                        </span>
-                        <input
-                          type="checkbox"
-                          checked={displaySettings.showAliases}
-                          onChange={(e) => updateSetting('showAliases', e.target.checked)}
-                          className="accent-indigo-600 w-3.5 h-3.5 cursor-pointer"
-                        />
-                      </label>
-                      <label className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-[#0F1522] border border-slate-200 dark:border-slate-800 cursor-pointer">
-                        <span className="text-slate-700 dark:text-slate-300">
-                          Show Post Frequency Counts
-                        </span>
-                        <input
-                          type="checkbox"
-                          checked={displaySettings.showPostCounts}
-                          onChange={(e) => updateSetting('showPostCounts', e.target.checked)}
-                          className="accent-indigo-600 w-3.5 h-3.5 cursor-pointer"
-                        />
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                      Prompt Output & History
-                    </label>
-                    <div className="space-y-1.5 text-xs">
-                      <label className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-[#0F1522] border border-slate-200 dark:border-slate-800 cursor-pointer">
-                        <span
-                          className="text-slate-700 dark:text-slate-300"
-                          title="Escapes tags like watercolor_(medium) into watercolor_\(medium\) for A1111/ComfyUI"
-                        >
-                          Escape Tag Parentheses \( \)
-                        </span>
-                        <input
-                          type="checkbox"
-                          checked={displaySettings.escapeParentheses}
-                          onChange={(e) =>
-                            updateSetting('escapeParentheses', e.target.checked)
-                          }
-                          className="accent-indigo-600 w-3.5 h-3.5 cursor-pointer"
-                        />
-                      </label>
-                      <label className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-[#0F1522] border border-slate-200 dark:border-slate-800 cursor-pointer">
-                        <span className="text-slate-700 dark:text-slate-300">
-                          Append Trailing Comma
-                        </span>
-                        <input
-                          type="checkbox"
-                          checked={displaySettings.trailingComma}
-                          onChange={(e) => updateSetting('trailingComma', e.target.checked)}
-                          className="accent-indigo-600 w-3.5 h-3.5 cursor-pointer"
-                        />
-                      </label>
-                      <div className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-[#0F1522] border border-slate-200 dark:border-slate-800">
-                        <span className="text-slate-700 dark:text-slate-300">
-                          History Cap Limit
-                        </span>
-                        <input
-                          type="number"
-                          min={1}
-                          max={200}
-                          value={historyCap}
-                          onChange={(e) => handleHistoryCapChange(Number(e.target.value))}
-                          className="w-16 px-2 py-0.5 text-xs font-mono tabular-nums text-right bg-slate-50 dark:bg-[#0B0F17] border border-slate-200 dark:border-slate-700 rounded text-slate-900 dark:text-slate-100"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+          {/* Streamlined Single-Row Search, Filters, Sort & View Toolbar */}
+          <div className="px-6 py-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0E131F] space-y-2.5">
 
             {/* Contextual Management Banner when inside Favorites or History view */}
             {selectedDomain === 'favorites' && (
@@ -2520,10 +2218,10 @@ export default function App() {
               </div>
             )}
 
-            {/* Search Input & Collapsible Filter / A-Z Drawer Toggle */}
+            {/* Unified Single-Row Toolbar: Search + Filters & A-Z + Sort + View */}
             <div className="space-y-2.5">
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-                <div className="relative flex-1">
+              <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-2">
+                <div className="relative flex-1 min-w-0">
                   <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     ref={searchInputRef}
@@ -2547,34 +2245,88 @@ export default function App() {
                   )}
                 </div>
 
-                {/* Collapsible Filters & A-Z Jumper Button */}
-                <button
-                  type="button"
-                  onClick={() => setIsFilterDrawerOpen((prev) => !prev)}
-                  className={`inline-flex items-center justify-center gap-2 px-3.5 py-2 text-xs font-medium rounded-lg border transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
-                    isFilterDrawerOpen ||
-                    popularityFilter !== 'all' ||
-                    letterFilter !== 'all' ||
-                    selectedSubcategory !== 'all'
-                      ? 'bg-indigo-50 dark:bg-indigo-950/50 border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300'
-                      : 'bg-slate-100 dark:bg-slate-800/90 border-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  <Filter className="w-3.5 h-3.5" />
-                  <span>Filters & A–Z</span>
-                  {(popularityFilter !== 'all' ||
-                    letterFilter !== 'all' ||
-                    selectedSubcategory !== 'all') && (
-                    <span className="font-mono text-[11px] font-semibold">
-                      · Active
-                    </span>
-                  )}
-                  {isFilterDrawerOpen ? (
-                    <ChevronDown className="w-3.5 h-3.5 opacity-70" />
-                  ) : (
-                    <ChevronRight className="w-3.5 h-3.5 opacity-70" />
-                  )}
-                </button>
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
+                  {/* Collapsible Filters & A-Z Jumper Button */}
+                  <button
+                    type="button"
+                    onClick={() => setIsFilterDrawerOpen((prev) => !prev)}
+                    className={`inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium rounded-lg border transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+                      isFilterDrawerOpen ||
+                      popularityFilter !== 'all' ||
+                      letterFilter !== 'all' ||
+                      selectedSubcategory !== 'all'
+                        ? 'bg-indigo-50 dark:bg-indigo-950/50 border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300'
+                        : 'bg-slate-100 dark:bg-slate-800/90 border-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    <Filter className="w-3.5 h-3.5" />
+                    <span>Filters & A–Z</span>
+                    {(popularityFilter !== 'all' ||
+                      letterFilter !== 'all' ||
+                      selectedSubcategory !== 'all') && (
+                      <span className="font-mono text-[11px] font-semibold">· Active</span>
+                    )}
+                    {isFilterDrawerOpen ? (
+                      <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+                    ) : (
+                      <ChevronRight className="w-3.5 h-3.5 opacity-70" />
+                    )}
+                  </button>
+
+                  {/* Sort Switch: Taxonomy | A–Z */}
+                  <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800/90 rounded-lg">
+                    <button
+                      type="button"
+                      onClick={() => setSortMode('canonical')}
+                      className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                        sortMode === 'canonical'
+                          ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                      }`}
+                    >
+                      {selectedDomain === 'history' ? 'Recent' : 'Taxonomy'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSortMode('alphabetical')}
+                      className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                        sortMode === 'alphabetical'
+                          ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                      }`}
+                    >
+                      A–Z
+                    </button>
+                  </div>
+
+                  {/* View Switch: Table | Grid */}
+                  <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800/90 rounded-lg">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('table')}
+                      title="Compact Lexicon Table"
+                      className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+                        viewMode === 'table'
+                          ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
+                          : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+                      }`}
+                    >
+                      <List className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('grid')}
+                      title="Detailed Lexicon Grid"
+                      className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+                        viewMode === 'grid'
+                          ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
+                          : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+                      }`}
+                    >
+                      <LayoutGrid className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {/* Collapsible Filter Drawer: Popularity Tier + Subcategories (mobile/quick) + A-Z Quick Jump */}
@@ -2684,7 +2436,7 @@ export default function App() {
                   <button
                     onClick={() => {
                       setCustomTagInput(searchQuery.trim().replace(/\s+/g, '_'));
-                      setIsCustomModalOpen(true);
+                      openSettingsModal('custom');
                     }}
                     className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors cursor-pointer"
                   >
@@ -2718,14 +2470,14 @@ export default function App() {
                         {displaySettings.showPostCounts && (
                           <th className="py-2.5 px-3 text-right hidden sm:table-cell">Posts</th>
                         )}
-                        <th className="py-2.5 pl-2 pr-4 text-right w-32">Favorite & Tools</th>
+                        <th className="py-2.5 pl-2 pr-4 text-right w-32">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200/70 dark:divide-slate-800/80">
                       {filteredTags.map((item) => {
-                        const isSelected = selectedPromptTags.includes(item.tag);
-                        const isNegated = selectedNegativeTags.includes(item.tag);
-                        const isFav = favoriteTags.includes(item.tag);
+                        const isSelected = selectedPromptSet.has(item.tag);
+                        const isNegated = selectedNegativeSet.has(item.tag);
+                        const isFav = favoriteTagSet.has(item.tag);
                         const isInspected = inspectedTag?.tag === item.tag;
                         const canColor = isTagColorable(item.tag);
                         const domainMeta = DOMAIN_MAP[item.domain];
@@ -2824,7 +2576,7 @@ export default function App() {
                               </td>
                             )}
 
-                            {/* Row Actions: Send to Negative, Color Prefixer Trigger, Favorite Star, Copy single tag, Inspect */}
+                            {/* Row Actions: Hover/Focus-Revealed Secondary Icons (Active states stay visible) */}
                             <td
                               className={`${tableCellPadding} pl-2 pr-4 align-middle text-right whitespace-nowrap`}
                               onClick={(e) => e.stopPropagation()}
@@ -2838,10 +2590,10 @@ export default function App() {
                                       ? `Remove "${item.tag}" from Negative Prompt`
                                       : `Send "${item.tag}" to Negative Prompt`
                                   }
-                                  className={`p-1.5 rounded transition-colors cursor-pointer ${
+                                  className={`p-1.5 rounded transition-all duration-150 cursor-pointer ${
                                     isNegated
-                                      ? 'text-rose-500 bg-rose-500/10 hover:bg-rose-500/20'
-                                      : 'text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                      ? 'opacity-100 text-rose-500 bg-rose-500/10 hover:bg-rose-500/20'
+                                      : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800'
                                   }`}
                                 >
                                   <Ban className="w-3.5 h-3.5" />
@@ -2851,10 +2603,11 @@ export default function App() {
                                     type="button"
                                     onClick={() => {
                                       setInspectedTagKey(item.tag);
+                                      setIsRightPanelCollapsed(false);
                                       setIsInspectorExpanded(true);
                                     }}
                                     title={`Open Color Prefixer for ${item.tag} in Inspector`}
-                                    className="p-1.5 rounded text-slate-400 hover:text-indigo-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                                    className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 p-1.5 rounded text-slate-400 hover:text-indigo-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-150 cursor-pointer"
                                   >
                                     <Palette className="w-3.5 h-3.5" />
                                   </button>
@@ -2865,10 +2618,10 @@ export default function App() {
                                   title={
                                     isFav ? 'Remove from Favorites' : 'Add to Favorites'
                                   }
-                                  className={`p-1.5 rounded transition-colors cursor-pointer ${
+                                  className={`p-1.5 rounded transition-all duration-150 cursor-pointer ${
                                     isFav
-                                      ? 'text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800'
-                                      : 'text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                      ? 'opacity-100 text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                      : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800'
                                   }`}
                                 >
                                   <Star
@@ -2880,7 +2633,11 @@ export default function App() {
                                   type="button"
                                   onClick={(e) => handleCopySingleTag(item.tag, e)}
                                   title={`Copy "${item.tag}"`}
-                                  className="p-1.5 rounded text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                                  className={`p-1.5 rounded transition-all duration-150 cursor-pointer ${
+                                    copiedSingleTag === item.tag
+                                      ? 'opacity-100 text-emerald-500'
+                                      : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                  }`}
                                 >
                                   {copiedSingleTag === item.tag ? (
                                     <Check className="w-3.5 h-3.5 text-emerald-500" />
@@ -2892,13 +2649,14 @@ export default function App() {
                                   type="button"
                                   onClick={() => {
                                     setInspectedTagKey(item.tag);
+                                    setIsRightPanelCollapsed(false);
                                     setIsInspectorExpanded(true);
                                   }}
                                   title="Inspect tag details & related tags"
-                                  className={`p-1.5 rounded transition-colors cursor-pointer ${
-                                    isInspected
-                                      ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60'
-                                      : 'text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                  className={`p-1.5 rounded transition-all duration-150 cursor-pointer ${
+                                    isInspected && isInspectorExpanded && !isRightPanelCollapsed
+                                      ? 'opacity-100 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60'
+                                      : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
                                   }`}
                                 >
                                   <Info className="w-3.5 h-3.5" />
@@ -2913,12 +2671,13 @@ export default function App() {
                 </div>
               </div>
             ) : (
-              /* Detailed Grid View (Single-Elevation Cards, Zero-Pill Metadata) */
+              /* Detailed Grid View (Single-Elevation Cards, Hover-Revealed Secondary Icons) */
               <div className={`grid ${gridColsClass} gap-4`}>
                 {filteredTags.map((item) => {
-                  const isSelected = selectedPromptTags.includes(item.tag);
-                  const isNegated = selectedNegativeTags.includes(item.tag);
-                  const isFav = favoriteTags.includes(item.tag);
+                  const isSelected = selectedPromptSet.has(item.tag);
+                  const isNegated = selectedNegativeSet.has(item.tag);
+                  const isFav = favoriteTagSet.has(item.tag);
+                  const isInspected = inspectedTag?.tag === item.tag;
                   const canColor = isTagColorable(item.tag);
                   const domainMeta = DOMAIN_MAP[item.domain];
 
@@ -2926,7 +2685,7 @@ export default function App() {
                     <div
                       key={item.tag}
                       onClick={() => toggleTagInPrompt(item.tag)}
-                      className={`${gridCardPadding} rounded-xl border transition-colors cursor-pointer flex flex-col justify-between ${
+                      className={`group ${gridCardPadding} rounded-xl border transition-colors cursor-pointer flex flex-col justify-between ${
                         isSelected
                           ? 'bg-indigo-50/50 dark:bg-indigo-950/25 border-indigo-500/60 dark:border-indigo-500/60'
                           : isNegated
@@ -2970,10 +2729,10 @@ export default function App() {
                                   ? `Remove "${item.tag}" from Negative Prompt`
                                   : `Send "${item.tag}" to Negative Prompt`
                               }
-                              className={`p-1 cursor-pointer ${
+                              className={`p-1 rounded transition-all duration-150 cursor-pointer ${
                                 isNegated
-                                  ? 'text-rose-500'
-                                  : 'text-slate-400 hover:text-rose-500'
+                                  ? 'opacity-100 text-rose-500'
+                                  : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 text-slate-400 hover:text-rose-500'
                               }`}
                             >
                               <Ban className="w-3.5 h-3.5" />
@@ -2983,10 +2742,11 @@ export default function App() {
                                 type="button"
                                 onClick={() => {
                                   setInspectedTagKey(item.tag);
+                                  setIsRightPanelCollapsed(false);
                                   setIsInspectorExpanded(true);
                                 }}
                                 title={`Open Color Prefixer for ${item.tag}`}
-                                className="p-1 text-slate-400 hover:text-indigo-500 cursor-pointer"
+                                className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 p-1 rounded text-slate-400 hover:text-indigo-500 transition-all duration-150 cursor-pointer"
                               >
                                 <Palette className="w-3.5 h-3.5" />
                               </button>
@@ -2995,10 +2755,10 @@ export default function App() {
                               type="button"
                               onClick={(e) => toggleFavorite(item.tag, e)}
                               title={isFav ? 'Remove from Favorites' : 'Add to Favorites'}
-                              className={`p-1 cursor-pointer ${
+                              className={`p-1 rounded transition-all duration-150 cursor-pointer ${
                                 isFav
-                                  ? 'text-amber-500'
-                                  : 'text-slate-400 hover:text-amber-500'
+                                  ? 'opacity-100 text-amber-500'
+                                  : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 text-slate-400 hover:text-amber-500'
                               }`}
                             >
                               <Star
@@ -3010,7 +2770,11 @@ export default function App() {
                               type="button"
                               onClick={(e) => handleCopySingleTag(item.tag, e)}
                               title={`Copy "${item.tag}"`}
-                              className="p-1 text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+                              className={`p-1 rounded transition-all duration-150 cursor-pointer ${
+                                copiedSingleTag === item.tag
+                                  ? 'opacity-100 text-emerald-500'
+                                  : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                              }`}
                             >
                               {copiedSingleTag === item.tag ? (
                                 <Check className="w-3.5 h-3.5 text-emerald-500" />
@@ -3022,9 +2786,15 @@ export default function App() {
                               type="button"
                               onClick={() => {
                                 setInspectedTagKey(item.tag);
+                                setIsRightPanelCollapsed(false);
                                 setIsInspectorExpanded(true);
                               }}
-                              className="p-1 text-slate-400 hover:text-indigo-500 cursor-pointer"
+                              title="Inspect tag details & related tags"
+                              className={`p-1 rounded transition-all duration-150 cursor-pointer ${
+                                isInspected && isInspectorExpanded && !isRightPanelCollapsed
+                                  ? 'opacity-100 text-indigo-500'
+                                  : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 text-slate-400 hover:text-indigo-500'
+                              }`}
                             >
                               <Info className="w-3.5 h-3.5" />
                             </button>
@@ -3081,10 +2851,17 @@ export default function App() {
           </div>
         </main>
 
-        {/* Right Panel: Prompt Composer, Conflict Detector, Color Prefixer & Collapsible Inspector */}
-        <aside className="w-full lg:w-[390px] shrink-0 border-t lg:border-t-0 lg:border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0F1522] flex flex-col">
-          {/* Upper Section: Prompt Composer Workspace */}
-          <div className="p-4 border-b border-slate-200 dark:border-slate-800 space-y-3.5">
+        {/* Right Panel: Collapsible Prompt Composer, Conflict Detector, Color Prefixer & Drawer Inspector */}
+        {!isRightPanelCollapsed && (
+          <aside className="w-full lg:w-[390px] shrink-0 border-t lg:border-t-0 lg:border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0F1522] flex flex-col justify-between">
+            {/* Upper Section: Prompt Composer Workspace */}
+            <div
+              className={`p-4 space-y-3.5 ${
+                isInspectorExpanded
+                  ? 'border-b border-slate-200 dark:border-slate-800'
+                  : 'flex-1'
+              }`}
+            >
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 font-display">
                 SDXL Illustrious Composer
@@ -3332,6 +3109,7 @@ export default function App() {
                         onClick={() => {
                           recordPromptHistory(orderedPromptTags, 'Cleared Prompt');
                           setSelectedPromptTags([]);
+                          setColorPickerTargetTag(null);
                         }}
                         className="text-[11px] text-rose-500 hover:underline cursor-pointer inline-flex items-center gap-1"
                       >
@@ -3417,7 +3195,7 @@ export default function App() {
                 </div>
 
                 {/* Inline Color Prefixer Popover when a colorable active prompt tag's palette icon is clicked */}
-                {colorPickerTargetTag && (
+                {colorPickerTargetTag && selectedPromptSet.has(colorPickerTargetTag) && (
                   <div className="p-2.5 rounded-lg bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-500/40 space-y-2">
                     <div className="flex items-center justify-between text-[11px]">
                       <span className="font-semibold text-indigo-700 dark:text-indigo-300 font-mono">
@@ -3448,13 +3226,13 @@ export default function App() {
                           <span>{c.label}</span>
                         </button>
                       ))}
-                      {getBaseUncoloredTag(colorPickerTargetTag).colorPrefix && (
+                      {getResetColorTarget(colorPickerTargetTag) && (
                         <button
                           type="button"
                           onClick={() => handleResetTagColor(colorPickerTargetTag)}
                           className="px-2 py-0.5 text-[11px] font-mono text-rose-500 hover:underline cursor-pointer"
                         >
-                          Reset Color
+                          Reset to {getResetColorTarget(colorPickerTargetTag)}
                         </button>
                       )}
                     </div>
@@ -3836,7 +3614,7 @@ export default function App() {
                     onClick={() => setIsNegPacksExpanded((prev) => !prev)}
                     className="w-full flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer"
                   >
-                    <span>Modular Negative Packs (7)</span>
+                    <span>Modular Negative Packs ({MODULAR_NEGATIVE_PACKS.length})</span>
                     <span className="inline-flex items-center gap-1 text-[11px] font-normal text-slate-400">
                       <span>{isNegPacksExpanded ? 'Collapse' : 'Expand'}</span>
                       {isNegPacksExpanded ? (
@@ -4046,13 +3824,21 @@ export default function App() {
             )}
           </div>
 
-          {/* Lower Section: Collapsible Tag Inspector, Color Prefixer & Sibling Relationships */}
+          {/* Lower Section: Collapsible Tag Inspector Drawer (Default Collapsed) */}
           {inspectedTag && (
-            <div className="flex-1 flex flex-col">
+            <div
+              className={
+                isInspectorExpanded
+                  ? 'flex-1 flex flex-col'
+                  : 'border-t border-slate-200 dark:border-slate-800'
+              }
+            >
               <button
                 type="button"
                 onClick={() => setIsInspectorExpanded((prev) => !prev)}
-                className="w-full px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-[#0B0F17]/60 flex items-center justify-between text-xs hover:bg-slate-100/80 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+                className={`w-full px-4 py-3 bg-slate-50/70 dark:bg-[#0B0F17]/60 flex items-center justify-between text-xs hover:bg-slate-100/80 dark:hover:bg-slate-800/40 transition-colors cursor-pointer ${
+                  isInspectorExpanded ? 'border-b border-slate-200 dark:border-slate-800' : ''
+                }`}
               >
                 <div className="flex items-center gap-2 truncate">
                   <Info className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
@@ -4158,13 +3944,13 @@ export default function App() {
                             <Palette className="w-3.5 h-3.5 text-indigo-500" />
                             <span>Quick Color Modifier Prefixer</span>
                           </span>
-                          {getBaseUncoloredTag(inspectedTag.tag).colorPrefix && (
+                          {getResetColorTarget(inspectedTag.tag) && (
                             <button
                               type="button"
                               onClick={() => handleResetTagColor(inspectedTag.tag)}
                               className="text-[11px] font-mono text-rose-500 hover:underline cursor-pointer"
                             >
-                              Reset to {getBaseUncoloredTag(inspectedTag.tag).baseTag}
+                              Reset to {getResetColorTarget(inspectedTag.tag)}
                             </button>
                           )}
                         </div>
@@ -4294,125 +4080,50 @@ export default function App() {
             </div>
           )}
         </aside>
+        )}
       </div>
 
-      {/* Add Custom Booru Tag Modal */}
-      {isCustomModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-xl bg-white dark:bg-[#0F1522] border border-slate-200 dark:border-slate-800 p-6 space-y-4 shadow-xl">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 font-display">
-                Add Custom Booru Tag
-              </h2>
-              <button
-                type="button"
-                onClick={() => setIsCustomModalOpen(false)}
-                className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateCustomTag} className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Canonical Booru Tag (spaces automatically convert to _)
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={customTagInput}
-                  onChange={(e) => setCustomTagInput(e.target.value)}
-                  placeholder="e.g. glowing_halo or cyber_visor"
-                  className="w-full px-3 py-2 text-xs font-mono bg-slate-50 dark:bg-[#0B0F17] border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    Domain
-                  </label>
-                  <select
-                    value={customDomainInput}
-                    onChange={(e) => {
-                      const nextDomain = e.target.value as DomainId;
-                      setCustomDomainInput(nextDomain);
-                      setCustomSubcategoryInput(DOMAIN_MAP[nextDomain].subcategories[0]);
-                    }}
-                    className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-[#0B0F17] border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
-                  >
-                    {DOMAINS.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {d.shortLabel}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    Subcategory
-                  </label>
-                  <select
-                    value={customSubcategoryInput}
-                    onChange={(e) => setCustomSubcategoryInput(e.target.value)}
-                    className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-[#0B0F17] border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
-                  >
-                    {DOMAIN_MAP[customDomainInput].subcategories.map((sub) => (
-                      <option key={sub} value={sub}>
-                        {sub}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Visual Definition
-                </label>
-                <textarea
-                  rows={2}
-                  value={customDescInput}
-                  onChange={(e) => setCustomDescInput(e.target.value)}
-                  placeholder="Concise description of how this tag affects the illustration..."
-                  className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-[#0B0F17] border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Aliases (comma-separated, optional)
-                </label>
-                <input
-                  type="text"
-                  value={customAliasesInput}
-                  onChange={(e) => setCustomAliasesInput(e.target.value)}
-                  placeholder="e.g. neon_visor, holo_glasses"
-                  className="w-full px-3 py-2 text-xs font-mono bg-slate-50 dark:bg-[#0B0F17] border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsCustomModalOpen(false)}
-                  className="px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors cursor-pointer"
-                >
-                  Save & Add to Prompt
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Unified Tabbed Settings & Tools Modal */}
+      <SettingsToolsModal
+        isOpen={isSettingsModalOpen}
+        activeTab={activeSettingsTab}
+        onTabChange={setActiveSettingsTab}
+        onClose={() => setIsSettingsModalOpen(false)}
+        isDark={isDark}
+        onSetIsDark={setIsDark}
+        displaySettings={displaySettings}
+        onUpdateSetting={updateSetting}
+        onResetDisplaySettings={() => setDisplaySettings(DEFAULT_DISPLAY_SETTINGS)}
+        onSetViewMode={setViewMode}
+        autoSortPrompt={autoSortPrompt}
+        onSetAutoSortPrompt={setAutoSortPrompt}
+        historyCap={historyCap}
+        onHistoryCapChange={handleHistoryCapChange}
+        recentTagsCount={recentTagsHistory.length}
+        promptHistoryCount={promptHistory.length}
+        onClearTagHistory={() => setRecentTagsHistory([])}
+        onClearPromptHistory={() => setPromptHistory([])}
+        customTagInput={customTagInput}
+        onCustomTagInputChange={setCustomTagInput}
+        customDomainInput={customDomainInput}
+        onCustomDomainInputChange={setCustomDomainInput}
+        customSubcategoryInput={customSubcategoryInput}
+        onCustomSubcategoryInputChange={setCustomSubcategoryInput}
+        customDescInput={customDescInput}
+        onCustomDescInputChange={setCustomDescInput}
+        customAliasesInput={customAliasesInput}
+        onCustomAliasesInputChange={setCustomAliasesInput}
+        onCreateCustomTag={handleCreateCustomTag}
+        customTagsCount={customTags.length}
+        onJumpToCustomTags={() => {
+          handleSelectDomain('custom');
+          setIsSettingsModalOpen(false);
+        }}
+        totalTagsCount={allTags.length}
+        builtInTagsCount={ALL_BOORU_TAGS.length}
+        filteredTagsCount={filteredTags.length}
+        onExportCsv={handleExportDatabaseCsv}
+      />
     </div>
   );
 }

@@ -5,17 +5,17 @@
 **High-Density Booru Tag Index & One-Click Prompt Composer for SDXL Illustrious Anime Diffusion Models**
 
 [![Latest Release](https://img.shields.io/badge/release-v3.0.0-4f46e5?style=for-the-badge)](https://github.com/MeanGreenz/Booru-Lexicon/releases/latest)
-[![Canonical Tags](https://img.shields.io/badge/canonical_tags-1%2C267-06b6d4?style=for-the-badge)](./illustrious-lexicon-tags.csv)
+[![Canonical Tags](https://img.shields.io/badge/canonical_tags-1%2C370-06b6d4?style=for-the-badge)](./illustrious-lexicon-tags.csv)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Web%20%7C%20Standalone_HTML-0f172a?style=for-the-badge)](https://github.com/MeanGreenz/Booru-Lexicon/releases/latest)
 [![License](https://img.shields.io/badge/license-Apache_2.0-10b981?style=for-the-badge)](./LICENSE)
 
-[**⬇ Download Windows `.exe` / Standalone Release**](https://github.com/MeanGreenz/Booru-Lexicon/releases/latest) · [**📊 Browse 1,267-Tag CSV**](./illustrious-lexicon-tags.csv) · [**🗂 7-Domain Taxonomy**](#1-comprehensive-7-domain-sdxl-illustrious-taxonomy) · [**✨ Features**](#2-smart-prompt-composer--workflow-studios) · [**🛠 Build & Deploy**](#deploying-on-github-web--pc-desktop-releases)
+[**⬇ Download Windows `.exe` / Standalone Release**](https://github.com/MeanGreenz/Booru-Lexicon/releases/latest) · [**📊 Browse 1,370-Tag CSV**](./illustrious-lexicon-tags.csv) · [**🗂 7-Domain Taxonomy**](#1-comprehensive-7-domain-sdxl-illustrious-taxonomy) · [**✨ Features**](#2-smart-prompt-composer--workflow-studios) · [**🛠 Build & Deploy**](#deploying-on-github-web--pc-desktop-releases)
 
 </div>
 
 ---
 
-**Illustrious Lexicon** is a fast, offline-capable desktop and web reference utility built specifically for **SDXL Illustrious** and Danbooru-trained anime diffusion models. It indexes **1,267 canonical Booru tags** across **7 domains** and **44 subcategories** using strict Danbooru underscore formatting (`big_eyes`, `long_hair`, `cat_ears`, `fox_tail`, `sailor_collar`, `dutch_angle`, `best_quality`) and assembles clean, comma-separated positive and negative prompts without unwanted weight clutter.
+**Illustrious Lexicon** is a fast, offline-capable desktop and web reference utility built specifically for **SDXL Illustrious** and Danbooru-trained anime diffusion models. It indexes **1,370 canonical Booru tags** across **7 domains** and **44 subcategories** using strict Danbooru underscore formatting (`big_eyes`, `long_hair`, `cat_ears`, `fox_tail`, `sailor_collar`, `dutch_angle`, `best_quality`) and assembles clean, comma-separated positive and negative prompts without unwanted weight clutter.
 
 ---
 
@@ -25,14 +25,14 @@ The database is structured in the exact canonical prompt ordering recommended fo
 
 | # | Domain | Subcategories | Tags | Focus & Scope |
 | :---: | :--- | :---: | :---: | :--- |
-| **01** | **Art Styles, Mediums & Meta Quality** | 4 | **63** | Quality triggers (`masterpiece`, `best_quality`, `very_awa`, `absurdres`, `newest`), lineart, mediums, page layouts (`comic`, `4koma`), censor modes, and visual effects |
-| **02** | **Character Traits, Archetypes, Body & Hair** | 6 | **201** | Subject counts (`1girl`, `solo`, `multiple_girls`), archetypes & professions, body proportions & anatomy, skin/tanlines/tattoos, hairstyles, bangs, and hair colors |
+| **01** | **Art Styles, Mediums & Meta Quality** | 4 | **85** | Quality triggers (`masterpiece`, `best_quality`, `very_awa`, `absurdres`, `newest`), lineart, mediums, page layouts (`comic`, `4koma`, `reference_sheet`), censor modes, and visual effects |
+| **02** | **Character Traits, Archetypes, Body & Hair** | 6 | **200** | Subject counts (`1girl`, `solo`, `multiple_girls`), archetypes & professions, body proportions & anatomy, skin/tanlines/tattoos, hairstyles, bangs, and hair colors |
 | **03** | **Species, Races & Demihuman Traits** | 6 | **233** | Kemonomimi/beastkin, fantasy races (elf, dark elf, dwarf, oni, succubus, vampire), monster girls, anthro/furry/scalie, ears, horns, wings, tails, and racial features |
-| **04** | **Face, Eyes & Expressions** | 5 | **166** | Brows, eye shapes, eyelids, pupil geometry, iris colors, mouth & tongue shapes, blush, tears, emoticons (`^_^`, `>_<`, `:o`, `;d`), emotion symbols, and facial hair |
-| **05** | **Clothing, Lingerie, Materials & Fashion States** | 10 | **290** | Uniforms, traditional/fantasy attire, tops, outerwear, dresses, skirts, swimwear, lingerie, prints & patterns, suggestive states, footwear, and accessories |
-| **06** | **Poses, Camera Angles, Gaze & Interactions** | 9 | **213** | Framing & shot sizes, camera perspective & Dutch angles, gaze direction, body postures, couple interactions, sensual stances, gestures, and cinematic lighting |
-| **07** | **Backgrounds, Environments & Props** | 4 | **101** | Studio & minimal backdrops, sky & weather, indoor/urban architecture, and handheld objects, weapons, and accessories |
-| | **Total Indexed Lexicon** | **44** | **1,267** | **Complete database export available in [illustrious-lexicon-tags.csv](./illustrious-lexicon-tags.csv)** |
+| **04** | **Face, Eyes & Expressions** | 5 | **176** | Brows, eye shapes, eyelids, pupil geometry, iris colors, mouth & tongue shapes, blush, tears, emoticons (`^_^`, `>_<`, `:o`, `;d`), emotion symbols, and facial hair |
+| **05** | **Clothing, Lingerie, Materials & Fashion States** | 10 | **319** | Uniforms, traditional/fantasy attire, tops, outerwear, dresses, skirts, swimwear, lingerie, prints & patterns, suggestive states, footwear, and accessories |
+| **06** | **Poses, Camera Angles, Gaze & Interactions** | 9 | **240** | Framing & shot sizes, camera perspective & Dutch angles, gaze direction, body postures, couple interactions, sensual stances, gestures, and cinematic lighting |
+| **07** | **Backgrounds, Environments & Props** | 4 | **117** | Studio & minimal backdrops, sky & weather, indoor/urban architecture, and handheld objects, weapons, and accessories |
+| | **Total Indexed Lexicon** | **44** | **1,370** | **Complete database export available in [illustrious-lexicon-tags.csv](./illustrious-lexicon-tags.csv)** |
 
 ---
 
@@ -49,7 +49,7 @@ The database is structured in the exact canonical prompt ordering recommended fo
   - **7 Modular Negative Packs**: *Baseline Quality*, *Anatomy & Hands*, *Anti-Censorship*, *Anti-3D / Realistic*, *Watermarks & UI*, *SFW Guard*, and *NSFW Guard*.
   - Live detection for positive/negative prompt collisions with one-click resolution.
 - **Complete Database CSV Export**:
-  - 1-click **Export CSV (1,267)** download button built into the application.
+  - 1-click **Export CSV (1,370)** download button built into the application.
   - Pre-built offline CSV exports included in root and release directories (`illustrious-lexicon-tags.csv`).
 - **Favorites & Configurable History**: Pin frequent tags to Favorites and set custom history limits (`1`–`200`) for recent tags and copied prompt bundles.
 - **Display & Formatting Preferences**: Adjustable font scaling (`85%`–`130%`), row/card density presets, table/grid column layouts, WebUI parenthesis escaping (`\(` and `\)`), and trailing comma formatting.
@@ -83,7 +83,7 @@ Pushing a version tag (`v3.0.0`) automatically packages the app with Electron Bu
 - `Illustrious-Lexicon-Portable-3.0.0.exe` — Single-file portable executable (no install required)
 - `Illustrious-Lexicon-Setup-3.0.0.exe` — Windows desktop installer
 - `Illustrious-Lexicon-Standalone.html` & `Launch-Illustrious-Lexicon-PC.bat` — Zero-install offline desktop bundle
-- `illustrious-lexicon-tags.csv` — Full 1,267 canonical tag database export
+- `illustrious-lexicon-tags.csv` — Full 1,370 canonical tag database export
 
 ---
 

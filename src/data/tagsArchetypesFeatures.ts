@@ -281,14 +281,14 @@ export const ARCHETYPES_FEATURES_TAGS: BooruTag[] = [
     postCountEst: '165K'
   },
   {
-    tag: 'glasses_off',
-    domain: 'character',
-    subcategory: 'Skin, Tanlines, Tattoos & Piercings',
-    description: 'A normally bespectacled character who has just removed or set aside their glasses, holding them or leaving them nearby.',
-    aliases: ['removing_glasses', 'holding_glasses'],
+    tag: 'eyewear_removed',
+    domain: 'clothing',
+    subcategory: 'Headwear, Eyewear & Accessories',
+    description: 'Character who has just removed or set aside their glasses, holding them or leaving them nearby.',
+    aliases: ['glasses_off', 'removing_glasses', 'holding_glasses'],
     relatedTags: ['glasses', 'eyewear_on_head', 'embarrassed'],
     popularity: 'Common',
-    postCountEst: '85K'
+    postCountEst: '42K'
   },
   {
     tag: 'womb_tattoo',

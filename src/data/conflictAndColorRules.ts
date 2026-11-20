@@ -251,6 +251,20 @@ export function applyColorPrefixToTag(tag: string, colorPrefix: string): string 
   return `${colorPrefix}_${baseTag}`;
 }
 
+/**
+ * Returns the canonical uncolored base tag when resetting a color-prefixed tag,
+ * or null if resetting would produce an invalid bare noun (e.g. 'hair' or 'eyes')
+ * or if the tag has no removable color prefix.
+ */
+export function getResetColorTarget(tag: string): string | null {
+  const { colorPrefix, baseTag } = getBaseUncoloredTag(tag);
+  if (!colorPrefix) return null;
+  if (baseTag === 'hair' || baseTag === 'eyes') return null;
+  if (baseTag === 'skin') return 'colored_skin';
+  if (baseTag === 'sclera') return 'colored_sclera';
+  return baseTag;
+}
+
 interface ConflictGroupRule {
   id: string;
   categoryLabel: string;

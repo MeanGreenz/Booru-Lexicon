@@ -335,7 +335,7 @@ export const ART_META_TAGS: BooruTag[] = [
   {
     tag: 'out-of-frame',
     domain: 'art_meta',
-    subcategory: 'Color, Tone & Visual Effects',
+    subcategory: 'Format & Page Layout',
     description: 'Stylized white or colored geometric frame/border which the character dynamically breaks out of.',
     aliases: ['dutch_border', 'out_of_frame_border', 'pop_out_border'],
     relatedTags: ['white_border', 'foreshortening', 'official_art'],

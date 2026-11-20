@@ -122,16 +122,6 @@ export const POSE_CAMERA_TAGS: BooruTag[] = [
     illustriousNote: 'Combine with looking_back if you still want the character’s face visible over their shoulder.'
   },
   {
-    tag: 'profile',
-    domain: 'pose_camera',
-    subcategory: 'Camera Angles & Perspective',
-    description: 'Strict 90-degree side view of the character’s face showing nose and jawline contour.',
-    aliases: ['side_profile', 'facial_profile'],
-    relatedTags: ['from_side', 'looking_ahead'],
-    popularity: 'Core',
-    postCountEst: '295K'
-  },
-  {
     tag: 'foreshortening',
     domain: 'pose_camera',
     subcategory: 'Camera Angles & Perspective',
@@ -417,20 +407,10 @@ export const POSE_CAMERA_TAGS: BooruTag[] = [
     postCountEst: '115K'
   },
   {
-    tag: 'head_tilt',
-    domain: 'pose_camera',
-    subcategory: 'Hands & Arm Gestures',
-    description: 'Head inclined quizzically or cutely to one shoulder (classic Shaft head tilt).',
-    aliases: ['tilted_head', 'curious_tilt'],
-    relatedTags: ['looking_at_viewer', 'finger_to_mouth', 'smile'],
-    popularity: 'Core',
-    postCountEst: '640K'
-  },
-  {
     tag: 'salute',
     domain: 'pose_camera',
     subcategory: 'Hands & Arm Gestures',
-    description: ' Crisp hand salute held to the brow or cap brim.',
+    description: 'Crisp hand salute held to the brow or cap brim.',
     aliases: ['military_salute'],
     relatedTags: ['military_uniform', 'peaked_cap', 'one_eye_closed'],
     popularity: 'Common',
@@ -460,14 +440,14 @@ export const POSE_CAMERA_TAGS: BooruTag[] = [
     illustriousNote: 'Creates gorgeous translucent hair edge glow in SDXL Illustrious.'
   },
   {
-    tag: 'dramatic_shadows',
+    tag: 'shadow',
     domain: 'pose_camera',
     subcategory: 'Lighting & Optical Effects',
-    description: 'High-contrast, moody theatrical illumination with rich shadow falloff and directional highlights.',
-    aliases: ['cinematic_lighting', 'dramatic_lighting', 'film_lighting'],
+    description: 'Prominent, defined shadows cast across the character or environment for strong directional depth and contrast.',
+    aliases: ['dramatic_shadows', 'dramatic_shadow', 'cinematic_lighting', 'dramatic_lighting'],
     relatedTags: ['backlighting', 'chiaroscuro', 'light_rays', 'depth_of_field'],
     popularity: 'Core',
-    postCountEst: '165K'
+    postCountEst: '580K'
   },
   {
     tag: 'chiaroscuro',
@@ -475,7 +455,7 @@ export const POSE_CAMERA_TAGS: BooruTag[] = [
     subcategory: 'Lighting & Optical Effects',
     description: 'Bold artistic interplay between deep dark shadows and bright directional light.',
     aliases: ['high_contrast_shadow', 'tenebrism'],
-    relatedTags: ['shade', 'dark_theme', 'backlighting', 'sidelighting', 'dramatic_shadows'],
+    relatedTags: ['shadow', 'dark', 'backlighting', 'sidelighting'],
     popularity: 'Common',
     postCountEst: '75K'
   },

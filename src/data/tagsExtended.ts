@@ -418,16 +418,6 @@ export const EXTENDED_TAGS: BooruTag[] = [
     postCountEst: '65K'
   },
   {
-    tag: 'chin_rest',
-    domain: 'pose_camera',
-    subcategory: 'Hands & Arm Gestures',
-    description: 'Resting the chin on one or both hands while elbows sit on a desk, table, or knees.',
-    aliases: ['head_in_hands', 'resting_chin_on_hand'],
-    relatedTags: ['sitting', 'on_desk', 'looking_at_viewer'],
-    popularity: 'Core',
-    postCountEst: '140K'
-  },
-  {
     tag: 'waving',
     domain: 'pose_camera',
     subcategory: 'Hands & Arm Gestures',

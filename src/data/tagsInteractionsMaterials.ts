@@ -10,7 +10,7 @@ export const INTERACTIONS_MATERIALS_TAGS: BooruTag[] = [
     subcategory: 'Materials, Latex & Fetish Gear',
     description: 'High-gloss, mirror-specular rubber or PVC garment material that molds tightly to every body contour.',
     aliases: ['rubber_clothes', 'pvc_outfit', 'liquid_latex'],
-    relatedTags: ['shiny_clothes', 'skintight', 'bodysuit', 'vacuum-packed_clothes'],
+    relatedTags: ['shiny_clothes', 'skintight', 'bodysuit', 'impossible_clothes'],
     popularity: 'Core',
     postCountEst: '290K',
     illustriousNote: 'Pair latex with shiny_clothes and skintight for dramatic specular reflections.'
@@ -31,19 +31,19 @@ export const INTERACTIONS_MATERIALS_TAGS: BooruTag[] = [
     subcategory: 'Materials, Latex & Fetish Gear',
     description: 'Second-skin garment fit that reveals underlying muscle, navel, and anatomical relief.',
     aliases: ['form-fitting', 'skin_tight'],
-    relatedTags: ['bodysuit', 'latex', 'taut_clothes', 'vacuum-packed_clothes'],
+    relatedTags: ['bodysuit', 'latex', 'taut_clothes', 'impossible_clothes'],
     popularity: 'Core',
     postCountEst: '380K'
   },
   {
-    tag: 'vacuum-packed_clothes',
+    tag: 'impossible_clothes',
     domain: 'clothing',
     subcategory: 'Materials, Latex & Fetish Gear',
     description: 'Anime stylistic trope where clothing clings so impossibly tight that it outlines the navel hollow and individual breast curves.',
-    aliases: ['impossible_clothes', 'navel_through_clothes', 'boob_socks'],
+    aliases: ['vacuum-packed_clothes', 'navel_through_clothes', 'boob_socks'],
     relatedTags: ['skintight', 'taut_clothes', 'bodysuit', 'leotard'],
     popularity: 'Core',
-    postCountEst: '240K'
+    postCountEst: '95K'
   },
   {
     tag: 'leather',

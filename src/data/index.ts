@@ -12,6 +12,7 @@ import { INTERACTIONS_MATERIALS_TAGS } from './tagsInteractionsMaterials';
 import { COMPREHENSIVE_POLISH_TAGS } from './tagsComprehensivePolish';
 import { CANONICAL_EXPANSION_TAGS } from './tagsCanonicalExpansion';
 import { MISSING_CANONICAL_TAGS } from './tagsMissingCanonical';
+import { CATEGORY_COMPLETION_TAGS } from './tagsCategoryCompletion';
 import {
   FACE_AND_GAZE_TAGS,
   FACIAL_AND_GAZE_MIGRATION_MAP,
@@ -173,7 +174,8 @@ const rawTags: BooruTag[] = [
   ...EXPLICIT_ACTION_TAGS,
   ...COMPREHENSIVE_POLISH_TAGS,
   ...CANONICAL_EXPANSION_TAGS,
-  ...MISSING_CANONICAL_TAGS
+  ...MISSING_CANONICAL_TAGS,
+  ...CATEGORY_COMPLETION_TAGS
 ];
 
 const seen = new Set<string>();
@@ -201,72 +203,6 @@ export const ALL_BOORU_TAGS: BooruTag[] = uniqueRawTags.map((item) => {
     relatedTags: mergedRelated
   };
 });
-
-export const ILLUSTRIOUS_NEGATIVE_PRESETS = [
-  {
-    id: 'standard_illustrious_neg',
-    name: 'Standard Illustrious Negative',
-    description: 'Clean baseline negative prompt for SDXL Illustrious v0.1–v1.1 checkpoints.',
-    tags: [
-      'worst_quality',
-      'low_quality',
-      'normal_quality',
-      'lowres',
-      'bad_anatomy',
-      'bad_hands',
-      'missing_fingers',
-      'extra_digit',
-      'fewer_digits',
-      'jpeg_artifacts',
-      'signature',
-      'watermark',
-      'username',
-      'blurry'
-    ]
-  },
-  {
-    id: 'uncensored_nsfw_neg',
-    name: 'Uncensored / Anti-Mosaic Negative',
-    description: 'Prevents mosaic pixelation, black censor bars, and anatomical artifacts in risqué or explicit generations.',
-    tags: [
-      'worst_quality',
-      'low_quality',
-      'normal_quality',
-      'lowres',
-      'censored',
-      'mosaic_censoring',
-      'bar_censor',
-      'light_censor',
-      'bad_anatomy',
-      'bad_hands',
-      'missing_fingers',
-      'extra_digits',
-      'mutated_hands',
-      'watermark',
-      'signature'
-    ]
-  },
-  {
-    id: 'modern_clean_neg',
-    name: 'Modern Sharp & Anti-Retro Negative',
-    description: 'Suppresses older 2000s flat shading and anatomical distortion.',
-    tags: [
-      'worst_quality',
-      'low_quality',
-      'early',
-      'lowres',
-      'bad_anatomy',
-      'bad_hands',
-      'mutated_hands',
-      'extra_limbs',
-      'text',
-      'error',
-      'watermark',
-      'cropped',
-      'jpeg_artifacts'
-    ]
-  }
-];
 
 export const BUILT_IN_PROMPT_PRESETS: PromptPreset[] = [
   {
@@ -351,7 +287,7 @@ export const BUILT_IN_PROMPT_PRESETS: PromptPreset[] = [
       'cleavage_cutout',
       'from_below',
       'looking_down',
-      'dramatic_shadows',
+      'shadow',
       'stained_glass'
     ],
     isBuiltIn: true
@@ -389,7 +325,7 @@ export const BUILT_IN_PROMPT_PRESETS: PromptPreset[] = [
       'on_bed',
       'kneeling',
       'all_fours',
-      'dramatic_shadows',
+      'shadow',
       'bedroom'
     ],
     isBuiltIn: true
